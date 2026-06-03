@@ -1,0 +1,3 @@
+display_name: "Algebraic Specs"
+short_description: "Write, implement, and verify algebraic specifications (.alg files) using set-theoretic notation"
+default_prompt: "Write an algebraic specification for"
