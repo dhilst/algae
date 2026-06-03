@@ -66,4 +66,4 @@ See [skills/alg-spec/references/syntax.md](skills/alg-spec/references/syntax.md)
 
 ## License
 
-MIT
+Apache 2.0
