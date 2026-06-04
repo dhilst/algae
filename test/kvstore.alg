@@ -1,35 +1,16 @@
-# kvstore.alg — Simple key-value store
+sort Store, Key, Value;
+sort Error = {missing_key};
 
-spec KVStore[K, V]
+op empty_store : -> Store;
+op put : Store × Key × Value -> Store;
+op get : Store × Key -> Value | Error;
+op delete : Store × Key -> Store;
+op has : Store × Key -> 𝔹;
 
-  state
-    data : K → V
+var s : Store;
+var k : Key;
+var v : Value;
 
-  init
-    data = ∅
-
-  inv dom(data) ⊆ K
-
-  op put(k : K, v : V)
-    post data' = data ⊕ {k ↦ v}
-
-  op get(k : K) → V
-    pre  k ∈ dom(data)
-    ret  data(k)
-
-  op delete(k : K)
-    pre  k ∈ dom(data)
-    post data' = data \ {k ↦ data(k)}
-
-  op has(k : K) → 𝔹
-    ret  k ∈ dom(data)
-
-  op size → ℕ
-    ret  |dom(data)|
-
-  op keys → ℘(K)
-    ret  dom(data)
-
-  prop put(k, v).then(get(k)).ret = v
-  prop put(k, v).then(delete(k)).then(has(k)).ret = false
-  prop put(k, v).then(size).ret ≥ 1
+axiom get(put(s, k, v), k) = v;
+axiom has(put(s, k, v), k) = true;
+axiom get(empty_store(), k) = missing_key;

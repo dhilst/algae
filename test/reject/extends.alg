@@ -1,0 +1,2 @@
+spec Child extends Parent {
+}

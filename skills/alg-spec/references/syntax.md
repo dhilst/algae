@@ -5,202 +5,149 @@
 - Extension: `.alg`
 - Encoding: UTF-8
 - Comments: `#` to end of line
-- Indentation: 2 spaces (significant for block structure)
+- Whitespace is insignificant.
+- A file contains top-level algebraic declarations; there is no `spec` wrapper.
+- Declarations end with `;`.
 
 ## Keywords
 
 ```
-spec  extends  import  type  state  init  inv  op  pre  post  ret  prop  fn
+sort  op  var  axiom  true  false  if  then  else
 ```
 
-## Symbols
+The previous state-machine syntax is not part of this grammar. `spec`, `state`,
+`init`, `inv`, `pre`, `post`, `ret`, `prop`, `fn`, `import`, `extends`, and
+`type` are rejected.
 
-| Symbol | Meaning | ASCII fallback |
-|--------|---------|----------------|
-| `∈`  | element of | `in` |
-| `∉`  | not element of | `not in` |
-| `⊆`  | subset or equal | `<=` |
-| `⊂`  | proper subset | `<` |
-| `⊇`  | superset or equal | `>=` |
-| `∪`  | union | `\|` |
-| `∩`  | intersection | `&` |
-| `\`  | set difference | `\` |
-| `×`  | cartesian product | `*` |
-| `→`  | function type / returns | `->` |
-| `↦`  | maps to (in bindings) | `\|->` |
-| `∅`  | empty set/map | `{}` |
-| `ℕ`  | natural numbers (0,1,2,...) | `Nat` |
-| `ℤ`  | integers | `Int` |
-| `ℝ`  | reals | `Real` |
-| `𝔹`  | booleans | `Bool` |
-| `∀`  | for all | `forall` |
-| `∃`  | exists | `exists` |
-| `¬`  | negation | `!` |
-| `∧`  | conjunction | `&&` |
-| `∨`  | disjunction | `\|\|` |
-| `⟹` | implication | `==>` |
-| `⟺` | biconditional | `<==>` |
-| `℘`  | power set | `P` |
-| `'`  | post-state suffix | `'` |
-| `·`  | separator (in quantifiers) | `.` |
-| `≠`  | not equal | `!=` |
-| `≤`  | less or equal | `<=` |
-| `≥`  | greater or equal | `>=` |
+## Symbols And ASCII Keyword Aliases
 
-Unicode and ASCII forms are interchangeable. Use whichever your editor supports.
+Unicode symbols and their lowercase ASCII keyword aliases are interchangeable.
+The formatter emits Unicode by default and emits aliases with `fmt --ascii`.
+
+| Symbol | Keyword | Meaning |
+|--------|---------|---------|
+| `∈` | `in` | element of |
+| `∉` | `notin` | not element of |
+| `⊆` | `subseteq` | subset or equal |
+| `⊂` | `subset` | proper subset |
+| `⊇` | `superseteq` | superset or equal |
+| `⊃` | `superset` | proper superset |
+| `∪` | `union` | union |
+| `∩` | `intersect` | intersection |
+| `\` | `setminus` | set difference |
+| `×` | `product` | product |
+| `→` | `arrow` | operation/function arrow |
+| `↦` | `mapsto` | mapping binding |
+| `∅` | `emptyset` | empty set/map |
+| `ℕ` | `nat` | natural numbers |
+| `ℤ` | `int` | integers |
+| `ℝ` | `real` | reals |
+| `𝔹` | `bool` | booleans |
+| `∀` | `forall` | for all |
+| `∃` | `exists` | exists |
+| `¬` | `not` | negation |
+| `∧` | `and` | conjunction |
+| `∨` | `or` | disjunction |
+| `⟹` | `implies` | implication |
+| `⟺` | `iff` | biconditional |
+| `℘` | `powerset` | power set |
+| `·` | `dot` | quantifier separator |
+| `≠` | `neq` | not equal |
+| `≤` | `leq` | less or equal |
+| `≥` | `geq` | greater or equal |
+| `⊤` | `truth` | logical top |
+| `⊥` | `falsehood` | logical bottom |
+| `⊕` | `override` | map override |
+| `⋃` | `bigunion` | generalized union |
+
+`empty` and `top` are ordinary identifiers so they can name operations.
 
 ## Grammar
 
-### Top-level declarations
-
 ```
-file       ::= (import | spec)*
-import     ::= 'import' path
-path       ::= identifier ('/' identifier)*
-spec       ::= 'spec' Name ('[' params ']')? ('extends' Name ('[' args ']')?)? body
-params     ::= identifier (',' identifier)*
-args       ::= type_expr (',' type_expr)*
-```
+file       ::= decl*
+decl       ::= sort_decl | op_decl | var_decl | axiom_decl
 
-### Spec body
+sort_decl  ::= 'sort' identifier (',' identifier)* ';'
+             | 'sort' identifier '=' '{' identifier (',' identifier)* '}' ';'
 
-```
-body       ::= (type_def | state_block | init_block | inv | op | prop | fn)*
-type_def   ::= 'type' Name '=' type_expr
-state_block::= 'state' (identifier ':' type_expr)+
-init_block ::= 'init' (identifier '=' expr)+
-inv        ::= 'inv' predicate
-op         ::= 'op' name '(' params_typed ')' ('→' type_expr)? op_body
-fn         ::= 'fn' name '(' params_typed ')' '→' type_expr '=' expr
-prop       ::= 'prop' predicate
+op_decl    ::= 'op' identifier ':' domain '→' type_expr ';'
+domain     ::=                    # empty domain for nullary operations
+             | type_product
+
+var_decl   ::= 'var' identifier ':' type_expr ';'
+axiom_decl ::= 'axiom' expr ';'
 ```
 
-### Operation body
+## Type Expressions
 
 ```
-op_body    ::= (pre | post | ret)*
-pre        ::= 'pre' predicate
-post       ::= 'post' predicate        # use primed vars for post-state
-ret        ::= 'ret' expr
+type_expr    ::= type_sum
+type_sum     ::= type_arrow ('|' type_arrow)*       # algebraic sum/union type
+type_arrow   ::= type_product ('→' type_arrow)?
+type_product ::= type_primary ('×' type_primary)*
+type_primary ::= identifier | 'ℕ' | 'ℤ' | 'ℝ' | '𝔹'
+               | 'Seq' '[' type_expr ']'
+               | '℘' '(' type_expr ')'
+               | '(' type_expr ')'
+               | '()'
 ```
 
-### Type expressions
+## Terms And Axioms
+
+The parser checks syntax only. It does not type-check variables, arity, or axiom
+validity. `var` declarations are conventionally read as implicitly universally
+quantified over all axioms.
 
 ```
-type_expr  ::= Name                     # named type or type variable
-             | '{' identifier (',' identifier)* '}'   # enumeration set
-             | type_expr '→' type_expr  # function/mapping type
-             | type_expr '×' type_expr  # product (tuple)
-             | 'Seq' '[' type_expr ']'  # ordered sequence
-             | '℘' '(' type_expr ')'   # power set
-             | '{' identifier '∈' type_expr '|' predicate '}'  # comprehension
-             | '{' field_decl (',' field_decl)* '}'  # record
+expr      ::= identifier
+            | literal
+            | expr '(' args ')'
+            | '(' expr ')'
+            | '{' (expr (',' expr)*)? '}'
+            | '{' expr '↦' expr '}'
+            | expr comparison expr
+            | expr set_op expr
+            | expr bool_op expr
+            | '∀' identifier '∈' expr '·' expr
+            | '∃' identifier '∈' expr '·' expr
+            | 'if' expr 'then' expr 'else' expr
+
+comparison ::= '=' | '≠' | '<' | '≤' | '>' | '≥'
+             | '∈' | '∉' | '⊆' | '⊂' | '⊇' | '⊃'
+set_op     ::= '∪' | '∩' | '\' | '⊕'
+bool_op    ::= '∧' | '∨' | '⟹' | '⟺'
 ```
 
-### Field declarations (records)
+## CLI
 
 ```
-field_decl ::= identifier ':' type_expr
+algae.py check file.alg [file2.alg ...]
+algae.py fmt [--ascii --inplace] file.alg [file2.alg ...]
+algae.py print file.alg [file2.alg ...]
 ```
 
-### Expressions and predicates
+- `check` prints `<file>.alg: ok` or `<file>.alg: error at <line>, Expected <foo> found <bar>`.
+- `fmt` prints formatted source, or rewrites files with `--inplace`.
+- `fmt` converts aliases to Unicode by default; `--ascii` emits lowercase keyword aliases.
+- `print` emits the parsed AST as JSON.
+
+## Example
 
 ```
-expr       ::= identifier | literal | expr '(' args ')' | expr '.' identifier
-             | expr '+' expr | expr '-' expr | ...
-             | '{' (expr (',' expr)*)? '}'          # set literal
-             | '[' (expr (',' expr)*)? ']'          # sequence literal
-             | expr '[' expr ']'                     # indexing
-             | '{' identifier '↦' expr '}'          # singleton mapping
-             | '|' expr '|'                          # cardinality
+sort Stack, Elem;
+sort Error = {empty_error};
 
-predicate  ::= expr '∈' expr | expr '∉' expr
-             | expr '⊆' expr | expr '⊂' expr
-             | predicate '∧' predicate
-             | predicate '∨' predicate
-             | '¬' predicate
-             | predicate '⟹' predicate
-             | '∀' identifier '∈' expr '·' predicate
-             | '∃' identifier '∈' expr '·' predicate
-             | expr '=' expr | expr '≠' expr
-             | expr '<' expr | expr '≤' expr
-             | expr '>' expr | expr '≥' expr
-             | 'true' | 'false' | '⊤' | '⊥'
-```
+op empty : -> Stack;
+op push  : Stack × Elem -> Stack;
+op pop   : Stack -> Stack | Error;
+op top   : Stack -> Elem | Error;
 
-## State Convention
+var s : Stack;
+var e : Elem;
 
-- **Unprimed** variables refer to the **pre-state** (before the operation).
-- **Primed** variables (e.g. `items'`) refer to the **post-state** (after the operation).
-- **Implicit frame**: any state variable NOT mentioned in `post` clauses is **unchanged**.
-
-## Built-in Functions
-
-| Function | Signature | Meaning |
-|----------|-----------|---------|
-| `dom(f)` | `(A → B) → ℘(A)` | domain of a mapping |
-| `ran(f)` | `(A → B) → ℘(B)` | range of a mapping |
-| `head(s)` | `Seq[T] → T` | first element |
-| `tail(s)` | `Seq[T] → Seq[T]` | all but first |
-| `last(s)` | `Seq[T] → T` | last element |
-| `init(s)` | `Seq[T] → Seq[T]` | all but last |
-| `len(s)` | `Seq[T] → ℕ` | sequence length |
-| `\|S\|` | `℘(T) → ℕ` | set cardinality |
-| `min(S)` | `℘(ℤ) → ℤ` | minimum element |
-| `max(S)` | `℘(ℤ) → ℤ` | maximum element |
-
-## Sequence Operations
-
-| Syntax | Meaning |
-|--------|---------|
-| `s ++ t` | concatenation |
-| `s[i]` | indexing (0-based) |
-| `s[i..j]` | slicing |
-| `[x] ++ s` | prepend |
-| `s ++ [x]` | append |
-
-## Mapping Operations
-
-| Syntax | Meaning |
-|--------|---------|
-| `f(x)` | application (lookup) |
-| `f ∪ {k ↦ v}` | extend/update mapping |
-| `f \ {k ↦ f(k)}` | remove key |
-| `dom(f)` | set of keys |
-| `ran(f)` | set of values |
-| `f ⊕ g` | override (`g` wins on shared keys) |
-
-## Import Resolution
-
-`import path/to/name` resolves to `path/to/name.alg` relative to the importing file.
-
-- Multiple imports are allowed.
-- Circular imports are forbidden.
-- Imported names are available unqualified. Use `Module.name` if disambiguation is needed.
-
-## Extends
-
-`spec Child extends Parent` inherits all state, invariants, and operations from Parent.
-
-- A spec may extend at most one other spec.
-- Child can add new state, invariants, and operations.
-- Child can override operations by redefining them with the same name.
-- Parent invariants still hold in the child; child can add stricter ones.
-
-## Pure Functions
-
-`fn` defines a pure helper (no state mutation):
-
-```
-fn abs(x : ℤ) → ℤ = if x ≥ 0 then x else -x
-```
-
-Use `fn` for shared logic referenced in `pre`/`post`/`inv` clauses.
-
-## Properties
-
-`prop` states a logical property believed to hold. It is not checked — it documents intent:
-
-```
-prop ∀x ∈ dom(store) · remove(x) ⟹ x ∉ dom(store')
+axiom top(push(s, e)) = e;
+axiom pop(push(s, e)) = s;
+axiom top(empty()) = empty_error;
+axiom pop(empty()) = empty_error;
 ```

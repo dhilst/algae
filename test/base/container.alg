@@ -1,14 +1,11 @@
-# base/container.alg — Abstract container
-spec Container[T]
+sort Container, Elem;
 
-  state
-    elements : ℘(T)
+op empty_container : -> Container;
+op insert : Container × Elem -> Container;
+op contains : Container × Elem -> 𝔹;
 
-  init
-    elements = ∅
+var c : Container;
+var e : Elem;
 
-  op contains(x : T) → 𝔹
-    ret  x ∈ elements
-
-  op empty → 𝔹
-    ret  elements = ∅
+axiom contains(insert(c, e), e) = true;
+axiom contains(empty_container(), e) = false;

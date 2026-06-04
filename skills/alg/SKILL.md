@@ -1,11 +1,11 @@
 ---
 name: alg
-description: "Write, implement, and verify algebraic specifications (.alg files). Use /alg write to author specs from natural language or code, /alg impl to generate conforming implementations, /alg verify to check code against specs."
-argument-hint: <write|impl|verify> [args...]
+description: "Write, implement, verify, and extract algebraic specifications (.alg files). Use /alg write to author specs from natural language or code, /alg impl to generate conforming implementations, /alg verify to check code against specs, /alg extract to reverse-engineer specs from existing code."
+argument-hint: <write|impl|verify|extract> [args...]
 allowed-tools: [Read, Write, Edit, Bash, Glob, Grep]
 ---
 
-# /alg — Algebraic Specification Tool
+# /alg - Algebraic Specification Tool
 
 Parse `$ARGUMENTS` to determine the subcommand.
 
@@ -15,31 +15,30 @@ Parse `$ARGUMENTS` to determine the subcommand.
 
 **Usage:** `/alg write <description or file path>`
 
-Create or update a `.alg` specification.
+Create or update an equational `.alg` specification.
 
 **If given a natural language description:**
-1. Identify the module's responsibility, its key types, and operations.
-2. Model types as sets: enumerations → `{a, b, c}`, records → `{field : Type}`, collections → `Seq[T]` or `℘(T)`, lookups → `K → V`.
-3. Define state variables.
-4. Write invariants that must always hold.
-5. For each operation: determine preconditions (when is this valid?), postconditions (what changes?), and return values.
-6. Add `prop` clauses for key behavioral properties.
-7. Write the `.alg` file next to the code it specifies (e.g. `auth.alg` alongside `auth.py`).
+1. Identify the module's domain concepts, error cases, and public operations.
+2. Declare concepts with `sort`, using enum sorts for named constructors such as errors.
+3. Declare public operations with `op name : Domain -> Codomain;`.
+4. Use `|` in codomains for algebraic alternatives, such as `Value | Error`.
+5. Declare variables with `var`; they are read as implicitly universal over axioms.
+6. Add `axiom` declarations for key equations and behavioral laws.
+7. Write one complete `.alg` file next to the code it specifies.
 
-**If given source code (file path):**
+**If given source code:**
+For thorough extraction from code, prefer `/alg extract`. This shortcut should:
 1. Read the source file.
-2. Extract types, state, and public operations.
-3. Reverse-engineer preconditions from guard clauses, validation, and error handling.
-4. Reverse-engineer postconditions from mutation logic.
-5. Identify invariants from assertions, comments, or structural constraints.
-6. Write the `.alg` file.
+2. Extract domain sorts, error constructors, and public operations.
+3. Infer operation signatures from arguments, return values, and failure cases.
+4. Infer equations from simple tests, examples, reversible operations, or documented laws.
+5. Write the `.alg` file.
 
 **Style rules:**
-- Prefer Unicode symbols (`∈ ∪ ∩ → ∀ ∃ ∧ ∨`) over ASCII fallbacks.
-- Keep specs concise — one screen per spec if possible.
-- Use `#` comments sparingly, only for non-obvious design decisions.
-- If the module depends on other specs, use `import`.
-- If it refines a more abstract spec, use `extends`.
+- Prefer Unicode symbols (`×`, `→`, `∈`, `∧`, `∨`) over ASCII aliases.
+- Use `emptyset` as the ASCII alias for `∅`; `empty` is a normal operation name.
+- Keep specs concise and equational.
+- Do not use `spec`, `state`, `init`, `pre`, `post`, `ret`, `prop`, `import`, or `extends`.
 
 ## Subcommand: `impl`
 
@@ -47,33 +46,26 @@ Create or update a `.alg` specification.
 
 Generate an implementation from a specification.
 
-1. Read the `.alg` file. If it has `import` statements, read those too.
-2. Detect the target language from `--lang`, or infer from the project (look at existing files, package.json, Cargo.toml, etc.).
+1. Read the `.alg` file.
+2. Detect the target language from `--lang`, or infer it from the project.
 3. Generate code:
-   - `type` → type definitions, enums, structs, dataclasses
-   - `state` → class fields or module state
-   - `init` → constructor / initialization
-   - `inv` → validation methods or assertions called after mutations
-   - `op` → methods/functions:
-     - `pre` → guard clause at method entry (raise/return error if violated)
-     - `post` → the implementation body that achieves the postcondition
-     - `ret` → return statement
-   - `fn` → pure helper functions
-   - `prop` → unit test stubs
+   - `sort Name` -> nominal type, class, interface, or type alias.
+   - `sort Error = {a, b}` -> enum or tagged error constructors.
+   - `op name : A × B -> C` -> public function/method signature.
+   - `A | Error` -> result/union/exception-returning behavior appropriate for the language.
+   - `axiom` -> implementation laws and unit-test candidates.
 4. Place generated code alongside the `.alg` file unless the user specifies otherwise.
-5. Add a comment at the top: `# Generated from <name>.alg` (one line only).
+5. Add a one-line generated-from comment.
 
 **Mapping conventions by language:**
 
 | `.alg` construct | Python | Rust | TypeScript |
 |-----------------|--------|------|------------|
-| `type Enum = {a,b}` | `Enum` class | `enum` | `type \| union` |
-| `type Rec = {f:T}` | `@dataclass` | `struct` | `interface` |
-| `K → V` | `dict[K,V]` | `HashMap<K,V>` | `Map<K,V>` |
-| `Seq[T]` | `list[T]` | `Vec<T>` | `T[]` |
-| `℘(T)` | `set[T]` | `HashSet<T>` | `Set<T>` |
-| `pre` | `if not: raise` | `assert!` / `Result` | `if (!): throw` |
-| `inv` | `_check_invariants()` | `fn invariant(&self)` | `private checkInv()` |
+| `sort User` | class/NewType/protocol | struct/trait marker | interface/type |
+| `sort Error = {missing}` | `Enum` | `enum` | string union/enum |
+| `op f : A × B -> C` | function/method | `fn` | function/method |
+| `A | Error` | union/exception/result object | `Result<A, Error>` | union/result object |
+| `axiom f(g(x)) = x` | unit test/property test | test/property | test/property |
 
 ## Subcommand: `verify`
 
@@ -81,36 +73,65 @@ Generate an implementation from a specification.
 
 Check whether implementation code conforms to a specification.
 
-1. Read the `.alg` file and resolve imports.
-2. If source files are given, read them. Otherwise, look for implementation files with the same stem (e.g. `auth.alg` → `auth.py`, `auth.rs`, `auth.ts`, etc.).
-3. For each `op` in the spec, find the corresponding function/method in the code.
+1. Read the `.alg` file.
+2. If source files are given, read them. Otherwise, look for implementation files with the same stem.
+3. For each `op`, find the corresponding public function/method.
 4. Check conformance:
 
 | Spec element | Check |
 |-------------|-------|
-| `type` | Corresponding type/class/struct exists |
-| `state` | Fields/attributes exist with compatible types |
-| `inv` | Invariant is enforced (assertions, validation, or structural guarantee) |
-| `op` exists | Corresponding function/method exists |
-| `pre` | Precondition is checked (guard clause, validation, type constraint) |
-| `post` | Implementation logic achieves the postcondition |
-| `ret` | Return value matches |
-| `prop` | Test exists (or could be written) to verify the property |
+| `sort` | Corresponding type/class/enum/concept exists |
+| `op` | Corresponding callable exists with compatible arity/result behavior |
+| result `| Error` | Error/failure cases are represented |
+| `axiom` | Behavior is implemented or covered by tests |
 
-5. Report findings in a table:
+5. Report findings in a table and summarize PASS/WARN/FAIL/SKIP counts.
+
+## Subcommand: `extract`
+
+**Usage:** `/alg extract <source-files...> [--out <file.alg>]`
+
+Reverse-engineer an `.alg` specification from existing implementation code.
+
+1. Read the source file(s). If multiple files are given, treat them as parts of one module.
+2. Detect the language from file extensions and content.
+3. Identify the public API boundary.
+4. Extract constructs using this inverse mapping:
+
+| Language construct | `.alg` construct |
+|---|---|
+| Domain class/interface/type alias | `sort Name` |
+| Enum, string literal union, named error constants | `sort Error = {a, b, c}` |
+| Public method/function | `op name : Domain -> Codomain` |
+| Multi-argument function | `A × B -> C` |
+| Optional/result/error return | `C | Error` |
+| Tests and documented laws | `axiom ...` |
+
+5. Infer axioms from:
+   - Tests and examples.
+   - Round-trip operations, such as `decode(encode(x)) = x`.
+   - Constructors followed by observers, such as `top(push(s, e)) = e`.
+   - Error behavior, such as `top(empty()) = empty_error`.
+
+6. Write the `.alg` file:
+   - Use `--out` if given, otherwise place it alongside the source.
+   - Prefer Unicode symbols.
+   - Add a one-line extracted-from comment.
+
+7. After writing, show a summary:
 
 ```
-## Verification Report: auth.alg vs auth.py
+## Extraction Summary: stack.py -> stack.alg
 
-| Element | Status | Notes |
-|---------|--------|-------|
-| type UserId | PASS | `UserId = int` |
-| state store | PASS | `self.store: dict[int, ...]` |
-| inv dom(active) ⊆ dom(store) | WARN | No explicit check — relies on login/logout logic |
-| op register pre | PASS | `if uid in self.store: raise` |
-| op register post | PASS | `self.store[uid] = ...` |
-| op login pre | FAIL | Missing password check |
-| prop ... | SKIP | No test found |
+| Construct | Count | Details |
+|-----------|-------|---------|
+| sort      | 3     | Stack, Elem, Error |
+| op        | 4     | empty, push, pop, top |
+| var       | 2     | s, e |
+| axiom     | 4     | top/push, pop/push, empty errors |
 ```
 
-6. Summarize: total PASS/WARN/FAIL/SKIP counts, and list recommended fixes for FAILs.
+**Judgment calls:**
+- When behavior is ambiguous, note it with a short `#` comment.
+- If a source file is large, focus on the public API.
+- Keep the output syntax-only; do not claim model checking or proof.

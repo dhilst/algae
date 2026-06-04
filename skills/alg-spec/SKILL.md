@@ -1,74 +1,54 @@
 ---
 name: alg-spec
-description: "Algebraic specification language (.alg files) for precise code development using set-theoretic notation. Activate when: (1) user mentions specifications, specs, .alg files, or algebraic specs, (2) .alg files exist in the project and user is implementing or reviewing related code, (3) user asks to design, specify, or formalize module behavior. This skill teaches how to read, write, and use .alg specifications."
+description: "Algebraic specification language (.alg files) for precise code development using equational notation. Activate when: (1) user mentions specifications, specs, .alg files, or algebraic specs, (2) .alg files exist in the project and user is implementing or reviewing related code, (3) user asks to design, specify, or formalize module behavior."
 version: 1.0.0
 ---
 
 # Algebraic Specifications (`.alg`)
 
-`.alg` files are lightweight algebraic specifications using set-theoretic notation. They describe *what* code should do — types as sets, operations as functions with pre/post conditions — without model checking. The model interprets them directly.
+`.alg` files are lightweight algebraic specifications. They describe sorts, operation signatures, variables, and axioms without model checking or type checking.
 
 ## Quick Reference
 
-**Structure of a spec:**
-
 ```
-import path/to/dep        # import another .alg file
+sort Stack, Elem;
+sort Error = {empty_error};
 
-spec Name[T] extends Base  # declare spec, optional generics and inheritance
+op empty : -> Stack;
+op push : Stack × Elem -> Stack;
+op pop : Stack -> Stack | Error;
+op top : Stack -> Elem | Error;
 
-  type Alias = ℕ           # type = named set
-  type Status = {a, b, c}  # enumeration set
-  type Map = K → V         # mapping (partial function)
+var s : Stack;
+var e : Elem;
 
-  state                    # mutable state variables
-    items : Seq[T]
-
-  init                     # initial values
-    items = []
-
-  inv |items| ≤ 100        # invariant (always holds)
-
-  op push(x : T)           # operation
-    pre  |items| < 100     #   precondition
-    post items' = items ++ [x]  #   postcondition (primed = post-state)
-
-  op pop → T               # operation with return
-    pre  items ≠ []
-    post items' = init(items)
-    ret  last(items)        #   return value
-
-  fn helper(x : ℤ) → ℕ = if x ≥ 0 then x else -x  # pure function
-
-  prop push(x).then(pop).ret = x  # property (not checked, documents intent)
+axiom top(push(s, e)) = e;
+axiom pop(push(s, e)) = s;
+axiom top(empty()) = empty_error;
+axiom pop(empty()) = empty_error;
 ```
 
 **Key conventions:**
-- `x'` = post-state of `x`; unmentioned state vars are unchanged (implicit frame)
-- `#` comments
-- `∅` = empty set/map, `dom(f)`/`ran(f)` = keys/values of mapping
-- See [references/syntax.md](references/syntax.md) for full symbol table and grammar
-- See [references/examples.md](references/examples.md) for complete example specs
+- `sort` declares carrier sets or enum-like constructor sets.
+- `op` declares operation signatures; an empty domain is written `op empty : -> Stack;`.
+- `|` in result types represents an algebraic sum/union, commonly for error alternatives.
+- `var` declarations are read as implicitly universally quantified over all axioms.
+- `axiom` gives equations or predicates that document intended behavior.
+- Lowercase ASCII aliases such as `product`, `arrow`, `neq`, `in`, and `emptyset` parse as Unicode symbols.
+- See [references/syntax.md](references/syntax.md) for the full grammar.
+- See [references/examples.md](references/examples.md) for example specs.
 
 ## When Working Near `.alg` Files
 
-1. **Before implementing**: scan for `.alg` files that specify the module you're about to implement. Use `find . -name "*.alg"` or `Glob("**/*.alg")`.
-2. **Read the spec**: understand types, state, invariants, and operations.
-3. **Map to code**:
-   - `type` declarations → type definitions, enums, structs, classes
-   - `state` → fields, instance variables, or module-level state
-   - `inv` → assertions, validation logic, or type constraints
-   - `op` with `pre` → input validation, guard clauses
-   - `op` with `post` → the core logic ensuring the postcondition holds
-   - `ret` → return value
-   - `prop` → unit test assertions
-4. **Preserve invariants**: every public method must maintain all `inv` clauses.
-5. **Test from props**: `prop` declarations are test cases. Generate tests that verify them.
+1. Scan for `.alg` files that specify the module you are about to implement.
+2. Read the sorts to identify domain concepts and error constructors.
+3. Map each `op` to the implementation's public functions or methods.
+4. Use `var` and `axiom` declarations as behavioral laws and test ideas.
+5. Preserve the distinction between syntax and semantics: the parser accepts syntax only.
 
-## When Reviewing Code Against a Spec
+## When Reviewing Code Against A Spec
 
-- Check that every `op` in the spec has a corresponding function/method.
-- Check that `pre` conditions are enforced (via validation, exceptions, or type system).
-- Check that `post` conditions are satisfied by the implementation.
-- Check that `inv` clauses hold after every public operation.
-- Flag operations present in code but absent from the spec (undocumented behavior).
+- Check that every operation has a corresponding function or method.
+- Check that return/error behavior matches the declared codomain.
+- Check that axioms are reflected in implementation logic or tests.
+- Flag public behavior that has no corresponding operation or axiom.

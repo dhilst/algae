@@ -1,0 +1,3 @@
+state {
+  value: ℕ;
+}

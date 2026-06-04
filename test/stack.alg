@@ -1,31 +1,15 @@
-# stack.alg — LIFO container
-import base/container
+sort Stack, Elem;
+sort Error = {empty_error};
 
-spec Stack[T] extends Container[T]
+op empty : -> Stack;
+op push : Stack × Elem -> Stack;
+op pop : Stack -> Stack | Error;
+op top : Stack -> Elem | Error;
 
-  state
-    items : Seq[T]
+var s : Stack;
+var e : Elem;
 
-  init
-    items = []
-
-  inv len(items) ∈ ℕ
-
-  op push(x : T)
-    post items' = items ++ [x]
-    post elements' = elements ∪ {x}
-
-  op pop → T
-    pre  items ≠ []
-    post items' = init(items)
-    ret  last(items)
-
-  op peek → T
-    pre  items ≠ []
-    ret  last(items)
-
-  op size → ℕ
-    ret  len(items)
-
-  prop push(x).then(pop).ret = x
-  prop push(x).then(size).ret = size.ret + 1
+axiom top(push(s, e)) = e;
+axiom pop(push(s, e)) = s;
+axiom top(empty()) = empty_error;
+axiom pop(empty()) = empty_error;
