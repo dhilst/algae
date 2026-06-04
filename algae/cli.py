@@ -105,10 +105,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return check(args.files)
     if args.command == "fmt":
         return fmt(args.files, ascii=args.ascii, inplace=args.inplace)
-    if args.command == "print":
-        return print_ast(args.files)
-    parser.error("unknown command")
-    return 2
+    return print_ast(args.files)
 
 
 if __name__ == "__main__":
