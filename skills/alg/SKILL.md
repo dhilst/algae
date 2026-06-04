@@ -35,8 +35,8 @@ For thorough extraction from code, prefer `/alg extract`. This shortcut should:
 5. Write the `.alg` file.
 
 **Style rules:**
-- Prefer Unicode symbols (`×`, `→`, `∈`, `∧`, `∨`) over ASCII aliases.
-- Use `emptyset` as the ASCII alias for `∅`; `empty` is a normal operation name.
+- Prefer Unicode symbols (`×`, `→`, `∧`, `∨`) over ASCII aliases.
+- Specs are equational: no set-theory notation (`∈`, `∪`, `∅`, quantifiers, set literals).
 - Keep specs concise and equational.
 - Do not use `spec`, `state`, `init`, `pre`, `post`, `ret`, `prop`, `import`, or `extends`.
 

@@ -34,7 +34,7 @@ axiom pop(empty()) = empty_error;
 - `|` in result types represents an algebraic sum/union, commonly for error alternatives.
 - `var` declarations are read as implicitly universally quantified over all axioms.
 - `axiom` gives equations or predicates that document intended behavior.
-- Lowercase ASCII aliases such as `product`, `arrow`, `neq`, `in`, and `emptyset` parse as Unicode symbols.
+- Lowercase ASCII aliases such as `product`, `arrow`, `neq`, and `implies` parse as Unicode symbols.
 - See [references/syntax.md](references/syntax.md) for the full grammar.
 - See [references/examples.md](references/examples.md) for example specs.
 

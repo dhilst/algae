@@ -54,7 +54,7 @@ claude plugin add /path/to/algae
 - **Declarations**: `sort`, `op`, `var`, `axiom`
 - **Operation signatures**: `op push : Stack × Elem -> Stack;`
 - **Sum/error result types**: `Stack | Error`
-- **Lowercase ASCII keyword aliases** available for Unicode symbols, such as `product`, `arrow`, `neq`, and `emptyset`
+- **Lowercase ASCII keyword aliases** available for Unicode symbols, such as `product`, `arrow`, `neq`, and `implies`
 - **Single-file specs**: no `spec`, `import`, or `extends`
 
 See [skills/alg-spec/references/syntax.md](skills/alg-spec/references/syntax.md) for the full language reference.

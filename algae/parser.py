@@ -25,47 +25,29 @@ class ParseFailure(Exception):
         super().__init__(expected)
 
 
-KEYWORDS = {"sort", "op", "var", "axiom", "true", "false", "if", "then", "else", "let"}
+KEYWORDS = {"sort", "op", "var", "axiom", "true", "false", "if", "then", "else", "let", "in"}
 
 WORD_SYMBOLS = {
-    "in": "∈",
-    "notin": "∉",
-    "subseteq": "⊆",
-    "subset": "⊂",
-    "superseteq": "⊇",
-    "superset": "⊃",
-    "union": "∪",
-    "intersect": "∩",
-    "setminus": "\\",
     "product": "×",
     "arrow": "→",
-    "mapsto": "↦",
-    "emptyset": "∅",
     "nat": "ℕ",
     "int": "ℤ",
     "real": "ℝ",
     "bool": "𝔹",
-    "forall": "∀",
-    "exists": "∃",
     "not": "¬",
     "and": "∧",
     "or": "∨",
     "implies": "⟹",
     "iff": "⟺",
-    "powerset": "℘",
-    "dot": "·",
     "neq": "≠",
     "leq": "≤",
     "geq": "≥",
     "truth": "⊤",
     "falsehood": "⊥",
-    "override": "⊕",
-    "bigunion": "⋃",
 }
 
 ASCII_SYMBOLS = {
     "->": "→",
-    "|->": "↦",
     "==>": "⟹",
     "<==>": "⟺",
     "!=": "≠",
@@ -79,8 +61,8 @@ ASCII_SYMBOLS = {
 
 UNICODE_SYMBOLS = set(WORD_SYMBOLS.values())
 ASCII_SYMBOLS_BY_LENGTH = sorted(ASCII_SYMBOLS.items(), key=lambda item: len(item[0]), reverse=True)
-SINGLE_SYMBOLS = set("{}[](),;:=.+-*/<>|\\'")
-COMPARISONS = {"=", "≠", "<", "≤", ">", "≥", "∈", "∉", "⊆", "⊂", "⊇", "⊃"}
+SINGLE_SYMBOLS = set("{}[](),;:=.+-*/<>|'")
+COMPARISONS = {"=", "≠", "<", "≤", ">", "≥"}
 TYPE_BUILTINS = {"ℕ", "ℤ", "ℝ", "𝔹"}
 PRECEDENCE = {
     "⟺": 1,
@@ -88,7 +70,6 @@ PRECEDENCE = {
     "∨": 3,
     "∧": 4,
     **{op: 5 for op in COMPARISONS},
-    **{op: 6 for op in ("∪", "∩", "\\", "⊕")},
     **{op: 7 for op in ("+", "-", "++")},
     **{op: 8 for op in ("*", "/", "×")},
 }
@@ -353,11 +334,6 @@ class AlgParser:
 
     def parse_type_primary(self) -> Any:
         token = self.current
-        if self.match("℘"):
-            self.consume("(")
-            inner = self.parse_type_expr()
-            self.consume(")")
-            return node("type_powerset", item=inner)
         if token.kind == "IDENT":
             name = self.consume_ident()
             if name == "Seq" and self.match("["):
@@ -395,18 +371,9 @@ class AlgParser:
 
     def parse_prefix(self) -> Any:
         token = self.current
-        if token.value in {"¬", "-", "⋃"}:
+        if token.value in {"¬", "-"}:
             self.advance()
             return node("unary", op=token.value, value=self.parse_binary(9))
-        if token.value in {"∀", "∃"}:
-            self.advance()
-            var = self.consume_ident("quantifier variable")
-            self.consume("∈")
-            source = self.parse_expr()
-            if not (self.match("·") or self.match(":")):
-                self.fail("quantifier separator")
-            body = self.parse_expr()
-            return node("quantifier", op=token.value, var=var, source=source, body=body)
         if token.kind == "KEYWORD" and token.value == "if":
             self.advance()
             condition = self.parse_expr()
@@ -419,10 +386,8 @@ class AlgParser:
             self.advance()
             name = self.consume_ident("let variable")
             self.consume("=")
-            # Parse the bound value above comparison precedence so the `in`
-            # separator (lexed as ∈) is not consumed as set membership.
-            value = self.parse_binary(6)
-            self.consume("∈", "in")
+            value = self.parse_expr()
+            self.consume_keyword("in")
             body = self.parse_expr()
             return node("let", name=name, value=value, body=body)
         return self.parse_postfix(self.parse_atom())
@@ -444,9 +409,6 @@ class AlgParser:
         if token.value in {"⊤", "⊥"}:
             self.advance()
             return node("bool_symbol", value=token.value)
-        if token.value == "∅":
-            self.advance()
-            return node("empty")
         if token.value in TYPE_BUILTINS:
             self.advance()
             return node("builtin_set", name=token.value)
@@ -463,8 +425,6 @@ class AlgParser:
                     self.consume(",")
             self.consume(")")
             return first
-        if self.match("{"):
-            return self.parse_braced_expr()
         self.fail("expression")
 
     def parse_postfix(self, expr: Any) -> Any:
@@ -486,20 +446,6 @@ class AlgParser:
             if self.match(closer):
                 return items
             self.consume(",")
-
-    def parse_braced_expr(self) -> Any:
-        if self.match("}"):
-            return node("set", items=[])
-        first = self.parse_expr()
-        if self.match("↦"):
-            value = self.parse_expr()
-            self.consume("}")
-            return node("mapping", key=first, value=value)
-        items = [first]
-        while self.match(","):
-            items.append(self.parse_expr())
-        self.consume("}")
-        return node("set", items=items)
 
 
 def parse_text(text: str) -> Module:

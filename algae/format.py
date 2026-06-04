@@ -56,8 +56,6 @@ class Formatter:
             return "()"
         if value.kind == "type_sequence":
             return f"Seq[{self.type_expr(data['item'])}]"
-        if value.kind == "type_powerset":
-            return f"{self.sym('℘')}({self.type_expr(data['item'])})"
         if value.kind == "type_function":
             return f"{self.type_expr(data['left'])} {self.sym('→')} {self.type_expr(data['right'])}"
         if value.kind == "type_product":
@@ -80,18 +78,12 @@ class Formatter:
             return "true" if data["value"] else "false"
         if value.kind == "bool_symbol":
             return self.sym(data["value"])
-        if value.kind == "empty":
-            return self.sym("∅")
         if value.kind == "builtin_set":
             return self.sym(data["name"])
         if value.kind == "unit":
             return "()"
         if value.kind == "tuple":
             return "(" + ", ".join(self.expr(item) for item in data["items"]) + ")"
-        if value.kind == "set":
-            return "{" + ", ".join(self.expr(item) for item in data["items"]) + "}"
-        if value.kind == "mapping":
-            return "{" + f"{self.expr(data['key'])} {self.sym('↦')} {self.expr(data['value'])}" + "}"
         if value.kind == "prime":
             return self.expr(data["value"]) + "'"
         if value.kind == "call":
@@ -100,11 +92,6 @@ class Formatter:
             return self.sym(data["op"]) + " " + self.expr(data["value"])
         if value.kind == "binary":
             return f"{self.expr(data['left'])} {self.sym(data['op'])} {self.expr(data['right'])}"
-        if value.kind == "quantifier":
-            return (
-                f"{self.sym(data['op'])} {data['var']} {self.sym('∈')} "
-                f"{self.expr(data['source'])} {self.sym('·')} {self.expr(data['body'])}"
-            )
         if value.kind == "if":
             return (
                 f"if {self.expr(data['condition'])} then {self.expr(data['then'])} "

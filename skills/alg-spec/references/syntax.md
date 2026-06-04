@@ -12,7 +12,7 @@
 ## Keywords
 
 ```
-sort  op  var  axiom  true  false  if  then  else  let
+sort  op  var  axiom  true  false  if  then  else  let  in
 ```
 
 The previous state-machine syntax is not part of this grammar. Its keywords
@@ -27,39 +27,27 @@ The formatter emits Unicode by default and emits aliases with `fmt --ascii`.
 
 | Symbol | Keyword | Meaning |
 |--------|---------|---------|
-| `∈` | `in` | element of |
-| `∉` | `notin` | not element of |
-| `⊆` | `subseteq` | subset or equal |
-| `⊂` | `subset` | proper subset |
-| `⊇` | `superseteq` | superset or equal |
-| `⊃` | `superset` | proper superset |
-| `∪` | `union` | union |
-| `∩` | `intersect` | intersection |
-| `\` | `setminus` | set difference |
 | `×` | `product` | product |
 | `→` | `arrow` | operation/function arrow |
-| `↦` | `mapsto` | mapping binding |
-| `∅` | `emptyset` | empty set/map |
 | `ℕ` | `nat` | natural numbers |
 | `ℤ` | `int` | integers |
 | `ℝ` | `real` | reals |
 | `𝔹` | `bool` | booleans |
-| `∀` | `forall` | for all |
-| `∃` | `exists` | exists |
 | `¬` | `not` | negation |
 | `∧` | `and` | conjunction |
 | `∨` | `or` | disjunction |
 | `⟹` | `implies` | implication |
 | `⟺` | `iff` | biconditional |
-| `℘` | `powerset` | power set |
-| `·` | `dot` | quantifier separator |
 | `≠` | `neq` | not equal |
 | `≤` | `leq` | less or equal |
 | `≥` | `geq` | greater or equal |
 | `⊤` | `truth` | logical top |
 | `⊥` | `falsehood` | logical bottom |
-| `⊕` | `override` | map override |
-| `⋃` | `bigunion` | generalized union |
+
+Set-theory notation (`∈`, `⊆`, `∪`, `∩`, `∅`, `℘`, `∀`/`∃` quantifiers, set and
+mapping literals) is not part of the grammar. Specifications are equational:
+behavior is captured by axioms over constructor terms, with `var` declarations
+read as implicitly universally quantified.
 
 `empty` and `top` are ordinary identifiers so they can name operations.
 
@@ -89,7 +77,6 @@ type_arrow   ::= type_product ('→' type_arrow)?
 type_product ::= type_primary ('×' type_primary)*
 type_primary ::= identifier | 'ℕ' | 'ℤ' | 'ℝ' | '𝔹'
                | 'Seq' '[' type_expr ']'
-               | '℘' '(' type_expr ')'
                | '(' type_expr ')'
                | '()'
 ```
@@ -105,26 +92,17 @@ expr      ::= identifier
             | literal
             | expr '(' args ')'
             | '(' expr ')'
-            | '{' (expr (',' expr)*)? '}'
-            | '{' expr '↦' expr '}'
             | expr comparison expr
-            | expr set_op expr
             | expr bool_op expr
-            | '∀' identifier '∈' expr '·' expr
-            | '∃' identifier '∈' expr '·' expr
             | 'if' expr 'then' expr 'else' expr
-            | 'let' identifier '=' binding 'in' expr
+            | 'let' identifier '=' expr 'in' expr
 
 comparison ::= '=' | '≠' | '<' | '≤' | '>' | '≥'
-             | '∈' | '∉' | '⊆' | '⊂' | '⊇' | '⊃'
-set_op     ::= '∪' | '∩' | '\' | '⊕'
 bool_op    ::= '∧' | '∨' | '⟹' | '⟺'
 ```
 
-`let` names an intermediate term so deeply nested axioms stay readable. The
-bound value (`binding`) binds tighter than comparisons — wrap comparisons,
-`if`, or quantifiers in parentheses when binding them. Lets nest, so a chain of
-bindings reads top to bottom:
+`let` names an intermediate term so deeply nested axioms stay readable. Lets
+nest, so a chain of bindings reads top to bottom:
 
 ```
 axiom let with_user = add_user(rbac, u) in

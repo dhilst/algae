@@ -59,7 +59,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "op pop : Stack arrow Stack | Error;",
                 "var s : Stack;",
                 "var e : Elem;",
-                "axiom pop(push(s, e)) neq emptyset;",
+                "axiom pop(push(s, e)) neq s;",
                 "",
             ]
         )
@@ -71,7 +71,7 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("op empty : → Stack;", result.stdout)
         self.assertIn("Stack × Elem → Stack", result.stdout)
-        self.assertIn("pop(push(s, e)) ≠ ∅", result.stdout)
+        self.assertIn("pop(push(s, e)) ≠ s", result.stdout)
 
     def test_fmt_ascii_outputs_keyword_aliases(self) -> None:
         result = self.run_cli("fmt", "--ascii", "test/stack.alg")

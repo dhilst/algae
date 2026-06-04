@@ -55,5 +55,5 @@ var s : Store;
 var k : Key;
 var v : Value;
 
-axiom get(put(s, k, v), k) neq emptyset;
+axiom get(put(s, k, v), k) = v;
 ```
