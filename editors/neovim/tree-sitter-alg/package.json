@@ -1,0 +1,13 @@
+{
+  "name": "tree-sitter-alg",
+  "version": "0.1.0",
+  "description": "Tree-sitter grammar for the .alg algebraic specification language",
+  "main": "bindings/node",
+  "license": "MIT",
+  "tree-sitter": [
+    {
+      "scope": "source.alg",
+      "file-types": ["alg"]
+    }
+  ]
+}

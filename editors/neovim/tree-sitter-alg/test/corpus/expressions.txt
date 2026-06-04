@@ -1,0 +1,147 @@
+==================
+operator precedence
+==================
+
+axiom a implies b implies c;
+axiom a or b and c = d + e * f;
+
+---
+
+(source_file
+  (axiom_declaration
+    (binary_expression
+      (identifier)
+      (binary_expression
+        (identifier)
+        (identifier))))
+  (axiom_declaration
+    (binary_expression
+      (identifier)
+      (binary_expression
+        (identifier)
+        (binary_expression
+          (identifier)
+          (binary_expression
+            (identifier)
+            (binary_expression
+              (identifier)
+              (identifier))))))))
+
+==================
+unicode and ascii aliases agree
+==================
+
+axiom ¬(a = b) ∧ ⊤ ∨ ⊥ ⟹ true ⟺ a ≠ b;
+axiom not (a = b) and truth or falsehood implies true iff a neq b;
+
+---
+
+(source_file
+  (axiom_declaration
+    (binary_expression
+      (binary_expression
+        (binary_expression
+          (binary_expression
+            (unary_expression
+              (parenthesized_expression
+                (binary_expression
+                  (identifier)
+                  (identifier))))
+            (boolean))
+          (boolean))
+        (boolean))
+      (binary_expression
+        (identifier)
+        (identifier))))
+  (axiom_declaration
+    (binary_expression
+      (binary_expression
+        (binary_expression
+          (binary_expression
+            (unary_expression
+              (parenthesized_expression
+                (binary_expression
+                  (identifier)
+                  (identifier))))
+            (boolean))
+          (boolean))
+        (boolean))
+      (binary_expression
+        (identifier)
+        (identifier)))))
+
+==================
+if then else
+==================
+
+axiom if size(s) > 0 then top(s) else empty_error = e;
+
+---
+
+(source_file
+  (axiom_declaration
+    (if_expression
+      (binary_expression
+        (call_expression
+          (identifier)
+          (arguments
+            (identifier)))
+        (number))
+      (call_expression
+        (identifier)
+        (arguments
+          (identifier)))
+      (binary_expression
+        (identifier)
+        (identifier)))))
+
+==================
+let in chains
+==================
+
+axiom let t = push(s, e) in let u = pop(t) in u = s;
+
+---
+
+(source_file
+  (axiom_declaration
+    (let_expression
+      (identifier)
+      (call_expression
+        (identifier)
+        (arguments
+          (identifier)
+          (identifier)))
+      (let_expression
+        (identifier)
+        (call_expression
+          (identifier)
+          (arguments
+            (identifier)))
+        (binary_expression
+          (identifier)
+          (identifier))))))
+
+==================
+calls, primes, tuples, unit
+==================
+
+axiom s' = f((a, b, c), (), "lit", 42);
+
+---
+
+(source_file
+  (axiom_declaration
+    (binary_expression
+      (prime_expression
+        (identifier))
+      (call_expression
+        (identifier)
+        (arguments
+          (tuple
+            (identifier)
+            (identifier)
+            (identifier))
+          (unit)
+          (string)
+          (number))))))

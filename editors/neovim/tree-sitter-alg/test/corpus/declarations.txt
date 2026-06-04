@@ -1,0 +1,127 @@
+==================
+sort declarations
+==================
+
+sort Stack, Elem;
+sort Error = {empty_error, overflow};
+sort Empty = {};
+
+---
+
+(source_file
+  (sort_declaration
+    (sort_identifier)
+    (sort_identifier))
+  (sort_declaration
+    (sort_identifier)
+    (enum_values
+      (enum_value)
+      (enum_value)))
+  (sort_declaration
+    (sort_identifier)
+    (enum_values)))
+
+==================
+op declarations
+==================
+
+op empty : -> Stack;
+op push  : Stack × Elem → Stack;
+op pop   : Stack -> Stack | Error;
+op curry : Stack -> Elem -> 𝔹;
+op unitop : → ();
+op seqop : Seq[Stack × Elem] → Seq[nat];
+op parens : (Stack -> Elem) product int -> real;
+
+---
+
+(source_file
+  (op_declaration
+    (identifier)
+    (type_identifier))
+  (op_declaration
+    (identifier)
+    (domain
+      (type_identifier)
+      (type_identifier))
+    (type_identifier))
+  (op_declaration
+    (identifier)
+    (domain
+      (type_identifier))
+    (sum_type
+      (type_identifier)
+      (type_identifier)))
+  (op_declaration
+    (identifier)
+    (domain
+      (type_identifier))
+    (function_type
+      (type_identifier)
+      (builtin_type)))
+  (op_declaration
+    (identifier)
+    (unit_type))
+  (op_declaration
+    (identifier)
+    (domain
+      (sequence_type
+        (type_identifier)
+        (product_type
+          (type_identifier)
+          (type_identifier))))
+    (sequence_type
+      (type_identifier)
+      (builtin_type)))
+  (op_declaration
+    (identifier)
+    (domain
+      (parenthesized_type
+        (function_type
+          (type_identifier)
+          (type_identifier)))
+      (builtin_type))
+    (builtin_type)))
+
+==================
+var declarations
+==================
+
+var s : Stack;
+var f : Stack → Elem;
+
+---
+
+(source_file
+  (var_declaration
+    (identifier)
+    (type_identifier))
+  (var_declaration
+    (identifier)
+    (function_type
+      (type_identifier)
+      (type_identifier))))
+
+==================
+axioms with comments
+==================
+
+# leading comment
+axiom top(push(s, e)) = e; # trailing comment
+
+---
+
+(source_file
+  (comment)
+  (axiom_declaration
+    (binary_expression
+      (call_expression
+        (identifier)
+        (arguments
+          (call_expression
+            (identifier)
+            (arguments
+              (identifier)
+              (identifier)))))
+      (identifier)))
+  (comment))
