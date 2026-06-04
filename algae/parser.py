@@ -25,10 +25,7 @@ class ParseFailure(Exception):
         super().__init__(expected)
 
 
-# Keywords from the old, richer grammar — still lexed as keywords so the
-# parser can reject them with a helpful error instead of treating them as identifiers.
-OLD_KEYWORDS = {"spec", "state", "init", "inv", "pre", "post", "ret", "prop", "fn", "import", "extends", "type"}
-KEYWORDS = {"sort", "op", "var", "axiom", "true", "false", "if", "then", "else"} | OLD_KEYWORDS
+KEYWORDS = {"sort", "op", "var", "axiom", "true", "false", "if", "then", "else"}
 
 WORD_SYMBOLS = {
     "in": "∈",
@@ -276,8 +273,6 @@ class AlgParser:
             return self.parse_var()
         if token.value == "axiom":
             return self.parse_axiom()
-        if token.value in OLD_KEYWORDS:
-            self.fail("sort, op, var, or axiom")
         self.fail("declaration")
 
     def parse_sort(self) -> SortDecl:
