@@ -4,7 +4,9 @@
 
 - Extension: `.alg`
 - Encoding: UTF-8
-- Comments: `#` to end of line
+- Comments: `#` to end of line, as in bash. `fmt` preserves them: standalone
+  comment lines stay above the next declaration, and a trailing comment stays
+  on its declaration's line.
 - Whitespace is insignificant.
 - A file contains top-level algebraic declarations; there is no `spec` wrapper.
 - Declarations end with `;`.

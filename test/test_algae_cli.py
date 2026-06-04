@@ -102,6 +102,28 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(fmt_result.returncode, 0, fmt_result.stderr)
         self.assertIn("axiom let y = f(x) in let z = f(y) in f(z) = x;", fmt_result.stdout)
 
+    def test_fmt_preserves_comments(self) -> None:
+        source = "\n".join(
+            [
+                "# A simple stack.",
+                "sort Stack;",
+                "op empty : arrow Stack;  # constructor",
+                "var s : Stack;",
+                "axiom empty() = s;",
+                "# end of spec",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "commented.alg"
+            path.write_text(source, encoding="utf-8")
+            result = self.run_cli("fmt", str(path))
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("# A simple stack.\nsort Stack;", result.stdout)
+        self.assertIn("op empty : → Stack;  # constructor", result.stdout)
+        self.assertIn("# end of spec", result.stdout)
+
     def test_fmt_inplace_rewrites_file(self) -> None:
         source = "sort Stack,Elem;op empty:arrow Stack;var s:Stack;axiom empty()=s;\n"
         with tempfile.TemporaryDirectory() as directory:

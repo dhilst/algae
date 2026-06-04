@@ -1,5 +1,6 @@
+# A LIFO stack with error-reporting pop and top.
 sort Stack, Elem;
-sort Error = {empty_error};
+sort Error = {empty_error};  # popping or reading an empty stack
 
 op empty : -> Stack;
 op push : Stack × Elem -> Stack;

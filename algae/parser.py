@@ -114,7 +114,9 @@ def lex(text: str) -> tuple[Token, ...]:
             start = index
             while index < len(text) and text[index] != "\n":
                 index += 1
-            advance(text[start:index])
+            raw = text[start:index]
+            emit("COMMENT", raw[1:].strip(), raw, line, column)
+            advance(raw)
             continue
         start_line, start_col = line, column
         matched = None
@@ -191,8 +193,11 @@ def lex(text: str) -> tuple[Token, ...]:
 
 class AlgParser:
     def __init__(self, text: str) -> None:
-        self.tokens = lex(text)
+        tokens = lex(text)
+        self.comments = [token for token in tokens if token.kind == "COMMENT"]
+        self.tokens = tuple(token for token in tokens if token.kind != "COMMENT")
         self.pos = 0
+        self.comment_pos = 0
 
     @property
     def current(self) -> Token:
@@ -231,12 +236,29 @@ class AlgParser:
             return True
         return False
 
+    def take_comments_before(self, line: int) -> list[str]:
+        taken: list[str] = []
+        while self.comment_pos < len(self.comments) and self.comments[self.comment_pos].line < line:
+            taken.append(self.comments[self.comment_pos].value)
+            self.comment_pos += 1
+        return taken
+
     def parse(self) -> Module:
         try:
             declarations: list[Any] = []
             while self.current.kind != "EOF":
-                declarations.append(self.parse_decl())
-            return Module(declarations)
+                leading = self.take_comments_before(self.current.line)
+                decl = self.parse_decl()
+                end_line = self.tokens[self.pos - 1].line
+                # Comments inside a multi-line declaration are hoisted above it.
+                leading.extend(self.take_comments_before(end_line))
+                decl.leading_comments = leading
+                if self.comment_pos < len(self.comments) and self.comments[self.comment_pos].line == end_line:
+                    decl.trailing_comment = self.comments[self.comment_pos].value
+                    self.comment_pos += 1
+                declarations.append(decl)
+            trailing = [token.value for token in self.comments[self.comment_pos :]]
+            return Module(declarations, trailing_comments=trailing)
         except ParseFailure as exc:
             token = exc.token
             found = "end of file" if token.kind == "EOF" else token.text

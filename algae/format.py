@@ -24,8 +24,13 @@ class Formatter:
             group = decl.__class__.__name__
             if lines and group != previous_group:
                 lines.append("")
-            lines.append(self.format_decl(decl))
+            lines.extend(f"# {comment}".rstrip() for comment in decl.leading_comments)
+            text = self.format_decl(decl)
+            if decl.trailing_comment:
+                text += f"  # {decl.trailing_comment}"
+            lines.append(text)
             previous_group = group
+        lines.extend(f"# {comment}".rstrip() for comment in module.trailing_comments)
         return "\n".join(lines) + ("\n" if lines else "")
 
     def format_decl(self, decl: Any) -> str:

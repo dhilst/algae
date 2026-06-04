@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass
 from typing import Any
 
 
 @dataclass(slots=True)
 class Module:
     declarations: list[Any]
+    trailing_comments: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
 class SortDecl:
     names: list[str]
     values: list[str] | None = None
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
 
 
 @dataclass(slots=True)
@@ -22,17 +25,23 @@ class OpDecl:
     name: str
     domain: list[Any]
     codomain: Any
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
 
 
 @dataclass(slots=True)
 class VarDecl:
     name: str
     sort: Any
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
 
 
 @dataclass(slots=True)
 class AxiomDecl:
     expr: Any
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
 
 
 @dataclass(slots=True)
