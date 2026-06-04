@@ -36,6 +36,7 @@ axiom pop(empty()) = empty_error;
 - `var` declarations are read as implicitly universally quantified over all axioms.
 - `axiom` gives equations or predicates that document intended behavior.
 - `let name = expr;` at top level names a term shared by later axioms; `let ... in` scopes a binding inside one axiom.
+- Application sugar: `x.f(a)` reads as `f(x, a)` (pipe-first) and `x ▷ f(a)` (alias `|>`) as `f(a, x)` (pipe-last). Prefer `.` when the spec targets object-oriented code and `▷` when it targets functional code.
 - Lowercase ASCII aliases such as `product`, `arrow`, `neq`, and `implies` parse as Unicode symbols, but prefer the Unicode symbols (`×`, `→`, `∧`, `∨`) when writing specs.
 - See [references/syntax.md](references/syntax.md) for the full grammar.
 - See [references/examples.md](references/examples.md) for example specs.

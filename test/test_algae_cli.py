@@ -78,7 +78,7 @@ class AlgaeCliTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Stack product Elem arrow Stack", result.stdout)
-        self.assertIn("Stack arrow Elem | Error", result.stdout)
+        self.assertIn("Stack arrow Stack product Elem | Error", result.stdout)
         self.assertNotIn("→", result.stdout)
         self.assertNotIn("×", result.stdout)
 
@@ -131,6 +131,41 @@ class AlgaeCliTests(unittest.TestCase):
         payload = json.loads(print_result.stdout)
         self.assertEqual(payload["ast"]["declarations"][3]["kind"], "LetDecl")
         self.assertEqual(payload["ast"]["declarations"][3]["name"], "y")
+
+    def test_application_sugar_parses_and_formats(self) -> None:
+        source = "\n".join(
+            [
+                "sort S;",
+                "op f : S × S -> S;",
+                "var x : S;",
+                "axiom x.f(x).f(x) = f(f(x, x), x);",
+                "axiom x |> f(x) = f(x, x);",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sugar.alg"
+            path.write_text(source, encoding="utf-8")
+            check_result = self.run_cli("check", str(path))
+            fmt_result = self.run_cli("fmt", "--no-valign", str(path))
+            ascii_result = self.run_cli("fmt", "--no-valign", "--ascii", str(path))
+
+        self.assertEqual(check_result.returncode, 0, check_result.stderr)
+        self.assertIn("axiom x.f(x).f(x) = f(f(x, x), x);", fmt_result.stdout)
+        self.assertIn("axiom x ▷ f(x) = f(x, x);", fmt_result.stdout)
+        self.assertIn("axiom x |> f(x) = f(x, x);", ascii_result.stdout)
+
+    def test_fmt_aligns_colons_unless_disabled(self) -> None:
+        result = self.run_cli("fmt", "test/stack.alg")
+        plain = self.run_cli("fmt", "--no-valign", "test/stack.alg")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("op empty : → Stack;", result.stdout)
+        self.assertIn("op push  : Stack × Elem → Stack;", result.stdout)
+        self.assertIn("op pop   : Stack → Stack × Elem | Error;", result.stdout)
+        self.assertIn("axiom empty().pop   = empty_error;", result.stdout)
+        self.assertIn("op push : Stack × Elem → Stack;", plain.stdout)
+        self.assertIn("axiom empty().pop = empty_error;", plain.stdout)
 
     def test_fmt_preserves_comments(self) -> None:
         source = "\n".join(

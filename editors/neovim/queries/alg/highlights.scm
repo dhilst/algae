@@ -87,6 +87,9 @@
   "++"
   "|"
   "'"
+  "▷"
+  "|>"
+  "."
 ] @operator
 
 ; Word aliases for operators

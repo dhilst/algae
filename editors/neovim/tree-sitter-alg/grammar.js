@@ -11,10 +11,12 @@ const PREC = {
   or: 3,
   and: 4,
   compare: 5,
+  pipe: 6,
   additive: 7,
   multiplicative: 8,
   unary: 9,
-  postfix: 10,
+  method: 10,
+  postfix: 11,
 };
 
 const TYPE_PREC = {
@@ -181,8 +183,10 @@ module.exports = grammar({
         ['left', PREC.or, choice('∨', '||', 'or')],
         ['left', PREC.and, choice('∧', '&&', 'and')],
         ['left', PREC.compare, choice('=', '≠', '!=', 'neq', '<', '≤', '<=', 'leq', '>', '≥', '>=', 'geq')],
+        ['left', PREC.pipe, choice('▷', '|>')],
         ['left', PREC.additive, choice('+', '-', '++')],
         ['left', PREC.multiplicative, choice('*', '/', '×', 'product')],
+        ['left', PREC.method, '.'],
       ];
       return choice(...table.map(([assoc, precedence, operator]) =>
         (assoc === 'left' ? prec.left : prec.right)(precedence, seq(

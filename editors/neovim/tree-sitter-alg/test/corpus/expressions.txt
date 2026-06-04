@@ -123,6 +123,57 @@ axiom let t = push(s, e) in let u = pop(t) in u = s;
           (identifier))))))
 
 ==================
+application sugar: pipe-first dot and pipe-last triangle
+==================
+
+axiom s.push(e).pop = (s, e);
+axiom s |> push(e) |> pop = (e, s);
+axiom a + 1 ▷ f = f(a + 1);
+
+---
+
+(source_file
+  (axiom_declaration
+    (binary_expression
+      (binary_expression
+        (binary_expression
+          (identifier)
+          (call_expression
+            (identifier)
+            (arguments
+              (identifier))))
+        (identifier))
+      (tuple
+        (identifier)
+        (identifier))))
+  (axiom_declaration
+    (binary_expression
+      (binary_expression
+        (binary_expression
+          (identifier)
+          (call_expression
+            (identifier)
+            (arguments
+              (identifier))))
+        (identifier))
+      (tuple
+        (identifier)
+        (identifier))))
+  (axiom_declaration
+    (binary_expression
+      (binary_expression
+        (binary_expression
+          (identifier)
+          (number))
+        (identifier))
+      (call_expression
+        (identifier)
+        (arguments
+          (binary_expression
+            (identifier)
+            (number)))))))
+
+==================
 calls, primes, tuples, unit
 ==================
 

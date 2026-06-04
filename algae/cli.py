@@ -30,12 +30,12 @@ def check(paths: list[Path]) -> int:
     return 1 if failed else 0
 
 
-def fmt(paths: list[Path], *, ascii: bool, inplace: bool) -> int:
+def fmt(paths: list[Path], *, ascii: bool, inplace: bool, valign: bool = True) -> int:
     failed = False
     outputs: list[tuple[Path, str]] = []
     for path in paths:
         try:
-            rendered = format_spec(parse_file(path), ascii=ascii)
+            rendered = format_spec(parse_file(path), ascii=ascii, valign=valign)
         except ParseError as exc:
             failed = True
             print(error_line(path, exc), file=sys.stderr)
@@ -91,6 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
     fmt_parser = subparsers.add_parser("fmt")
     fmt_parser.add_argument("--ascii", action="store_true")
     fmt_parser.add_argument("--inplace", action="store_true")
+    fmt_parser.add_argument("--no-valign", dest="valign", action="store_false")
     fmt_parser.add_argument("files", nargs="+", type=Path)
 
     print_parser = subparsers.add_parser("print")
@@ -104,7 +105,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "check":
         return check(args.files)
     if args.command == "fmt":
-        return fmt(args.files, ascii=args.ascii, inplace=args.inplace)
+        return fmt(args.files, ascii=args.ascii, inplace=args.inplace, valign=args.valign)
     return print_ast(args.files)
 
 

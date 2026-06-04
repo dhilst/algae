@@ -57,9 +57,10 @@ ASCII_SYMBOLS = {
     "||": "∨",
     "++": "++",
     "..": "..",
+    "|>": "▷",
 }
 
-UNICODE_SYMBOLS = set(WORD_SYMBOLS.values())
+UNICODE_SYMBOLS = set(WORD_SYMBOLS.values()) | {"▷"}
 ASCII_SYMBOLS_BY_LENGTH = sorted(ASCII_SYMBOLS.items(), key=lambda item: len(item[0]), reverse=True)
 SINGLE_SYMBOLS = set("{}[](),;:=.+-*/<>|'")
 COMPARISONS = {"=", "≠", "<", "≤", ">", "≥"}
@@ -70,8 +71,10 @@ PRECEDENCE = {
     "∨": 3,
     "∧": 4,
     **{op: 5 for op in COMPARISONS},
+    "▷": 6,  # pipe-last application sugar: x ▷ f(a) reads as f(a, x)
     **{op: 7 for op in ("+", "-", "++")},
     **{op: 8 for op in ("*", "/", "×")},
+    ".": 9,  # pipe-first application sugar: x.f(a) reads as f(x, a)
 }
 
 
