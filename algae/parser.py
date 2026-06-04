@@ -104,6 +104,16 @@ ASCII_SYMBOLS_BY_LENGTH = sorted(ASCII_SYMBOLS.items(), key=lambda item: len(ite
 SINGLE_SYMBOLS = set("{}[](),;:=.+-*/<>|\\'")
 COMPARISONS = {"=", "≠", "<", "≤", ">", "≥", "∈", "∉", "⊆", "⊂", "⊇", "⊃"}
 TYPE_BUILTINS = {"ℕ", "ℤ", "ℝ", "𝔹"}
+PRECEDENCE = {
+    "⟺": 1,
+    "⟹": 2,
+    "∨": 3,
+    "∧": 4,
+    **{op: 5 for op in COMPARISONS},
+    **{op: 6 for op in ("∪", "∩", "\\", "⊕")},
+    **{op: 7 for op in ("+", "-", "++")},
+    **{op: 8 for op in ("*", "/", "×")},
+}
 OLD_KEYWORDS = {"spec", "state", "init", "inv", "pre", "post", "ret", "prop", "fn", "import", "extends", "type"}
 
 
@@ -399,7 +409,7 @@ class AlgParser:
         while True:
             token = self.current
             op = token.value
-            prec = self.precedence(op)
+            prec = PRECEDENCE.get(op, -1)
             if prec < min_prec:
                 break
             self.advance()
@@ -407,25 +417,6 @@ class AlgParser:
             right = self.parse_binary(right_min)
             left = node("binary", op=op, left=left, right=right)
         return left
-
-    def precedence(self, op: str) -> int:
-        if op == "⟺":
-            return 1
-        if op == "⟹":
-            return 2
-        if op == "∨":
-            return 3
-        if op == "∧":
-            return 4
-        if op in COMPARISONS:
-            return 5
-        if op in {"∪", "∩", "\\", "⊕"}:
-            return 6
-        if op in {"+", "-", "++"}:
-            return 7
-        if op in {"*", "/", "×"}:
-            return 8
-        return -1
 
     def parse_prefix(self) -> Any:
         token = self.current
