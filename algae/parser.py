@@ -84,7 +84,8 @@ ASCII_SYMBOLS = {
     "..": "..",
 }
 
-UNICODE_SYMBOLS = set(WORD_SYMBOLS.values()) | {"≤", "≥", "≠", "⊕", "⋃"}
+UNICODE_SYMBOLS = set(WORD_SYMBOLS.values())
+ASCII_SYMBOLS_BY_LENGTH = sorted(ASCII_SYMBOLS.items(), key=lambda item: len(item[0]), reverse=True)
 SINGLE_SYMBOLS = set("{}[](),;:=.+-*/<>|\\'")
 COMPARISONS = {"=", "≠", "<", "≤", ">", "≥", "∈", "∉", "⊆", "⊂", "⊇", "⊃"}
 TYPE_BUILTINS = {"ℕ", "ℤ", "ℝ", "𝔹"}
@@ -134,7 +135,7 @@ def lex(text: str) -> tuple[Token, ...]:
             continue
         start_line, start_col = line, column
         matched = None
-        for raw, canonical in sorted(ASCII_SYMBOLS.items(), key=lambda item: len(item[0]), reverse=True):
+        for raw, canonical in ASCII_SYMBOLS_BY_LENGTH:
             if text.startswith(raw, index):
                 matched = (raw, canonical)
                 break
