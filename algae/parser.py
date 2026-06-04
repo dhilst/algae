@@ -7,7 +7,35 @@ from pathlib import Path
 from typing import Any
 
 from .ast import AxiomDecl, Module, OpDecl, SortDecl, VarDecl, node
-from .combinators import ParseFailure, State, Token
+
+
+@dataclass(frozen=True, slots=True)
+class Token:
+    kind: str
+    value: str
+    text: str
+    line: int
+    column: int
+
+
+@dataclass(frozen=True, slots=True)
+class State:
+    tokens: tuple[Token, ...]
+    index: int = 0
+
+    @property
+    def current(self) -> Token:
+        return self.tokens[self.index]
+
+    def advance(self, count: int = 1) -> "State":
+        return State(self.tokens, self.index + count)
+
+
+class ParseFailure(Exception):
+    def __init__(self, state: State, expected: str) -> None:
+        self.state = state
+        self.expected = expected
+        super().__init__(expected)
 
 
 KEYWORDS = {
