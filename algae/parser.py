@@ -25,29 +25,10 @@ class ParseFailure(Exception):
         super().__init__(expected)
 
 
-KEYWORDS = {
-    "sort",
-    "op",
-    "var",
-    "axiom",
-    "true",
-    "false",
-    "if",
-    "then",
-    "else",
-    "spec",
-    "state",
-    "init",
-    "inv",
-    "pre",
-    "post",
-    "ret",
-    "prop",
-    "fn",
-    "import",
-    "extends",
-    "type",
-}
+# Keywords from the old, richer grammar — still lexed as keywords so the
+# parser can reject them with a helpful error instead of treating them as identifiers.
+OLD_KEYWORDS = {"spec", "state", "init", "inv", "pre", "post", "ret", "prop", "fn", "import", "extends", "type"}
+KEYWORDS = {"sort", "op", "var", "axiom", "true", "false", "if", "then", "else"} | OLD_KEYWORDS
 
 WORD_SYMBOLS = {
     "in": "∈",
@@ -114,7 +95,6 @@ PRECEDENCE = {
     **{op: 7 for op in ("+", "-", "++")},
     **{op: 8 for op in ("*", "/", "×")},
 }
-OLD_KEYWORDS = {"spec", "state", "init", "inv", "pre", "post", "ret", "prop", "fn", "import", "extends", "type"}
 
 
 @dataclass(slots=True)
