@@ -1,7 +1,7 @@
 ---
 name: alg
-description: "Write, implement, verify, and extract algebraic specifications (.alg files). Use /alg write to author specs from natural language or code, /alg impl to generate conforming implementations, /alg verify to check code against specs, /alg extract to reverse-engineer specs from existing code."
-argument-hint: <write|impl|verify|extract> [args...]
+description: "Write, refine, implement, verify, and extract algebraic specifications (.alg files). Use /alg write to author specs from natural language or code, /alg refine to iteratively improve an existing spec in dialogue with the user, /alg impl to generate conforming implementations, /alg verify to check code against specs, /alg extract to reverse-engineer specs from existing code."
+argument-hint: <write|refine|impl|verify|extract> [args...]
 allowed-tools: [Read, Write, Edit, Bash, Glob, Grep]
 ---
 
@@ -39,6 +39,45 @@ For thorough extraction from code, prefer `/alg extract`. This shortcut should:
 - Specs are equational: no set-theory notation (`∈`, `∪`, `∅`, quantifiers, set literals).
 - Keep specs concise and equational.
 - Do not use `spec`, `state`, `init`, `pre`, `post`, `ret`, `prop`, `import`, or `extends`.
+
+## Subcommand: `refine`
+
+**Usage:** `/alg refine <file.alg> [focus...]`
+
+Iteratively refine an existing specification in dialogue with the user. The
+user steers; each round proposes a small, reviewable set of improvements.
+
+1. Read the `.alg` file and validate it with `python algae.py check <file.alg>`.
+   If it has syntax errors, propose fixes and stop until they are resolved.
+2. Build a model of the spec: sorts, operations split into constructors
+   (operations that produce a sort) and observers (operations that inspect
+   one), variables, and which axioms mention each operation.
+3. Analyze the spec across these dimensions (narrow to `[focus...]` if given):
+
+| Dimension | What to look for |
+|-----------|------------------|
+| Coverage | Operations appearing in no axiom; observers not defined over each constructor |
+| Error behavior | `\| Error` codomains whose error constructors never appear as an axiom result |
+| Consistency | Axioms with the same left-hand side but different right-hand sides |
+| Redundancy | Axioms derivable from others; unused sorts or variables |
+| Readability | Deeply nested terms that would read better as a `let ... in` chain |
+| Signatures | Domains/codomains the axioms contradict or imply are missing |
+
+4. Present numbered findings, each with a concrete before/after proposal.
+   Distinguish facts (e.g. "`pop` has no axiom for `empty()`") from
+   assumptions about intended behavior, and flag the assumptions.
+5. Ask the user which findings to apply. Also accept free-form refinement
+   requests ("add an axiom for revoking roles") as the next round's input.
+6. Apply the chosen edits, re-run `python algae.py check`, and show the diff.
+7. Repeat from step 3 until the user is satisfied or no findings remain.
+8. Finish with `python algae.py fmt --inplace <file.alg>` and a one-paragraph
+   summary of what changed across the session.
+
+**Rules:**
+- Never invent domain behavior silently; every guessed axiom is presented as a
+  question, not applied by default.
+- Keep rounds small: 3-6 findings at a time, highest impact first.
+- Follow the style rules from `/alg write`.
 
 ## Subcommand: `impl`
 

@@ -43,8 +43,10 @@ claude plugin add /path/to/algae
 | Command | Description |
 |---------|-------------|
 | `/alg write <description>` | Author a `.alg` spec from natural language or existing code |
+| `/alg refine <file.alg>` | Iteratively refine a spec in dialogue with the model |
 | `/alg impl <file.alg>` | Generate implementation code from a spec |
 | `/alg verify <file.alg>` | Check code conformance against a spec |
+| `/alg extract <source-files...>` | Reverse-engineer a spec from existing code |
 | `python algae.py check <file.alg>` | Check `.alg` syntax |
 | `python algae.py fmt <file.alg>` | Format `.alg` syntax |
 | `python algae.py print <file.alg>` | Print the parsed AST as JSON |
