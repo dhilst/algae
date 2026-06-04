@@ -210,7 +210,6 @@ class AlgParser:
     def __init__(self, text: str) -> None:
         self.state = State(lex(text))
         self.ident_parser = token_kind("IDENT", "identifier")
-        self.eof_parser = token_kind("EOF", "end of file")
 
     @property
     def current(self) -> Token:
@@ -245,7 +244,6 @@ class AlgParser:
             declarations: list[Any] = []
             while self.current.kind != "EOF":
                 declarations.append(self.parse_decl())
-            self.eof_parser(self.state)
             return Module(declarations)
         except ParseFailure as exc:
             token = exc.state.current
