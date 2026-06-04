@@ -26,7 +26,7 @@ const TYPE_PREC = {
 };
 
 const ARROW = ['→', '->', 'arrow'];
-const PRODUCT = ['×', 'product'];
+const PRODUCT = ['×', '*', 'product'];
 
 function sep1(rule, separator) {
   return seq(rule, repeat(seq(separator, rule)));
@@ -142,7 +142,7 @@ module.exports = grammar({
       alias($.identifier, $.type_identifier),
     ),
 
-    builtin_type: $ => choice('ℕ', 'ℤ', 'ℝ', '𝔹', 'nat', 'int', 'real', 'bool'),
+    builtin_type: $ => choice('ℕ', 'ℤ', 'ℝ', '𝔹', 'Nat', 'Int', 'Real', 'Bool'),
 
     // Only `Seq` is valid here today; accepting any constructor keeps the
     // parser robust and lets queries pick out `Seq` specifically.
@@ -180,8 +180,8 @@ module.exports = grammar({
       const table = [
         ['right', PREC.iff, choice('⟺', '<==>', 'iff')],
         ['right', PREC.implies, choice('⟹', '==>', 'implies')],
-        ['left', PREC.or, choice('∨', '||', 'or')],
-        ['left', PREC.and, choice('∧', '&&', 'and')],
+        ['left', PREC.or, choice('∨', '||', '\\/', 'or')],
+        ['left', PREC.and, choice('∧', '&&', '/\\', 'and')],
         ['left', PREC.compare, choice('=', '≠', '!=', 'neq', '<', '≤', '<=', 'leq', '>', '≥', '>=', 'geq')],
         ['left', PREC.pipe, choice('▷', '|>')],
         ['left', PREC.additive, choice('+', '-', '++')],

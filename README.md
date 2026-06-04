@@ -57,7 +57,7 @@ claude plugin add /path/to/algae
 - **Operation signatures**: `op push : Stack × Elem -> Stack;`
 - **Sum/error result types**: `Stack | Error`
 - **Explicit narrowing**: `T | Error` never narrows to `T` implicitly; declare `op cast : (T | Error) -> T;` and wrap happy-path uses with `cast(...)` (convention)
-- **Lowercase ASCII keyword aliases** available for Unicode symbols, such as `product`, `arrow`, `neq`, and `implies`
+- **ASCII aliases** available for Unicode symbols, such as `*`, `arrow`, `/\`, `\/`, `Nat`, `Bool`, `neq`, and `implies`
 - **Single-file specs**: no `spec`, `import`, or `extends`
 
 See [skills/alg/references/syntax.md](skills/alg/references/syntax.md) for the full language reference.

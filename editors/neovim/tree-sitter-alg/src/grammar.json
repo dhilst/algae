@@ -267,6 +267,10 @@
                   },
                   {
                     "type": "STRING",
+                    "value": "*"
+                  },
+                  {
+                    "type": "STRING",
                     "value": "product"
                   }
                 ]
@@ -482,6 +486,10 @@
               },
               {
                 "type": "STRING",
+                "value": "*"
+              },
+              {
+                "type": "STRING",
                 "value": "product"
               }
             ]
@@ -548,19 +556,19 @@
         },
         {
           "type": "STRING",
-          "value": "nat"
+          "value": "Nat"
         },
         {
           "type": "STRING",
-          "value": "int"
+          "value": "Int"
         },
         {
           "type": "STRING",
-          "value": "real"
+          "value": "Real"
         },
         {
           "type": "STRING",
-          "value": "bool"
+          "value": "Bool"
         }
       ]
     },
@@ -814,6 +822,10 @@
                     },
                     {
                       "type": "STRING",
+                      "value": "\\/"
+                    },
+                    {
+                      "type": "STRING",
                       "value": "or"
                     }
                   ]
@@ -857,6 +869,10 @@
                     {
                       "type": "STRING",
                       "value": "&&"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "/\\"
                     },
                     {
                       "type": "STRING",

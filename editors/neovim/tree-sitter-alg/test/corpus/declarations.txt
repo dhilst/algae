@@ -30,8 +30,8 @@ op push  : Stack × Elem → Stack;
 op pop   : Stack -> Stack | Error;
 op curry : Stack -> Elem -> 𝔹;
 op unitop : → ();
-op seqop : Seq[Stack × Elem] → Seq[nat];
-op parens : (Stack -> Elem) product int -> real;
+op seqop : Seq[Stack × Elem] → Seq[Nat];
+op parens : (Stack -> Elem) product Int -> Real;
 
 ---
 

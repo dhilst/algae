@@ -107,10 +107,42 @@ class AlgaeCliTests(unittest.TestCase):
         result = self.run_cli("fmt", "--ascii", "test/stack.alg")
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Stack product Elem arrow Stack", result.stdout)
-        self.assertIn("Stack arrow Stack product Elem | Error", result.stdout)
+        self.assertIn("Stack * Elem arrow Stack", result.stdout)
+        self.assertIn("Stack arrow Stack * Elem | Error", result.stdout)
         self.assertNotIn("→", result.stdout)
         self.assertNotIn("×", result.stdout)
+
+    def test_symbolic_ascii_aliases_parse_and_format(self) -> None:
+        source = "\n".join(
+            [
+                "sort S;",
+                "op f : S * Nat arrow S;",
+                "var s : S;",
+                "var n : Nat;",
+                "var z : Int;",
+                "var r : Real;",
+                "var b : Bool;",
+                "axiom b /\\ true \\/ false;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "aliases.alg"
+            path.write_text(source, encoding="utf-8")
+            check_result = self.run_cli("check", str(path))
+            fmt_result = self.run_cli("fmt", str(path))
+            ascii_result = self.run_cli("fmt", "--ascii", str(path))
+
+        self.assertEqual(check_result.returncode, 0, check_result.stdout)
+        self.assertEqual(fmt_result.returncode, 0, fmt_result.stderr)
+        self.assertIn("op f : S × ℕ → S;", fmt_result.stdout)
+        self.assertIn("var z : ℤ;", fmt_result.stdout)
+        self.assertIn("var r : ℝ;", fmt_result.stdout)
+        self.assertIn("var b : 𝔹;", fmt_result.stdout)
+        self.assertIn("axiom b ∧ true ∨ false;", fmt_result.stdout)
+        self.assertIn("op f : S * Nat arrow S;", ascii_result.stdout)
+        self.assertIn("var b : Bool;", ascii_result.stdout)
+        self.assertIn("axiom b /\\ true \\/ false;", ascii_result.stdout)
 
     def test_let_expression_parses_and_formats(self) -> None:
         source = "\n".join(

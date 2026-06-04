@@ -60,7 +60,7 @@ The grammar mirrors `algae/parser.py`: top-level `sort` / `op` / `var` /
 `axiom` declarations, equational type expressions (`×`, `→`, `|`, `Seq[...]`),
 and Pratt-style operator precedence for terms (including `if`/`then`/`else`
 and `let`/`in`). Unicode symbols and their ASCII / keyword aliases
-(`->`/`arrow`, `&&`/`and`, `nat`/`ℕ`, ...) are interchangeable, as in the
+(`->`/`arrow`, `/\`/`and`, `Nat`/`ℕ`, ...) are interchangeable, as in the
 reference parser.
 
 One deliberate superset: `Seq[...]` parses as any `identifier [ type ]`, so

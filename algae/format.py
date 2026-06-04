@@ -7,7 +7,13 @@ from typing import Any
 from .ast import AxiomDecl, LetDecl, Module, Node, OpDecl, SortDecl, VarDecl
 from .parser import PRECEDENCE, WORD_SYMBOLS
 
-ASCII = {symbol: word for word, symbol in WORD_SYMBOLS.items()} | {"▷": "|>"}
+# Word aliases inverted, overridden where the canonical ASCII form is symbolic.
+ASCII = {symbol: word for word, symbol in WORD_SYMBOLS.items()} | {
+    "▷": "|>",
+    "∧": "/\\",
+    "∨": "\\/",
+    "×": "*",
+}
 
 
 class Formatter:

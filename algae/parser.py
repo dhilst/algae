@@ -30,10 +30,10 @@ KEYWORDS = {"sort", "op", "var", "axiom", "true", "false", "if", "then", "else",
 WORD_SYMBOLS = {
     "product": "×",
     "arrow": "→",
-    "nat": "ℕ",
-    "int": "ℤ",
-    "real": "ℝ",
-    "bool": "𝔹",
+    "Nat": "ℕ",
+    "Int": "ℤ",
+    "Real": "ℝ",
+    "Bool": "𝔹",
     "not": "¬",
     "and": "∧",
     "or": "∨",
@@ -55,6 +55,8 @@ ASCII_SYMBOLS = {
     ">=": "≥",
     "&&": "∧",
     "||": "∨",
+    "/\\": "∧",
+    "\\/": "∨",
     "++": "++",
     "..": "..",
     "|>": "▷",
@@ -372,8 +374,10 @@ class AlgParser:
         return node("type_product", items=parts)
 
     def parse_type_product_items(self) -> list[Any]:
+        # `*` is the symbolic ASCII alias for `×` in type position; the lexer
+        # cannot canonicalize it because `*` is also multiplication.
         parts = [self.parse_type_primary()]
-        while self.match("×"):
+        while self.match("×") or self.match("*"):
             parts.append(self.parse_type_primary())
         return parts
 

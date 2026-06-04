@@ -237,6 +237,10 @@
             "named": false
           },
           {
+            "type": "/\\",
+            "named": false
+          },
+          {
             "type": "<",
             "named": false
           },
@@ -262,6 +266,10 @@
           },
           {
             "type": ">=",
+            "named": false
+          },
+          {
+            "type": "\\/",
             "named": false
           },
           {
@@ -1844,6 +1852,10 @@
     "named": false
   },
   {
+    "type": "/\\",
+    "named": false
+  },
+  {
     "type": ":",
     "named": false
   },
@@ -1880,7 +1892,27 @@
     "named": false
   },
   {
+    "type": "Bool",
+    "named": false
+  },
+  {
+    "type": "Int",
+    "named": false
+  },
+  {
+    "type": "Nat",
+    "named": false
+  },
+  {
+    "type": "Real",
+    "named": false
+  },
+  {
     "type": "[",
+    "named": false
+  },
+  {
+    "type": "\\/",
     "named": false
   },
   {
@@ -1897,10 +1929,6 @@
   },
   {
     "type": "axiom",
-    "named": false
-  },
-  {
-    "type": "bool",
     "named": false
   },
   {
@@ -1949,19 +1977,11 @@
     "named": false
   },
   {
-    "type": "int",
-    "named": false
-  },
-  {
     "type": "leq",
     "named": false
   },
   {
     "type": "let",
-    "named": false
-  },
-  {
-    "type": "nat",
     "named": false
   },
   {
@@ -1986,10 +2006,6 @@
   },
   {
     "type": "product",
-    "named": false
-  },
-  {
-    "type": "real",
     "named": false
   },
   {

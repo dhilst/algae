@@ -24,21 +24,23 @@ old-syntax files still fail to parse since declarations must start with `sort`,
 
 ## Symbols And ASCII Aliases
 
-Unicode symbols and their ASCII aliases (lowercase keywords or symbolic
-spellings) are interchangeable. The formatter emits Unicode by default and
-emits aliases with `fmt --ascii`.
+Unicode symbols and their ASCII aliases (keywords or symbolic spellings) are
+interchangeable. The formatter emits Unicode by default and emits the aliases
+below with `fmt --ascii`. Additional symbolic input spellings are accepted:
+`->` for `→`, `==>` for `⟹`, `<==>` for `⟺`, `!=` for `≠`, `<=` for `≤`,
+`>=` for `≥`, `&&` for `∧`, `||` for `∨`.
 
 | Symbol | Alias | Meaning |
 |--------|-------|---------|
-| `×` | `product` | product |
+| `×` | `*` (or `product`) | product |
 | `→` | `arrow` | operation/function arrow |
-| `ℕ` | `nat` | natural numbers |
-| `ℤ` | `int` | integers |
-| `ℝ` | `real` | reals |
-| `𝔹` | `bool` | booleans |
+| `ℕ` | `Nat` | natural numbers |
+| `ℤ` | `Int` | integers |
+| `ℝ` | `Real` | reals |
+| `𝔹` | `Bool` | booleans |
 | `¬` | `not` | negation |
-| `∧` | `and` | conjunction |
-| `∨` | `or` | disjunction |
+| `∧` | `/\` (or `and`) | conjunction |
+| `∨` | `\/` (or `or`) | disjunction |
 | `⟹` | `implies` | implication |
 | `⟺` | `iff` | biconditional |
 | `≠` | `neq` | not equal |
@@ -273,7 +275,7 @@ algae.py print file.alg [file2.alg ...]
   (`<file>.alg: type error at line <N>, <message>`). `--syntax-only` skips
   type checking.
 - `fmt` prints formatted source, or rewrites files with `--inplace`.
-- `fmt` converts aliases to Unicode by default; `--ascii` emits lowercase keyword aliases.
+- `fmt` converts aliases to Unicode by default; `--ascii` emits the canonical ASCII aliases.
 - `fmt` aligns separators vertically within each run of same-kind
   declarations (`:` for op/var blocks, `=` for let blocks and single-line `=`
   axioms); a standalone comment starts a new run. `--no-valign` disables the
