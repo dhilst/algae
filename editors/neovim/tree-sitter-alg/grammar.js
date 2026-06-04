@@ -49,6 +49,7 @@ module.exports = grammar({
       $.op_declaration,
       $.var_declaration,
       $.axiom_declaration,
+      $.let_declaration,
     ),
 
     // sort A, B;  |  sort A = {x, y};
@@ -92,6 +93,15 @@ module.exports = grammar({
     axiom_declaration: $ => seq(
       'axiom',
       field('body', $._expression),
+      ';',
+    ),
+
+    // let name = expr;  (top level, no `in`) names a term shared by axioms
+    let_declaration: $ => seq(
+      'let',
+      field('name', $.identifier),
+      '=',
+      field('value', $._expression),
       ';',
     ),
 

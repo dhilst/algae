@@ -51,6 +51,9 @@
 (let_expression
   name: (identifier) @variable)
 
+(let_declaration
+  name: (identifier) @variable)
+
 (call_expression
   function: (identifier) @function.call)
 

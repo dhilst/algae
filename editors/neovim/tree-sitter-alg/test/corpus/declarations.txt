@@ -103,6 +103,44 @@ var f : Stack → Elem;
       (type_identifier))))
 
 ==================
+top-level let declarations
+==================
+
+let with_user = add_user(empty_rbac(), u);
+let with_role = add_role(with_user, r);
+
+axiom authorized(with_role, u, p) = false;
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (call_expression
+      (identifier)
+      (arguments
+        (call_expression
+          (identifier)
+          (arguments))
+        (identifier))))
+  (let_declaration
+    (identifier)
+    (call_expression
+      (identifier)
+      (arguments
+        (identifier)
+        (identifier))))
+  (axiom_declaration
+    (binary_expression
+      (call_expression
+        (identifier)
+        (arguments
+          (identifier)
+          (identifier)
+          (identifier)))
+      (boolean))))
+
+==================
 axioms with comments
 ==================
 
