@@ -46,10 +46,24 @@ class Formatter:
         if isinstance(decl, VarDecl):
             return f"var {decl.name} : {self.type_expr(decl.sort)};"
         if isinstance(decl, AxiomDecl):
+            if isinstance(decl.expr, Node) and decl.expr.kind == "let":
+                return self.format_axiom_lets(decl.expr)
             return f"axiom {self.expr(decl.expr)};"
         if isinstance(decl, LetDecl):
             return f"let {decl.name} = {self.expr(decl.expr)};"
         raise TypeError(f"unsupported declaration: {decl!r}")
+
+    def format_axiom_lets(self, expr: Node) -> str:
+        # A let chain at the axiom spine breaks after each `in`, with the
+        # bindings and final body aligned under the first one.
+        lines: list[str] = []
+        current: Any = expr
+        while isinstance(current, Node) and current.kind == "let":
+            lines.append(f"let {current.data['name']} = {self.expr(current.data['value'])} in")
+            current = current.data["body"]
+        lines.append(f"{self.expr(current)};")
+        indent = " " * len("axiom ")
+        return "axiom " + f"\n{indent}".join(lines)
 
     def type_expr(self, value: Any) -> str:
         if not isinstance(value, Node):

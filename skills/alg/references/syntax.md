@@ -105,7 +105,8 @@ bool_op    ::= '∧' | '∨' | '⟹' | '⟺'
 ```
 
 `let` names an intermediate term so deeply nested axioms stay readable. Lets
-nest, so a chain of bindings reads top to bottom:
+nest, so a chain of bindings reads top to bottom; the formatter breaks the
+line after each `in` and aligns the bindings:
 
 ```
 axiom let with_user = add_user(rbac, u) in

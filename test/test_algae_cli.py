@@ -100,7 +100,10 @@ class AlgaeCliTests(unittest.TestCase):
 
         self.assertEqual(check_result.returncode, 0, check_result.stderr)
         self.assertEqual(fmt_result.returncode, 0, fmt_result.stderr)
-        self.assertIn("axiom let y = f(x) in let z = f(y) in f(z) = x;", fmt_result.stdout)
+        self.assertIn(
+            "axiom let y = f(x) in\n      let z = f(y) in\n      f(z) = x;",
+            fmt_result.stdout,
+        )
 
     def test_toplevel_let_parses_and_formats(self) -> None:
         source = "\n".join(

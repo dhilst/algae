@@ -39,6 +39,9 @@ axiom revoke_permission(empty_rbac(), r, p) = unknown_role;
 axiom authorized(add_user(empty_rbac(), u), u, p) = false;
 
 # Revoking the role, the permission, or the user removes authorization.
-axiom let revoked = revoke_role(with_assignment, u, r) in authorized(revoked, u, p) = false;
-axiom let revoked = revoke_permission(with_assignment, r, p) in authorized(revoked, u, p) = false;
-axiom let removed = remove_user(with_assignment, u) in authorized(removed, u, p) = unknown_user;
+axiom let revoked = revoke_role(with_assignment, u, r) in
+      authorized(revoked, u, p) = false;
+axiom let revoked = revoke_permission(with_assignment, r, p) in
+      authorized(revoked, u, p) = false;
+axiom let removed = remove_user(with_assignment, u) in
+      authorized(removed, u, p) = unknown_user;
