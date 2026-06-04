@@ -38,7 +38,9 @@ runtimepath automatically.
   dir = '/path/to/algae/editors/neovim',
   name = 'alg.nvim',
   build = 'make',
-  ft = 'alg',
+  -- Load eagerly: the plugin registers the .alg filetype itself,
+  -- so lazy-loading on `ft = 'alg'` would never trigger.
+  lazy = false,
 }
 ```
 
