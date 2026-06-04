@@ -5,43 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from .ast import AxiomDecl, Module, Node, OpDecl, SortDecl, VarDecl
+from .parser import WORD_SYMBOLS
 
-
-ASCII = {
-    "∈": "in",
-    "∉": "notin",
-    "⊆": "subseteq",
-    "⊂": "subset",
-    "⊇": "superseteq",
-    "⊃": "superset",
-    "∪": "union",
-    "∩": "intersect",
-    "\\": "setminus",
-    "×": "product",
-    "→": "arrow",
-    "↦": "mapsto",
-    "∅": "emptyset",
-    "ℕ": "nat",
-    "ℤ": "int",
-    "ℝ": "real",
-    "𝔹": "bool",
-    "∀": "forall",
-    "∃": "exists",
-    "¬": "not",
-    "∧": "and",
-    "∨": "or",
-    "⟹": "implies",
-    "⟺": "iff",
-    "℘": "powerset",
-    "·": "dot",
-    "≠": "neq",
-    "≤": "leq",
-    "≥": "geq",
-    "⊤": "truth",
-    "⊥": "falsehood",
-    "⊕": "override",
-    "⋃": "bigunion",
-}
+ASCII = {symbol: word for word, symbol in WORD_SYMBOLS.items()}
 
 
 class Formatter:
