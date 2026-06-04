@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .ast import AxiomDecl, Module, Node, OpDecl, SortDecl, VarDecl
+from .ast import AxiomDecl, LetDecl, Module, Node, OpDecl, SortDecl, VarDecl
 from .parser import WORD_SYMBOLS
 
 ASCII = {symbol: word for word, symbol in WORD_SYMBOLS.items()}
@@ -47,6 +47,8 @@ class Formatter:
             return f"var {decl.name} : {self.type_expr(decl.sort)};"
         if isinstance(decl, AxiomDecl):
             return f"axiom {self.expr(decl.expr)};"
+        if isinstance(decl, LetDecl):
+            return f"let {decl.name} = {self.expr(decl.expr)};"
         raise TypeError(f"unsupported declaration: {decl!r}")
 
     def type_expr(self, value: Any) -> str:

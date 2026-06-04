@@ -45,6 +45,14 @@ class AxiomDecl:
 
 
 @dataclass(slots=True)
+class LetDecl:
+    name: str
+    expr: Any
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
+
+
+@dataclass(slots=True)
 class Node:
     kind: str
     data: dict[str, Any]

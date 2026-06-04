@@ -35,6 +35,7 @@ axiom pop(empty()) = empty_error;
 - `|` in result types represents an algebraic sum/union, commonly for error alternatives.
 - `var` declarations are read as implicitly universally quantified over all axioms.
 - `axiom` gives equations or predicates that document intended behavior.
+- `let name = expr;` at top level names a term shared by later axioms; `let ... in` scopes a binding inside one axiom.
 - Lowercase ASCII aliases such as `product`, `arrow`, `neq`, and `implies` parse as Unicode symbols, but prefer the Unicode symbols (`×`, `→`, `∧`, `∨`) when writing specs.
 - See [references/syntax.md](references/syntax.md) for the full grammar.
 - See [references/examples.md](references/examples.md) for example specs.
@@ -106,7 +107,7 @@ user steers; each round proposes a small, reviewable set of improvements.
 | Error behavior | `\| Error` codomains whose error constructors never appear as an axiom result |
 | Consistency | Axioms with the same left-hand side but different right-hand sides |
 | Redundancy | Axioms derivable from others; unused sorts or variables |
-| Readability | Deeply nested terms that would read better as a `let ... in` chain |
+| Readability | Deeply nested terms that would read better as a `let ... in` chain; setup chains repeated across axioms that a top-level `let name = expr;` could share |
 | Signatures | Domains/codomains the axioms contradict or imply are missing |
 
 4. Present numbered findings, each with a concrete before/after proposal.

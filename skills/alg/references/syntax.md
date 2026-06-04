@@ -57,7 +57,7 @@ read as implicitly universally quantified.
 
 ```
 file       ::= decl*
-decl       ::= sort_decl | op_decl | var_decl | axiom_decl
+decl       ::= sort_decl | op_decl | var_decl | axiom_decl | let_decl
 
 sort_decl  ::= 'sort' identifier (',' identifier)* ';'
              | 'sort' identifier '=' '{' identifier (',' identifier)* '}' ';'
@@ -68,6 +68,7 @@ domain     ::=                    # empty domain for nullary operations
 
 var_decl   ::= 'var' identifier ':' type_expr ';'
 axiom_decl ::= 'axiom' expr ';'
+let_decl   ::= 'let' identifier '=' expr ';'
 ```
 
 ## Type Expressions
@@ -111,6 +112,21 @@ axiom let with_user = add_user(rbac, u) in
       let with_role = add_role(with_user, r) in
       authorized(with_role, u, p) = true;
 ```
+
+A `let` may also appear at top level (no `in`), naming a term once for every
+axiom that follows. This avoids repeating a common setup chain:
+
+```
+let with_user = add_user(empty_rbac(), u);
+let with_role = add_role(with_user, r);
+
+axiom authorized(with_role, u, p) = false;
+axiom let revoked = remove_user(with_role, u) in authorized(revoked, u, p) = unknown_user;
+```
+
+Top-level lets are abbreviations: the parser records them but does not check
+that axioms reference them, and variables inside the named term are still read
+as universally quantified per axiom.
 
 ## CLI
 

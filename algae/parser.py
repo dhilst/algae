@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .ast import AxiomDecl, Module, OpDecl, SortDecl, VarDecl, node
+from .ast import AxiomDecl, LetDecl, Module, OpDecl, SortDecl, VarDecl, node
 
 
 @dataclass(frozen=True, slots=True)
@@ -276,6 +276,8 @@ class AlgParser:
             return self.parse_var()
         if token.value == "axiom":
             return self.parse_axiom()
+        if token.value == "let":
+            return self.parse_let()
         self.fail("declaration")
 
     def parse_sort(self) -> SortDecl:
@@ -323,6 +325,14 @@ class AlgParser:
         expr = self.parse_expr()
         self.consume(";")
         return AxiomDecl(expr)
+
+    def parse_let(self) -> LetDecl:
+        self.consume_keyword("let")
+        name = self.consume_ident("let name")
+        self.consume("=")
+        expr = self.parse_expr()
+        self.consume(";")
+        return LetDecl(name, expr)
 
     def parse_type_expr(self) -> Any:
         return self.parse_type_sum()

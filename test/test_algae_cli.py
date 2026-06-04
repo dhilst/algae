@@ -102,6 +102,33 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(fmt_result.returncode, 0, fmt_result.stderr)
         self.assertIn("axiom let y = f(x) in let z = f(y) in f(z) = x;", fmt_result.stdout)
 
+    def test_toplevel_let_parses_and_formats(self) -> None:
+        source = "\n".join(
+            [
+                "sort S;",
+                "op f : S -> S;",
+                "var x : S;",
+                "let y = f(x);",
+                "let z = f(y);",
+                "axiom f(z) = x;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "toplevel_let.alg"
+            path.write_text(source, encoding="utf-8")
+            check_result = self.run_cli("check", str(path))
+            fmt_result = self.run_cli("fmt", str(path))
+            print_result = self.run_cli("print", str(path))
+
+        self.assertEqual(check_result.returncode, 0, check_result.stderr)
+        self.assertEqual(fmt_result.returncode, 0, fmt_result.stderr)
+        self.assertIn("let y = f(x);", fmt_result.stdout)
+        self.assertIn("let z = f(y);", fmt_result.stdout)
+        payload = json.loads(print_result.stdout)
+        self.assertEqual(payload["ast"]["declarations"][3]["kind"], "LetDecl")
+        self.assertEqual(payload["ast"]["declarations"][3]["name"], "y")
+
     def test_fmt_preserves_comments(self) -> None:
         source = "\n".join(
             [
