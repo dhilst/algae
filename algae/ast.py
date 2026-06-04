@@ -16,6 +16,7 @@ class Module:
 class SortDecl:
     names: list[str]
     values: list[str] | None = None
+    line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
 
@@ -25,6 +26,7 @@ class OpDecl:
     name: str
     domain: list[Any]
     codomain: Any
+    line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
 
@@ -33,6 +35,7 @@ class OpDecl:
 class VarDecl:
     name: str
     sort: Any
+    line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
 
@@ -40,6 +43,7 @@ class VarDecl:
 @dataclass(slots=True)
 class AxiomDecl:
     expr: Any
+    line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
 
@@ -48,6 +52,7 @@ class AxiomDecl:
 class LetDecl:
     name: str
     expr: Any
+    line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
 

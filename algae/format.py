@@ -92,7 +92,7 @@ class Formatter:
         if isinstance(decl, VarDecl):
             return f"var {decl.name.ljust(name_width)} : {self.type_expr(decl.sort)};"
         if isinstance(decl, AxiomDecl):
-            if isinstance(decl.expr, Node) and decl.expr.kind == "let":
+            if isinstance(decl.expr, Node) and decl.expr.kind in ("let", "let_tuple"):
                 return self.format_axiom_lets(decl.expr)
             if name_width and self.axiom_aligns(decl):
                 lhs = self.expr(decl.expr.data["left"]).ljust(name_width)
@@ -107,8 +107,8 @@ class Formatter:
         # bindings and final body aligned under the first one.
         lines: list[str] = []
         current: Any = expr
-        while isinstance(current, Node) and current.kind == "let":
-            lines.append(f"let {current.data['name']} = {self.expr(current.data['value'])} in")
+        while isinstance(current, Node) and current.kind in ("let", "let_tuple"):
+            lines.append(f"{self.let_binding(current)} in")
             current = current.data["body"]
         lines.append(f"{self.expr(current)};")
         indent = " " * len("axiom ")
@@ -169,9 +169,16 @@ class Formatter:
                 f"if {self.expr(data['condition'])} then {self.expr(data['then'])} "
                 f"else {self.expr(data['otherwise'])}"
             )
-        if value.kind == "let":
-            return f"let {data['name']} = {self.expr(data['value'])} in {self.expr(data['body'])}"
+        if value.kind in ("let", "let_tuple"):
+            return f"{self.let_binding(value)} in {self.expr(data['body'])}"
         raise TypeError(f"unsupported expression: {value!r}")
+
+    def let_binding(self, value: Node) -> str:
+        if value.kind == "let_tuple":
+            pattern = "(" + ", ".join(value.data["binders"]) + ")"
+        else:
+            pattern = value.data["name"]
+        return f"let {pattern} = {self.expr(value.data['value'])}"
 
 
 def format_spec(module: Module, *, ascii: bool = False, valign: bool = True) -> str:

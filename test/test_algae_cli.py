@@ -167,6 +167,52 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("op push : Stack × Elem → Stack;", plain.stdout)
         self.assertIn("axiom empty().pop = empty_error;", plain.stdout)
 
+    def test_destructuring_let_parses_and_formats(self) -> None:
+        source = "\n".join(
+            [
+                "sort S, T;",
+                "op pair : S -> S × T;",
+                "var x : S;",
+                "axiom let (a, _) = pair(x) in a = x;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "destructure.alg"
+            path.write_text(source, encoding="utf-8")
+            check_result = self.run_cli("check", str(path))
+            fmt_result = self.run_cli("fmt", str(path))
+
+        self.assertEqual(check_result.returncode, 0, check_result.stdout)
+        self.assertIn(
+            "axiom let (a, _) = pair(x) in\n      a = x;",
+            fmt_result.stdout,
+        )
+
+    def test_check_reports_type_errors(self) -> None:
+        source = "\n".join(
+            [
+                "sort Stack, Elem;",
+                "sort Error = {empty_error};",
+                "op pop : Stack -> Stack × Elem | Error;",
+                "var s : Stack;",
+                "axiom let (rest, x) = pop(s) in rest = s;",
+                "axiom missing(s) = s;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "typed.alg"
+            path.write_text(source, encoding="utf-8")
+            result = self.run_cli("check", str(path))
+            loose = self.run_cli("check", "--syntax-only", str(path))
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("type error at line 5, cannot destructure sum type", result.stdout)
+        self.assertIn("type error at line 6, undeclared identifier missing", result.stdout)
+        self.assertEqual(loose.returncode, 0, loose.stdout)
+        self.assertIn(": ok", loose.stdout)
+
     def test_fmt_preserves_comments(self) -> None:
         source = "\n".join(
             [

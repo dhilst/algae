@@ -224,12 +224,25 @@ module.exports = grammar({
 
     let_expression: $ => prec.right(PREC.let, seq(
       'let',
-      field('name', $.identifier),
+      field('name', choice($.identifier, $.tuple_pattern)),
       '=',
       field('value', $._expression),
       'in',
       field('body', $._expression),
     )),
+
+    // (a, _, b) — destructures a product; `_` binds an unused component
+    tuple_pattern: $ => seq(
+      '(',
+      $._binder,
+      ',',
+      sep1($._binder, ','),
+      ')',
+    ),
+
+    _binder: $ => choice($.identifier, $.wildcard),
+
+    wildcard: $ => '_',
 
     parenthesized_expression: $ => seq('(', $._expression, ')'),
 

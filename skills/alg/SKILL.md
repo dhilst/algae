@@ -7,7 +7,7 @@ allowed-tools: [Read, Write, Edit, Bash, Glob, Grep]
 
 # Algebraic Specifications (`.alg`)
 
-`.alg` files are lightweight algebraic specifications. They describe sorts, operation signatures, variables, and axioms without model checking or type checking.
+`.alg` files are lightweight algebraic specifications. They describe sorts, operation signatures, variables, and axioms. `algae.py check` parses and type-checks them; there is no model checking or proof.
 
 ## Quick Reference
 
@@ -36,6 +36,7 @@ axiom pop(empty()) = empty_error;
 - `var` declarations are read as implicitly universally quantified over all axioms.
 - `axiom` gives equations or predicates that document intended behavior.
 - `let name = expr;` at top level names a term shared by later axioms; `let ... in` scopes a binding inside one axiom.
+- `let (a, b) = expr in ...` destructures a product-typed value; `_` binds unused components (each `_` is a fresh variable, valid only in patterns). Sum-typed values cannot be destructured.
 - Application sugar: `x.f(a)` reads as `f(x, a)` (pipe-first) and `x ▷ f(a)` (alias `|>`) as `f(a, x)` (pipe-last). Prefer `.` when the spec targets object-oriented code and `▷` when it targets functional code.
 - Lowercase ASCII aliases such as `product`, `arrow`, `neq`, and `implies` parse as Unicode symbols, but prefer the Unicode symbols (`×`, `→`, `∧`, `∨`) when writing specs.
 - See [references/syntax.md](references/syntax.md) for the full grammar.
@@ -49,7 +50,7 @@ If activated while implementing or reviewing code (rather than via an explicit `
 2. Read the sorts to identify domain concepts and error constructors.
 3. Map each `op` to the implementation's public functions or methods.
 4. Use `var` and `axiom` declarations as behavioral laws and test ideas.
-5. Preserve the distinction between syntax and semantics: the parser accepts syntax only.
+5. Preserve the distinction between checking and proving: `check` validates syntax and types, but axioms are not proved or model-checked.
 
 When reviewing code against a spec, follow the conformance checks of the `verify` subcommand below.
 
@@ -221,4 +222,4 @@ Reverse-engineer an `.alg` specification from existing implementation code.
 **Judgment calls:**
 - When behavior is ambiguous, note it with a short `#` comment.
 - If a source file is large, focus on the public API.
-- Keep the output syntax-only; do not claim model checking or proof.
+- Do not claim model checking or proof.

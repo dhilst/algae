@@ -11,20 +11,27 @@ from typing import Sequence
 from .ast import to_jsonable
 from .format import format_spec
 from .parser import ParseError, parse_file
+from .types import check_module
 
 
 def error_line(path: Path, error: ParseError) -> str:
     return f"{path}: error at {error.line}, Expected {error.expected} found {error.found}"
 
 
-def check(paths: list[Path]) -> int:
+def check(paths: list[Path], *, syntax_only: bool = False) -> int:
     failed = False
     for path in paths:
         try:
-            parse_file(path)
+            module = parse_file(path)
         except ParseError as exc:
             failed = True
             print(error_line(path, exc))
+            continue
+        issues = [] if syntax_only else check_module(module)
+        if issues:
+            failed = True
+            for issue in issues:
+                print(f"{path}: type error at line {issue.line}, {issue.message}")
         else:
             print(f"{path}: ok")
     return 1 if failed else 0
@@ -86,6 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     check_parser = subparsers.add_parser("check")
+    check_parser.add_argument("--syntax-only", action="store_true")
     check_parser.add_argument("files", nargs="+", type=Path)
 
     fmt_parser = subparsers.add_parser("fmt")
@@ -103,7 +111,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.command == "check":
-        return check(args.files)
+        return check(args.files, syntax_only=args.syntax_only)
     if args.command == "fmt":
         return fmt(args.files, ascii=args.ascii, inplace=args.inplace, valign=args.valign)
     return print_ast(args.files)

@@ -228,10 +228,18 @@ class AlgParser:
 
     def consume_ident(self, expected: str = "identifier") -> str:
         token = self.current
-        if token.kind == "IDENT":
+        if token.kind == "IDENT" and token.value != "_":
             self.advance()
             return token.value
         self.fail(expected)
+
+    def consume_binder(self) -> str:
+        # `_` is a fresh anonymous variable, valid only here.
+        token = self.current
+        if token.kind == "IDENT":
+            self.advance()
+            return token.value
+        self.fail("binder")
 
     def match(self, value: str) -> bool:
         if self.current.value == value:
@@ -251,7 +259,9 @@ class AlgParser:
             declarations: list[Any] = []
             while self.current.kind != "EOF":
                 leading = self.take_comments_before(self.current.line)
+                start_line = self.current.line
                 decl = self.parse_decl()
+                decl.line = start_line
                 end_line = self.tokens[self.pos - 1].line
                 # Comments inside a multi-line declaration are hoisted above it.
                 leading.extend(self.take_comments_before(end_line))
@@ -419,6 +429,19 @@ class AlgParser:
             return node("if", condition=condition, then=then_expr, otherwise=else_expr)
         if token.kind == "KEYWORD" and token.value == "let":
             self.advance()
+            if self.current.value == "(":
+                self.consume("(")
+                binders = [self.consume_binder()]
+                self.consume(",", "',' (a destructuring pattern needs at least two binders)")
+                binders.append(self.consume_binder())
+                while self.match(","):
+                    binders.append(self.consume_binder())
+                self.consume(")")
+                self.consume("=")
+                value = self.parse_expr()
+                self.consume_keyword("in")
+                body = self.parse_expr()
+                return node("let_tuple", binders=binders, value=value, body=body)
             name = self.consume_ident("let variable")
             self.consume("=")
             value = self.parse_expr()
@@ -430,6 +453,8 @@ class AlgParser:
     def parse_atom(self) -> Any:
         token = self.current
         if token.kind == "IDENT":
+            if token.value == "_":
+                self.fail("expression ('_' is only valid in destructuring patterns)")
             self.advance()
             return node("identifier", name=token.value)
         if token.kind == "NUMBER":

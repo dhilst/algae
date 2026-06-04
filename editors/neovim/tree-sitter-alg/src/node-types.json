@@ -966,6 +966,10 @@
           {
             "type": "identifier",
             "named": true
+          },
+          {
+            "type": "tuple_pattern",
+            "named": true
           }
         ]
       },
@@ -1619,6 +1623,25 @@
     }
   },
   {
+    "type": "tuple_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "wildcard",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "unary_expression",
     "named": true,
     "fields": {
@@ -2000,6 +2023,10 @@
   {
     "type": "var",
     "named": false
+  },
+  {
+    "type": "wildcard",
+    "named": true
   },
   {
     "type": "{",

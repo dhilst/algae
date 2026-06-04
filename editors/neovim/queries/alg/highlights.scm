@@ -51,6 +51,11 @@
 (let_expression
   name: (identifier) @variable)
 
+(tuple_pattern
+  (identifier) @variable)
+
+(wildcard) @variable.builtin
+
 (let_declaration
   name: (identifier) @variable)
 
