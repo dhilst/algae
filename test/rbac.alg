@@ -13,5 +13,9 @@ var u : User;
 var r : Role;
 var p : Permission;
 
-axiom authorized(assign_role(grant_permission(add_role(add_user(rbac, u), r), r, p), u, r), u, p) = true;
+axiom let with_user = add_user(rbac, u) in
+      let with_role = add_role(with_user, r) in
+      let with_perm = grant_permission(with_role, r, p) in
+      let with_assignment = assign_role(with_perm, u, r) in
+      authorized(with_assignment, u, p) = true;
 axiom assign_role(empty_rbac(), u, r) = unknown_user;

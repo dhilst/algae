@@ -110,6 +110,8 @@ class Formatter:
                 f"if {self.expr(data['condition'])} then {self.expr(data['then'])} "
                 f"else {self.expr(data['otherwise'])}"
             )
+        if value.kind == "let":
+            return f"let {data['name']} = {self.expr(data['value'])} in {self.expr(data['body'])}"
         raise TypeError(f"unsupported expression: {value!r}")
 
 

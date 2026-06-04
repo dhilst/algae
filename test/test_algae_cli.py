@@ -82,6 +82,26 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertNotIn("→", result.stdout)
         self.assertNotIn("×", result.stdout)
 
+    def test_let_expression_parses_and_formats(self) -> None:
+        source = "\n".join(
+            [
+                "sort S;",
+                "op f : S -> S;",
+                "var x : S;",
+                "axiom let y = f(x) in let z = f(y) in f(z) = x;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "let.alg"
+            path.write_text(source, encoding="utf-8")
+            check_result = self.run_cli("check", str(path))
+            fmt_result = self.run_cli("fmt", str(path))
+
+        self.assertEqual(check_result.returncode, 0, check_result.stderr)
+        self.assertEqual(fmt_result.returncode, 0, fmt_result.stderr)
+        self.assertIn("axiom let y = f(x) in let z = f(y) in f(z) = x;", fmt_result.stdout)
+
     def test_fmt_inplace_rewrites_file(self) -> None:
         source = "sort Stack,Elem;op empty:arrow Stack;var s:Stack;axiom empty()=s;\n"
         with tempfile.TemporaryDirectory() as directory:

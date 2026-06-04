@@ -12,12 +12,13 @@
 ## Keywords
 
 ```
-sort  op  var  axiom  true  false  if  then  else
+sort  op  var  axiom  true  false  if  then  else  let
 ```
 
-The previous state-machine syntax is not part of this grammar. `spec`, `state`,
-`init`, `inv`, `pre`, `post`, `ret`, `prop`, `fn`, `import`, `extends`, and
-`type` are rejected.
+The previous state-machine syntax is not part of this grammar. Its keywords
+(`spec`, `state`, `init`, `pre`, `post`, ...) are ordinary identifiers now, but
+old-syntax files still fail to parse since declarations must start with `sort`,
+`op`, `var`, or `axiom`.
 
 ## Symbols And ASCII Keyword Aliases
 
@@ -112,11 +113,23 @@ expr      ::= identifier
             | '∀' identifier '∈' expr '·' expr
             | '∃' identifier '∈' expr '·' expr
             | 'if' expr 'then' expr 'else' expr
+            | 'let' identifier '=' binding 'in' expr
 
 comparison ::= '=' | '≠' | '<' | '≤' | '>' | '≥'
              | '∈' | '∉' | '⊆' | '⊂' | '⊇' | '⊃'
 set_op     ::= '∪' | '∩' | '\' | '⊕'
 bool_op    ::= '∧' | '∨' | '⟹' | '⟺'
+```
+
+`let` names an intermediate term so deeply nested axioms stay readable. The
+bound value (`binding`) binds tighter than comparisons — wrap comparisons,
+`if`, or quantifiers in parentheses when binding them. Lets nest, so a chain of
+bindings reads top to bottom:
+
+```
+axiom let with_user = add_user(rbac, u) in
+      let with_role = add_role(with_user, r) in
+      authorized(with_role, u, p) = true;
 ```
 
 ## CLI

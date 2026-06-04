@@ -25,7 +25,7 @@ class ParseFailure(Exception):
         super().__init__(expected)
 
 
-KEYWORDS = {"sort", "op", "var", "axiom", "true", "false", "if", "then", "else"}
+KEYWORDS = {"sort", "op", "var", "axiom", "true", "false", "if", "then", "else", "let"}
 
 WORD_SYMBOLS = {
     "in": "∈",
@@ -415,6 +415,16 @@ class AlgParser:
             self.consume_keyword("else")
             else_expr = self.parse_expr()
             return node("if", condition=condition, then=then_expr, otherwise=else_expr)
+        if token.kind == "KEYWORD" and token.value == "let":
+            self.advance()
+            name = self.consume_ident("let variable")
+            self.consume("=")
+            # Parse the bound value above comparison precedence so the `in`
+            # separator (lexed as ∈) is not consumed as set membership.
+            value = self.parse_binary(6)
+            self.consume("∈", "in")
+            body = self.parse_expr()
+            return node("let", name=name, value=value, body=body)
         return self.parse_postfix(self.parse_atom())
 
     def parse_atom(self) -> Any:
