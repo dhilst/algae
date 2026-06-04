@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Callable, Generic, TypeVar
 
 T = TypeVar("T")
-U = TypeVar("U")
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,64 +50,8 @@ class Parser(Generic[T]):
                 raise ParseFailure(exc.state, self._label) from exc
             raise
 
-    def map(self, func: Callable[[T], U]) -> "Parser[U]":
-        def parse(state: State) -> tuple[U, State]:
-            value, next_state = self(state)
-            return func(value), next_state
-
-        return Parser(parse, self._label)
-
-    def bind(self, func: Callable[[T], "Parser[U]"]) -> "Parser[U]":
-        def parse(state: State) -> tuple[U, State]:
-            value, next_state = self(state)
-            return func(value)(next_state)
-
-        return Parser(parse)
-
     def label(self, expected: str) -> "Parser[T]":
         return Parser(self.func, expected)
-
-    def optional(self) -> "Parser[T | None]":
-        def parse(state: State) -> tuple[T | None, State]:
-            try:
-                return self(state)
-            except ParseFailure as exc:
-                if exc.state.index != state.index:
-                    raise
-                return None, state
-
-        return Parser(parse)
-
-    def many(self) -> "Parser[list[T]]":
-        def parse(state: State) -> tuple[list[T], State]:
-            values: list[T] = []
-            current = state
-            while True:
-                try:
-                    value, current = self(current)
-                except ParseFailure as exc:
-                    if exc.state.index != current.index:
-                        raise
-                    return values, current
-                values.append(value)
-
-        return Parser(parse)
-
-    def __or__(self, other: "Parser[T]") -> "Parser[T]":
-        def parse(state: State) -> tuple[T, State]:
-            try:
-                return self(state)
-            except ParseFailure as left:
-                try:
-                    return other(state)
-                except ParseFailure as right:
-                    if right.state.index > left.state.index:
-                        raise right
-                    if left.state.index > right.state.index:
-                        raise left
-                    raise ParseFailure(left.state, f"{left.expected} or {right.expected}") from right
-
-        return Parser(parse)
 
 
 def satisfy(predicate: Callable[[Token], bool], expected: str) -> Parser[Token]:
@@ -127,15 +70,3 @@ def token_kind(kind: str, expected: str | None = None) -> Parser[Token]:
 
 def token_value(value: str, expected: str | None = None) -> Parser[Token]:
     return satisfy(lambda token: token.value == value, expected or value)
-
-
-def sequence(*parsers: Parser[object]) -> Parser[list[object]]:
-    def parse(state: State) -> tuple[list[object], State]:
-        values: list[object] = []
-        current = state
-        for parser in parsers:
-            value, current = parser(current)
-            values.append(value)
-        return values, current
-
-    return Parser(parse)
