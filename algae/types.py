@@ -2,8 +2,10 @@
 
 Bottom-up synthesis over the parsed AST. Ops may be overloaded by signature
 and are resolved by argument types. Compatibility is structural equality
-plus numeric widening (ℕ ⊆ ℤ ⊆ ℝ) and sum injection (a term of type T is
-acceptable where a sum containing T is expected).
+plus sum injection (a term of type T is acceptable where a sum containing T
+is expected). Numeric sorts are strict: ℕ, ℤ, and ℝ are distinct types.
+Narrowing a sum to one of its summands requires an explicit cast op declared
+by the spec, conventionally `op cast : T | Error → T;`.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from .format import Formatter
 NUMERIC = {"ℕ": 0, "ℤ": 1, "ℝ": 2}
 BOOL = node("type_builtin", name="𝔹")
 NAT = node("type_builtin", name="ℕ")
+INT = node("type_builtin", name="ℤ")
 STRING = node("type_builtin", name="String")  # internal; string literals only
 COMPARISONS = {"=", "≠", "<", "≤", ">", "≥"}
 ORDERINGS = {"<", "≤", ">", "≥"}
@@ -55,9 +58,6 @@ def compatible(actual: Node, expected: Node) -> bool:
     """True when a term of type `actual` is acceptable where `expected` is required."""
     if same_type(actual, expected):
         return True
-    if actual.kind == "type_builtin" and expected.kind == "type_builtin":
-        a, b = actual.data["name"], expected.data["name"]
-        return a in NUMERIC and b in NUMERIC and NUMERIC[a] <= NUMERIC[b]
     if actual.kind == "type_sum" and expected.kind == "type_sum":
         return all(
             any(compatible(item, target) for target in expected.data["items"])
@@ -65,11 +65,6 @@ def compatible(actual: Node, expected: Node) -> bool:
         )
     if expected.kind == "type_sum":
         return any(compatible(actual, item) for item in expected.data["items"])
-    if actual.kind == "type_sum":
-        # Narrowing: a sum is accepted where one of its summands is expected,
-        # read as an implicit happy-path assertion. Destructuring does not go
-        # through this rule and stays strict.
-        return any(compatible(item, expected) for item in actual.data["items"])
     if actual.kind == "type_product" and expected.kind == "type_product":
         items_a, items_b = actual.data["items"], expected.data["items"]
         return len(items_a) == len(items_b) and all(
@@ -308,7 +303,8 @@ class Checker:
         if not is_numeric(operand):
             self.issue(f"unary - requires a numeric type, got {_render(operand)}")
             return None
-        return operand
+        # Negation leaves the naturals: -n is an integer, not a natural.
+        return INT if same_type(operand, NAT) else operand
 
     def synth_binary(self, op: str, left: Any, right: Any, env: dict[str, Node]) -> Node | None:
         if op in (".", "▷"):
@@ -336,7 +332,11 @@ class Checker:
             if not (is_numeric(left_t) and is_numeric(right_t)):
                 self.issue(f"{op} requires numeric operands, got {_render(left_t)} and {_render(right_t)}")
                 return None
-            return widest(left_t, right_t)
+            result = widest(left_t, right_t)
+            # Subtraction is not closed over the naturals: ℕ - ℕ yields ℤ.
+            if op == "-" and same_type(result, NAT):
+                return INT
+            return result
         if op == "++":
             if (
                 left_t.kind == "type_sequence"
@@ -391,6 +391,11 @@ class Checker:
             self.issue(
                 f"pattern has {len(binders)} binders but {_render(value)} has {len(items)} components"
             )
+            return None
+        named = [binder for binder in binders if binder != "_"]
+        duplicates = sorted({binder for binder in named if named.count(binder) > 1})
+        if duplicates:
+            self.issue(f"duplicate binder {duplicates[0]} in destructuring pattern")
             return None
         scope = dict(env)
         for binder, item in zip(binders, items):

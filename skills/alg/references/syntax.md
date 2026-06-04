@@ -241,12 +241,17 @@ Caveats:
   `var`, an enum value, a top-level `let`, or an op.
 - Ops may be **overloaded**: the same name with different domains is resolved
   by argument types. Unresolvable or ambiguous calls are errors.
-- Number literals are `ℕ`, and numerics **widen**: `ℕ ⊆ ℤ ⊆ ℝ`.
+- Number literals are `ℕ`. Numeric sorts are **strict**: `ℕ`, `ℤ`, and `ℝ`
+  are distinct types and do not widen into one another. Arithmetic over mixed
+  numeric operands synthesizes the widest operand type; unary `-` and `-` over
+  `ℕ` operands yield `ℤ` (negation and subtraction leave the naturals).
 - Sums **inject**: a term of type `T` is accepted where `T | Error` is
-  expected. Sums also **narrow**: a term of type `T | Error` is accepted
-  where `T` is expected, read as an implicit happy-path assertion (this is
-  what lets setup chains compose error-returning ops). Destructuring is the
-  exception: a sum-typed value can never be destructured.
+  expected. Sums do **not** implicitly narrow: a term of type `T | Error` is
+  rejected where `T` is expected. To assert the happy path, the spec declares
+  an explicit cast op — by convention `op cast : (T | Error) → T;` — and
+  wraps the fallible term, e.g. `assign_role(cast(with_perm), u, r)`. This is
+  what lets setup chains compose error-returning ops while keeping every
+  narrowing visible in the spec. A sum-typed value can never be destructured.
 - Comparisons and boolean operators yield `𝔹`; `< ≤ > ≥` and arithmetic
   require numerics; `++` requires matching `Seq` operands; equations `=`/`≠`
   require compatible operand types (either direction).

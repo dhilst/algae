@@ -10,6 +10,30 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CLI = ROOT / "algae.py"
 
+sys.path.insert(0, str(ROOT))
+
+from algae.ast import AxiomDecl, LetDecl, OpDecl, SortDecl, VarDecl  # noqa: E402
+from algae.format import format_spec  # noqa: E402
+from algae.parser import parse_text  # noqa: E402
+
+
+def semantic_payload(module) -> list[tuple]:
+    # The declaration payloads that formatting must preserve, ignoring line
+    # numbers and comments. Nodes are dataclasses, so == is structural.
+    payload: list[tuple] = []
+    for decl in module.declarations:
+        if isinstance(decl, SortDecl):
+            payload.append(("sort", decl.names, decl.values))
+        elif isinstance(decl, OpDecl):
+            payload.append(("op", decl.name, decl.domain, decl.codomain))
+        elif isinstance(decl, VarDecl):
+            payload.append(("var", decl.name, decl.sort))
+        elif isinstance(decl, AxiomDecl):
+            payload.append(("axiom", decl.expr))
+        elif isinstance(decl, LetDecl):
+            payload.append(("let", decl.name, decl.expr))
+    return payload
+
 
 class AlgaeCliTests(unittest.TestCase):
     def run_cli(self, *args: str) -> subprocess.CompletedProcess[str]:
@@ -21,6 +45,12 @@ class AlgaeCliTests(unittest.TestCase):
             stderr=subprocess.PIPE,
             check=False,
         )
+
+    def check_source(self, source: str) -> subprocess.CompletedProcess[str]:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "spec.alg"
+            path.write_text(source, encoding="utf-8")
+            return self.run_cli("check", str(path))
 
     def test_check_accepts_equational_fixtures(self) -> None:
         result = self.run_cli("check", "test/stack.alg", "test/kvstore.alg", "test/base/container.alg")
@@ -248,6 +278,175 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("sort Stack, Elem;", rewritten)
         self.assertIn("op empty : → Stack;", rewritten)
         self.assertIn("axiom empty() = s;", rewritten)
+
+
+    def test_check_rejects_negative_literal_for_natural(self) -> None:
+        result = self.check_source("var n : ℕ;\naxiom n = -1;\n")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("cannot equate ℕ with ℤ", result.stdout)
+
+    def test_check_accepts_negative_literal_for_integer(self) -> None:
+        result = self.check_source("var z : ℤ;\naxiom z = -1;\n")
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_check_rejects_natural_subtraction_for_natural(self) -> None:
+        result = self.check_source("var n : ℕ;\naxiom n = 1 - 2;\n")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("cannot equate ℕ with ℤ", result.stdout)
+
+    def test_check_subtraction_widens_only_naturals(self) -> None:
+        source = "\n".join(
+            [
+                "var z : ℤ;",
+                "var n : ℕ;",
+                "axiom z = 1 - 2;",  # ℕ - ℕ is ℤ
+                "axiom z = z - 1;",  # ℤ - ℕ stays ℤ
+                "axiom n = 1 + 2;",  # other arithmetic still ℕ
+                "axiom n = 2 * 3;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_check_rejects_duplicate_destructuring_binders(self) -> None:
+        source = "\n".join(
+            [
+                "sort S, T;",
+                "op pair : S × T → S × T;",
+                "var s : S;",
+                "var t : T;",
+                "axiom let (x, x) = pair(s, t) in x = t;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("type error at line 5, duplicate binder x in destructuring pattern", result.stdout)
+
+    def test_check_accepts_repeated_wildcard_binders(self) -> None:
+        source = "\n".join(
+            [
+                "sort S, T;",
+                "op triple : → S × T × S;",
+                "var s : S;",
+                "axiom let (_, _, x) = triple() in x = s;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_check_rejects_implicit_error_narrowing(self) -> None:
+        source = "\n".join(
+            [
+                "sort S;",
+                "sort Error = {oops};",
+                "op f : → S | Error;",
+                "op g : S → S;",
+                "var x : S;",
+                "axiom g(f()) = x;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("no signature of g matches (S | Error)", result.stdout)
+
+    def test_check_accepts_cast_convention_for_narrowing(self) -> None:
+        source = "\n".join(
+            [
+                "sort S;",
+                "sort Error = {oops};",
+                "op f : → S | Error;",
+                "op g : S → S;",
+                "op cast : (S | Error) → S;",
+                "var x : S;",
+                "axiom g(cast(f())) = x;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_fmt_preserves_type_parentheses(self) -> None:
+        source = "\n".join(
+            [
+                "sort A, B, C, D;",
+                "op f : → A × (B | C);",
+                "op g : (A → B) × C → D;",
+                "var v : (A × B) × C;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "types.alg"
+            path.write_text(source, encoding="utf-8")
+            result = self.run_cli("fmt", "--no-valign", str(path))
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("op f : → A × (B | C);", result.stdout)
+        self.assertIn("op g : (A → B) × C → D;", result.stdout)
+        self.assertIn("var v : (A × B) × C;", result.stdout)
+
+    def test_fmt_preserves_expression_parentheses(self) -> None:
+        source = "\n".join(
+            [
+                "var a : ℕ;",
+                "var b : ℕ;",
+                "var c : ℕ;",
+                "var d : ℕ;",
+                "axiom (a + b) * c = d;",
+                "axiom a + b * c = d;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "exprs.alg"
+            path.write_text(source, encoding="utf-8")
+            result = self.run_cli("fmt", "--no-valign", str(path))
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("axiom (a + b) * c = d;", result.stdout)
+        self.assertIn("axiom a + b * c = d;", result.stdout)
+
+    def test_fmt_round_trips_grouping(self) -> None:
+        sources = [
+            "axiom (a + b) * c = d;",
+            "axiom a - (b - c) = d;",
+            "axiom (a ⟹ b) ⟹ c;",
+            "axiom a ⟹ b ⟹ c;",
+            "axiom ¬ (a ∧ b) ∨ c;",
+            "axiom (a ∨ b) ∧ c;",
+            "axiom (a + b).f = c;",
+            "axiom a ▷ f(b) = c;",
+            "axiom (a + b)' = c;",
+            "axiom x = (if a then b else c) + 1;",
+            "axiom (let y = f(x) in y) = z;",
+            "axiom - (a + b) = c;",
+            "axiom (- a) * b = c;",
+            "axiom a * (- b) = c;",
+            "op f : → A × (B | C);",
+            "op g : (A → B) × C → D;",
+            "var v : (A × B) × C;",
+            "var w : A | (B | C);",
+            "var q : Seq[A | B];",
+        ]
+        for source in sources:
+            with self.subTest(source=source):
+                module = parse_text(source)
+                rendered = format_spec(module)
+                reparsed = parse_text(rendered)
+                self.assertEqual(semantic_payload(reparsed), semantic_payload(module), rendered)
+                self.assertEqual(format_spec(reparsed), rendered)
 
 
 if __name__ == "__main__":

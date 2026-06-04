@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .ast import AxiomDecl, LetDecl, Module, Node, OpDecl, SortDecl, VarDecl
-from .parser import WORD_SYMBOLS
+from .parser import PRECEDENCE, WORD_SYMBOLS
 
 ASCII = {symbol: word for word, symbol in WORD_SYMBOLS.items()} | {"▷": "|>"}
 
@@ -60,7 +60,7 @@ class Formatter:
                     widths[position] = width
             elif kind is AxiomDecl:
                 lengths = [
-                    len(self.expr(decl.expr.data["left"]))
+                    len(self.expr(decl.expr.data["left"], PRECEDENCE["="]))
                     for decl in run
                     if self.axiom_aligns(decl)
                 ]
@@ -85,7 +85,10 @@ class Formatter:
             return f"sort {', '.join(decl.names)};"
         if isinstance(decl, OpDecl):
             name = decl.name.ljust(name_width)
-            domain = f" {self.sym('×')} ".join(self.type_expr(item) for item in decl.domain)
+            # Domain items parse as type primaries, so looser types need parens.
+            domain = f" {self.sym('×')} ".join(
+                self.type_expr(item, self.TYPE_PRIMARY) for item in decl.domain
+            )
             if domain:
                 return f"op {name} : {domain} {self.sym('→')} {self.type_expr(decl.codomain)};"
             return f"op {name} : {self.sym('→')} {self.type_expr(decl.codomain)};"
@@ -95,8 +98,9 @@ class Formatter:
             if isinstance(decl.expr, Node) and decl.expr.kind in ("let", "let_tuple"):
                 return self.format_axiom_lets(decl.expr)
             if name_width and self.axiom_aligns(decl):
-                lhs = self.expr(decl.expr.data["left"]).ljust(name_width)
-                return f"axiom {lhs} = {self.expr(decl.expr.data['right'])};"
+                prec = PRECEDENCE["="]
+                lhs = self.expr(decl.expr.data["left"], prec).ljust(name_width)
+                return f"axiom {lhs} = {self.expr(decl.expr.data['right'], prec + 1)};"
             return f"axiom {self.expr(decl.expr)};"
         if isinstance(decl, LetDecl):
             return f"let {decl.name.ljust(name_width)} = {self.expr(decl.expr)};"
@@ -114,7 +118,12 @@ class Formatter:
         indent = " " * len("axiom ")
         return "axiom " + f"\n{indent}".join(lines)
 
-    def type_expr(self, value: Any) -> str:
+    # Type grammar precedence: sum `|` (1) < arrow `→` (2, right-assoc)
+    # < product `×` (3) < primary (4). Children that bind looser than the
+    # surrounding context get parenthesized so formatting preserves the AST.
+    TYPE_SUM, TYPE_ARROW, TYPE_PRODUCT, TYPE_PRIMARY = 1, 2, 3, 4
+
+    def type_expr(self, value: Any, min_prec: int = 0) -> str:
         if not isinstance(value, Node):
             raise TypeError(f"unsupported type expression: {value!r}")
         data = value.data
@@ -127,14 +136,32 @@ class Formatter:
         if value.kind == "type_sequence":
             return f"Seq[{self.type_expr(data['item'])}]"
         if value.kind == "type_function":
-            return f"{self.type_expr(data['left'])} {self.sym('→')} {self.type_expr(data['right'])}"
+            left = self.type_expr(data["left"], self.TYPE_PRODUCT)
+            right = self.type_expr(data["right"], self.TYPE_ARROW)
+            return self.wrap(f"{left} {self.sym('→')} {right}", self.TYPE_ARROW, min_prec)
         if value.kind == "type_product":
-            return f" {self.sym('×')} ".join(self.type_expr(item) for item in data["items"])
+            text = f" {self.sym('×')} ".join(
+                self.type_expr(item, self.TYPE_PRIMARY) for item in data["items"]
+            )
+            return self.wrap(text, self.TYPE_PRODUCT, min_prec)
         if value.kind == "type_sum":
-            return " | ".join(self.type_expr(item) for item in data["items"])
+            text = " | ".join(self.type_expr(item, self.TYPE_ARROW) for item in data["items"])
+            return self.wrap(text, self.TYPE_SUM, min_prec)
         raise TypeError(f"unsupported type expression: {value!r}")
 
-    def expr(self, value: Any) -> str:
+    @staticmethod
+    def wrap(text: str, prec: int, min_prec: int) -> str:
+        return f"({text})" if prec < min_prec else text
+
+    # Expression precedence beyond the parser's binary table: unary operands
+    # parse at level 9, postfix (call, prime) binds tighter, and atoms never
+    # need parens. if/let extend greedily to the right, so they sit at the
+    # bottom and get parenthesized in any operand position.
+    UNARY_PREC = 8
+    POSTFIX_PREC = 10
+    ATOM_PREC = 11
+
+    def expr(self, value: Any, min_prec: int = 0) -> str:
         if not isinstance(value, Node):
             raise TypeError(f"unsupported expression: {value!r}")
         data = value.data
@@ -155,22 +182,30 @@ class Formatter:
         if value.kind == "tuple":
             return "(" + ", ".join(self.expr(item) for item in data["items"]) + ")"
         if value.kind == "prime":
-            return self.expr(data["value"]) + "'"
+            return self.expr(data["value"], self.POSTFIX_PREC) + "'"
         if value.kind == "call":
-            return self.expr(data["function"]) + "(" + ", ".join(self.expr(arg) for arg in data["args"]) + ")"
+            function = self.expr(data["function"], self.POSTFIX_PREC)
+            return function + "(" + ", ".join(self.expr(arg) for arg in data["args"]) + ")"
         if value.kind == "unary":
-            return self.sym(data["op"]) + " " + self.expr(data["value"])
+            text = self.sym(data["op"]) + " " + self.expr(data["value"], PRECEDENCE["."])
+            return self.wrap(text, self.UNARY_PREC, min_prec)
         if value.kind == "binary":
-            if data["op"] == ".":
-                return f"{self.expr(data['left'])}.{self.expr(data['right'])}"
-            return f"{self.expr(data['left'])} {self.sym(data['op'])} {self.expr(data['right'])}"
+            op = data["op"]
+            prec = PRECEDENCE[op]
+            right_assoc = op in {"⟹", "⟺"}
+            left = self.expr(data["left"], prec + 1 if right_assoc else prec)
+            right = self.expr(data["right"], prec if right_assoc else prec + 1)
+            text = f"{left}.{right}" if op == "." else f"{left} {self.sym(op)} {right}"
+            return self.wrap(text, prec, min_prec)
         if value.kind == "if":
-            return (
+            text = (
                 f"if {self.expr(data['condition'])} then {self.expr(data['then'])} "
                 f"else {self.expr(data['otherwise'])}"
             )
+            return self.wrap(text, 0, min_prec)
         if value.kind in ("let", "let_tuple"):
-            return f"{self.let_binding(value)} in {self.expr(data['body'])}"
+            text = f"{self.let_binding(value)} in {self.expr(data['body'])}"
+            return self.wrap(text, 0, min_prec)
         raise TypeError(f"unsupported expression: {value!r}")
 
     def let_binding(self, value: Node) -> str:
