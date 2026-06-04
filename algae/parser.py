@@ -18,22 +18,9 @@ class Token:
     column: int
 
 
-@dataclass(frozen=True, slots=True)
-class State:
-    tokens: tuple[Token, ...]
-    index: int = 0
-
-    @property
-    def current(self) -> Token:
-        return self.tokens[self.index]
-
-    def advance(self, count: int = 1) -> "State":
-        return State(self.tokens, self.index + count)
-
-
 class ParseFailure(Exception):
-    def __init__(self, state: State, expected: str) -> None:
-        self.state = state
+    def __init__(self, token: Token, expected: str) -> None:
+        self.token = token
         self.expected = expected
         super().__init__(expected)
 
@@ -236,39 +223,43 @@ def lex(text: str) -> tuple[Token, ...]:
 
 class AlgParser:
     def __init__(self, text: str) -> None:
-        self.state = State(lex(text))
+        self.tokens = lex(text)
+        self.pos = 0
 
     @property
     def current(self) -> Token:
-        return self.state.current
+        return self.tokens[self.pos]
+
+    def advance(self) -> None:
+        self.pos += 1
 
     def fail(self, expected: str) -> None:
-        raise ParseFailure(self.state, expected)
+        raise ParseFailure(self.current, expected)
 
     def consume(self, value: str, expected: str | None = None) -> Token:
         token = self.current
         if token.value == value:
-            self.state = self.state.advance()
+            self.advance()
             return token
         self.fail(expected or value)
 
     def consume_keyword(self, value: str) -> Token:
         token = self.current
         if token.kind == "KEYWORD" and token.value == value:
-            self.state = self.state.advance()
+            self.advance()
             return token
         self.fail(value)
 
     def consume_ident(self, expected: str = "identifier") -> str:
         token = self.current
         if token.kind == "IDENT":
-            self.state = self.state.advance()
+            self.advance()
             return token.value
         self.fail(expected)
 
     def match(self, value: str) -> bool:
         if self.current.value == value:
-            self.state = self.state.advance()
+            self.advance()
             return True
         return False
 
@@ -279,7 +270,7 @@ class AlgParser:
                 declarations.append(self.parse_decl())
             return Module(declarations)
         except ParseFailure as exc:
-            token = exc.state.current
+            token = exc.token
             found = "end of file" if token.kind == "EOF" else token.text
             raise ParseError(token.line, token.column, exc.expected, found) from exc
 
@@ -390,7 +381,7 @@ class AlgParser:
                 return node("type_sequence", item=item)
             return node("type_name", name=name)
         if token.value in TYPE_BUILTINS:
-            self.state = self.state.advance()
+            self.advance()
             return node("type_builtin", name=token.value)
         if self.match("("):
             if self.match(")"):
@@ -411,7 +402,7 @@ class AlgParser:
             prec = self.precedence(op)
             if prec < min_prec:
                 break
-            self.state = self.state.advance()
+            self.advance()
             right_min = prec if op in {"⟹", "⟺"} else prec + 1
             right = self.parse_binary(right_min)
             left = node("binary", op=op, left=left, right=right)
@@ -439,10 +430,10 @@ class AlgParser:
     def parse_prefix(self) -> Any:
         token = self.current
         if token.value in {"¬", "-", "⋃"}:
-            self.state = self.state.advance()
+            self.advance()
             return node("unary", op=token.value, value=self.parse_binary(9))
         if token.value in {"∀", "∃"}:
-            self.state = self.state.advance()
+            self.advance()
             var = self.consume_ident("quantifier variable")
             self.consume("∈")
             source = self.parse_expr()
@@ -451,7 +442,7 @@ class AlgParser:
             body = self.parse_expr()
             return node("quantifier", op=token.value, var=var, source=source, body=body)
         if token.kind == "KEYWORD" and token.value == "if":
-            self.state = self.state.advance()
+            self.advance()
             condition = self.parse_expr()
             self.consume_keyword("then")
             then_expr = self.parse_expr()
@@ -463,25 +454,25 @@ class AlgParser:
     def parse_atom(self) -> Any:
         token = self.current
         if token.kind == "IDENT":
-            self.state = self.state.advance()
+            self.advance()
             return node("identifier", name=token.value)
         if token.kind == "NUMBER":
-            self.state = self.state.advance()
+            self.advance()
             return node("number", value=token.value)
         if token.kind == "STRING":
-            self.state = self.state.advance()
+            self.advance()
             return node("string", value=token.value)
         if token.kind == "KEYWORD" and token.value in {"true", "false"}:
-            self.state = self.state.advance()
+            self.advance()
             return node("bool", value=(token.value == "true"))
         if token.value in {"⊤", "⊥"}:
-            self.state = self.state.advance()
+            self.advance()
             return node("bool_symbol", value=token.value)
         if token.value == "∅":
-            self.state = self.state.advance()
+            self.advance()
             return node("empty")
         if token.value in TYPE_BUILTINS:
-            self.state = self.state.advance()
+            self.advance()
             return node("builtin_set", name=token.value)
         if self.match("("):
             if self.match(")"):
