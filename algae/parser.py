@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .ast import AxiomDecl, Module, OpDecl, SortDecl, VarDecl, node
-from .combinators import ParseFailure, State, Token, token_kind, token_value
+from .combinators import ParseFailure, State, Token
 
 
 KEYWORDS = {
@@ -209,7 +209,6 @@ def lex(text: str) -> tuple[Token, ...]:
 class AlgParser:
     def __init__(self, text: str) -> None:
         self.state = State(lex(text))
-        self.ident_parser = token_kind("IDENT", "identifier")
 
     @property
     def current(self) -> Token:
@@ -219,8 +218,11 @@ class AlgParser:
         raise ParseFailure(self.state, expected)
 
     def consume(self, value: str, expected: str | None = None) -> Token:
-        token, self.state = token_value(value, expected or value)(self.state)
-        return token
+        token = self.current
+        if token.value == value:
+            self.state = self.state.advance()
+            return token
+        self.fail(expected or value)
 
     def consume_keyword(self, value: str) -> Token:
         token = self.current
@@ -230,8 +232,11 @@ class AlgParser:
         self.fail(value)
 
     def consume_ident(self, expected: str = "identifier") -> str:
-        token, self.state = self.ident_parser.label(expected)(self.state)
-        return token.value
+        token = self.current
+        if token.kind == "IDENT":
+            self.state = self.state.advance()
+            return token.value
+        self.fail(expected)
 
     def match(self, value: str) -> bool:
         if self.current.value == value:
