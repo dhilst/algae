@@ -2,10 +2,10 @@
 sort Stack, Elem;
 sort Error = {empty_error};  # popping or reading an empty stack
 
-op empty : -> Stack;
-op push : Stack × Elem -> Stack;
-op pop : Stack -> Stack | Error;
-op top : Stack -> Elem | Error;
+op empty : → Stack;
+op push : Stack × Elem → Stack;
+op pop : Stack → Stack | Error;
+op top : Stack → Elem | Error;
 
 var s : Stack;
 var e : Elem;

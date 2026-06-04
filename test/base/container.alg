@@ -1,8 +1,8 @@
 sort Container, Elem;
 
-op empty_container : -> Container;
-op insert : Container × Elem -> Container;
-op contains : Container × Elem -> 𝔹;
+op empty_container : → Container;
+op insert : Container × Elem → Container;
+op contains : Container × Elem → 𝔹;
 
 var c : Container;
 var e : Elem;

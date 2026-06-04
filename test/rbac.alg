@@ -23,21 +23,17 @@ let with_assignment = assign_role(with_perm, u, r);
 
 # Happy path: full setup grants authorization.
 axiom authorized(with_assignment, u, p) = true;
-
 # Unknown-user errors.
 axiom assign_role(empty_rbac(), u, r) = unknown_user;
 axiom authorized(empty_rbac(), u, p) = unknown_user;
 axiom remove_user(empty_rbac(), u) = unknown_user;
 axiom revoke_role(empty_rbac(), u, r) = unknown_user;
-
 # Unknown-role errors.
 axiom assign_role(add_user(empty_rbac(), u), u, r) = unknown_role;
 axiom grant_permission(empty_rbac(), r, p) = unknown_role;
 axiom revoke_permission(empty_rbac(), r, p) = unknown_role;
-
 # A known user with no roles is denied.
 axiom authorized(add_user(empty_rbac(), u), u, p) = false;
-
 # Revoking the role, the permission, or the user removes authorization.
 axiom let revoked = revoke_role(with_assignment, u, r) in
       authorized(revoked, u, p) = false;

@@ -1,11 +1,11 @@
 sort Store, Key, Value;
 sort Error = {missing_key};
 
-op empty_store : -> Store;
-op put : Store × Key × Value -> Store;
-op get : Store × Key -> Value | Error;
-op delete : Store × Key -> Store;
-op has : Store × Key -> 𝔹;
+op empty_store : → Store;
+op put : Store × Key × Value → Store;
+op get : Store × Key → Value | Error;
+op delete : Store × Key → Store;
+op has : Store × Key → 𝔹;
 
 var s : Store;
 var k : Key;
