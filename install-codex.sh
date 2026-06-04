@@ -6,7 +6,7 @@ SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
 
 mkdir -p "$SKILLS_DIR"
 
-for skill in alg-spec alg; do
+for skill in alg; do
   src="$SCRIPT_DIR/skills/$skill"
   dst="$SKILLS_DIR/$skill"
   if [ -e "$dst" ]; then

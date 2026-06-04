@@ -1,7 +1,7 @@
 {
   "name": "algae",
   "version": "0.1.0",
-  "description": "Lightweight algebraic specifications using set-theoretic notation for precise code development",
+  "description": "Lightweight algebraic specifications using equational notation for precise code development",
   "author": {
     "name": "Daniel Hilst Selli",
     "email": "danielhilst@gmail.com"
