@@ -43,6 +43,10 @@ module.exports = grammar({
 
   word: $ => $.identifier,
 
+  conflicts: $ => [
+    [$.axiom_name, $._expression],
+  ],
+
   rules: {
     source_file: $ => repeat($._declaration),
 
@@ -87,16 +91,24 @@ module.exports = grammar({
     var_declaration: $ => seq(
       'var',
       field('name', $.identifier),
+      repeat(seq(',', field('name', $.identifier))),
       ':',
       field('type', $._type),
       ';',
     ),
 
+    // axiom name? body;  — the optional name is an identifier with trailing
+    // primes; GLR disambiguates against the body's leading identifier, and
+    // the dynamic precedences mirror algae/parser.py: a bare identifier (or
+    // one followed by `(` or `'`) is the expression, not the name.
     axiom_declaration: $ => seq(
       'axiom',
+      optional(field('name', $.axiom_name)),
       field('body', $._expression),
       ';',
     ),
+
+    axiom_name: $ => prec.dynamic(-1, seq($.identifier, repeat("'"))),
 
     // let name = expr;  (top level, no `in`) names a term shared by axioms
     let_declaration: $ => seq(

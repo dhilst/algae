@@ -3,9 +3,9 @@ sort Stack, Elem;
 sort Error = {empty_error};  # popping or reading an empty stack
 
 op empty : → Stack;
-op push  : Stack × Elem → Stack;
-op pop   : Stack → Stack × Elem | Error;
-op top   : Stack → Elem | Error;
+op push : Stack × Elem → Stack;
+op pop : Stack → Stack × Elem | Error;
+op top : Stack → Elem | Error;
 
 var s : Stack;
 var e : Elem;
@@ -14,5 +14,5 @@ var e : Elem;
 # s.push(e).pop reads as pop(push(s, e)).
 axiom s.push(e).pop = (s, e);
 axiom s.push(e).top = e;
-axiom empty().pop   = empty_error;
-axiom empty().top   = empty_error;
+axiom empty().pop = empty_error;
+axiom empty().top = empty_error;

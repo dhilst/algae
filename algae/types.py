@@ -106,6 +106,7 @@ class Checker:
                 self.collect_op(decl)
             elif isinstance(decl, VarDecl):
                 self.collect_var(decl)
+        axiom_names: set[str] = set()
         for decl in self.module.declarations:
             self.line = decl.line
             if isinstance(decl, LetDecl):
@@ -113,6 +114,10 @@ class Checker:
                 if bound is not None:
                     self.lets[decl.name] = bound
             elif isinstance(decl, AxiomDecl):
+                if decl.name is not None:
+                    if decl.name in axiom_names:
+                        self.issue(f"duplicate axiom name {decl.name}")
+                    axiom_names.add(decl.name)
                 body = self.synth(decl.expr, {})
                 if body is not None and not compatible(body, BOOL):
                     self.issue(f"axiom must be a boolean expression, got {_render(body)}")
@@ -146,9 +151,10 @@ class Checker:
 
     def collect_var(self, decl: VarDecl) -> None:
         self.check_type(decl.sort)
-        if decl.name in self.vars:
-            self.issue(f"duplicate var {decl.name}")
-        self.vars[decl.name] = decl.sort
+        for name in decl.names:
+            if name in self.vars:
+                self.issue(f"duplicate var {name}")
+            self.vars[name] = decl.sort
 
     def check_type(self, t: Node) -> None:
         if t.kind == "type_name":

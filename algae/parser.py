@@ -328,18 +328,47 @@ class AlgParser:
         return OpDecl(name, domain, codomain)
 
     def parse_var(self) -> VarDecl:
+        # `var e, f : Elem;` declares every name at the same sort.
         self.consume_keyword("var")
-        name = self.consume_ident("variable name")
+        names = [self.consume_ident("variable name")]
+        while self.match(","):
+            names.append(self.consume_ident("variable name"))
         self.consume(":")
         sort = self.parse_type_expr()
         self.consume(";")
-        return VarDecl(name, sort)
+        return VarDecl(names, sort)
 
     def parse_axiom(self) -> AxiomDecl:
         self.consume_keyword("axiom")
+        name = self.parse_axiom_name()
         expr = self.parse_expr()
         self.consume(";")
-        return AxiomDecl(expr)
+        return AxiomDecl(expr, name)
+
+    def parse_axiom_name(self) -> str | None:
+        # `axiom name expr;` — the optional name is an identifier (trailing
+        # primes allowed, e.g. assoc') and is recognized only when the token
+        # after it begins a new expression. Anything else (an operator, `(`,
+        # `'`, `;`) means the identifier was the expression itself.
+        token = self.current
+        if token.kind != "IDENT" or token.value == "_":
+            return None
+        start = self.pos
+        name = token.value
+        self.advance()
+        while self.match("'"):
+            name += "'"
+        if self.starts_expression(self.current):
+            return name
+        self.pos = start
+        return None
+
+    def starts_expression(self, token: Token) -> bool:
+        if token.kind in ("IDENT", "NUMBER", "STRING"):
+            return True
+        if token.kind == "KEYWORD":
+            return token.value in {"if", "let", "true", "false"}
+        return token.value in {"¬", "⊤", "⊥"} or token.value in TYPE_BUILTINS
 
     def parse_let(self) -> LetDecl:
         self.consume_keyword("let")

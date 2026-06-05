@@ -1,11 +1,17 @@
-"""Formatter for equational .alg ASTs."""
+"""Formatter for equational .alg sources.
+
+`respell` is what `fmt` runs: it preserves the source verbatim — whitespace,
+layout, comments — and only canonicalizes symbol spellings. `Formatter` is
+the AST pretty-printer, used to render synthesized types in checker errors
+and available programmatically.
+"""
 
 from __future__ import annotations
 
 from typing import Any
 
 from .ast import AxiomDecl, LetDecl, Module, Node, OpDecl, SortDecl, VarDecl
-from .parser import PRECEDENCE, WORD_SYMBOLS
+from .parser import PRECEDENCE, WORD_SYMBOLS, lex
 
 # Word aliases inverted, overridden where the canonical ASCII form is symbolic.
 ASCII = {symbol: word for word, symbol in WORD_SYMBOLS.items()} | {
@@ -16,24 +22,52 @@ ASCII = {symbol: word for word, symbol in WORD_SYMBOLS.items()} | {
 }
 
 
+def respell(text: str, *, ascii: bool = False) -> str:
+    """Rewrite symbol tokens to their canonical spelling, byte-for-byte otherwise.
+
+    Unicode is canonical by default; `ascii` swaps to the canonical ASCII
+    aliases instead. `*` and `×` are interchangeable in both expressions
+    (multiplication) and types (product), so they respell to `×`/`*` too.
+    """
+    line_starts = [0]
+    for index, char in enumerate(text):
+        if char == "\n":
+            line_starts.append(index + 1)
+    pieces: list[str] = []
+    position = 0
+    for token in lex(text):
+        if token.kind != "SYMBOL":
+            continue
+        if ascii:
+            target = ASCII.get(token.value, token.value)
+        else:
+            target = "×" if token.value == "*" else token.value
+        if target == token.text:
+            continue
+        start = line_starts[token.line - 1] + token.column - 1
+        pieces.append(text[position:start])
+        pieces.append(target)
+        position = start + len(token.text)
+    pieces.append(text[position:])
+    return "".join(pieces)
+
+
 class Formatter:
-    def __init__(self, *, ascii: bool = False, valign: bool = True) -> None:
+    def __init__(self, *, ascii: bool = False) -> None:
         self.ascii = ascii
-        self.valign = valign
 
     def sym(self, value: str) -> str:
         return ASCII[value] if self.ascii and value in ASCII else value
 
     def format_module(self, module: Module) -> str:
         lines: list[str] = []
-        widths = self.name_widths(module.declarations)
         previous_group = None
-        for decl, width in zip(module.declarations, widths):
+        for decl in module.declarations:
             group = decl.__class__.__name__
             if lines and group != previous_group:
                 lines.append("")
             lines.extend(f"# {comment}".rstrip() for comment in decl.leading_comments)
-            text = self.format_decl(decl, name_width=width)
+            text = self.format_decl(decl)
             if decl.trailing_comment:
                 text += f"  # {decl.trailing_comment}"
             lines.append(text)
@@ -41,78 +75,31 @@ class Formatter:
         lines.extend(f"# {comment}".rstrip() for comment in module.trailing_comments)
         return "\n".join(lines) + ("\n" if lines else "")
 
-    def name_widths(self, declarations: list[Any]) -> list[int]:
-        # Pad within each run of same-kind declarations so the `:` (op/var)
-        # and `=` (let, single-line `=` axioms) separators align vertically.
-        # A leading comment starts a new run, so commented subgroups align
-        # independently.
-        widths = [0] * len(declarations)
-        if not self.valign:
-            return widths
-        index = 0
-        while index < len(declarations):
-            kind = declarations[index].__class__
-            end = index + 1
-            while (
-                end < len(declarations)
-                and declarations[end].__class__ is kind
-                and not declarations[end].leading_comments
-            ):
-                end += 1
-            run = declarations[index:end]
-            if kind in (OpDecl, VarDecl, LetDecl):
-                width = max(len(decl.name) for decl in run)
-                for position in range(index, end):
-                    widths[position] = width
-            elif kind is AxiomDecl:
-                lengths = [
-                    len(self.expr(decl.expr.data["left"], PRECEDENCE["="]))
-                    for decl in run
-                    if self.axiom_aligns(decl)
-                ]
-                if lengths:
-                    width = max(lengths)
-                    for position in range(index, end):
-                        if self.axiom_aligns(declarations[position]):
-                            widths[position] = width
-            index = end
-        return widths
-
-    def axiom_aligns(self, decl: AxiomDecl) -> bool:
-        # Only single-line axioms whose top-level operator is `=` take part
-        # in alignment; let-chain axioms format multiline.
-        expr = decl.expr
-        return isinstance(expr, Node) and expr.kind == "binary" and expr.data["op"] == "="
-
-    def format_decl(self, decl: Any, name_width: int = 0) -> str:
+    def format_decl(self, decl: Any) -> str:
         if isinstance(decl, SortDecl):
             if decl.values is not None:
                 return f"sort {decl.names[0]} = " + "{" + ", ".join(decl.values) + "};"
             return f"sort {', '.join(decl.names)};"
         if isinstance(decl, OpDecl):
-            name = decl.name.ljust(name_width)
             # Domain items parse as type primaries, so looser types need parens.
             domain = f" {self.sym('×')} ".join(
                 self.type_expr(item, self.TYPE_PRIMARY) for item in decl.domain
             )
             if domain:
-                return f"op {name} : {domain} {self.sym('→')} {self.type_expr(decl.codomain)};"
-            return f"op {name} : {self.sym('→')} {self.type_expr(decl.codomain)};"
+                return f"op {decl.name} : {domain} {self.sym('→')} {self.type_expr(decl.codomain)};"
+            return f"op {decl.name} : {self.sym('→')} {self.type_expr(decl.codomain)};"
         if isinstance(decl, VarDecl):
-            return f"var {decl.name.ljust(name_width)} : {self.type_expr(decl.sort)};"
+            return f"var {', '.join(decl.names)} : {self.type_expr(decl.sort)};"
         if isinstance(decl, AxiomDecl):
+            keyword = f"axiom {decl.name}" if decl.name else "axiom"
             if isinstance(decl.expr, Node) and decl.expr.kind in ("let", "let_tuple"):
-                return self.format_axiom_lets(decl.expr)
-            if name_width and self.axiom_aligns(decl):
-                prec = PRECEDENCE["="]
-                lhs = self.expr(decl.expr.data["left"], prec).ljust(name_width)
-                return f"axiom {lhs} = {self.expr(decl.expr.data['right'], prec + 1)};"
-            return f"axiom {self.expr(decl.expr)};"
+                return self.format_axiom_lets(decl.expr, keyword)
+            return f"{keyword} {self.expr(decl.expr)};"
         if isinstance(decl, LetDecl):
-            return f"let {decl.name.ljust(name_width)} = {self.expr(decl.expr)};"
+            return f"let {decl.name} = {self.expr(decl.expr)};"
         raise TypeError(f"unsupported declaration: {decl!r}")
 
-    def format_axiom_lets(self, expr: Node) -> str:
+    def format_axiom_lets(self, expr: Node, keyword: str = "axiom") -> str:
         # A let chain at the axiom spine breaks after each `in`, with the
         # bindings and final body aligned under the first one.
         lines: list[str] = []
@@ -121,8 +108,8 @@ class Formatter:
             lines.append(f"{self.let_binding(current)} in")
             current = current.data["body"]
         lines.append(f"{self.expr(current)};")
-        indent = " " * len("axiom ")
-        return "axiom " + f"\n{indent}".join(lines)
+        indent = " " * len(f"{keyword} ")
+        return f"{keyword} " + f"\n{indent}".join(lines)
 
     # Type grammar precedence: sum `|` (1) < arrow `→` (2, right-assoc)
     # < product `×` (3) < primary (4). Children that bind looser than the
@@ -222,5 +209,5 @@ class Formatter:
         return f"let {pattern} = {self.expr(value.data['value'])}"
 
 
-def format_spec(module: Module, *, ascii: bool = False, valign: bool = True) -> str:
-    return Formatter(ascii=ascii, valign=valign).format_module(module)
+def format_spec(module: Module, *, ascii: bool = False) -> str:
+    return Formatter(ascii=ascii).format_module(module)

@@ -33,7 +33,7 @@ class OpDecl:
 
 @dataclass(slots=True)
 class VarDecl:
-    name: str
+    names: list[str]
     sort: Any
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
@@ -43,6 +43,7 @@ class VarDecl:
 @dataclass(slots=True)
 class AxiomDecl:
     expr: Any
+    name: str | None = None
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None

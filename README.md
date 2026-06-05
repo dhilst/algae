@@ -48,7 +48,7 @@ claude plugin add /path/to/algae
 | `/alg verify <file.alg>` | Check code conformance against a spec |
 | `/alg extract <source-files...>` | Reverse-engineer a spec from existing code |
 | `python algae.py check <file.alg>` | Check `.alg` syntax |
-| `python algae.py fmt <file.alg>` | Format `.alg` syntax |
+| `python algae.py fmt <file.alg>` | Respell symbol aliases (Unicode ⇄ ASCII), preserving layout |
 | `python algae.py print <file.alg>` | Print the parsed AST as JSON |
 
 ## Language Overview

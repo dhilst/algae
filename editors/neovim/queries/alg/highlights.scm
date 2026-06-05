@@ -128,3 +128,6 @@
   ","
   ":"
 ] @punctuation.delimiter
+
+; Axiom names
+(axiom_name) @label

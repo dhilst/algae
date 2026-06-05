@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Sequence
 
 from .ast import to_jsonable
-from .format import format_spec
-from .parser import ParseError, parse_file
+from .format import respell
+from .parser import ParseError, parse_file, parse_text
 from .types import check_module
 
 
@@ -37,17 +37,18 @@ def check(paths: list[Path], *, syntax_only: bool = False) -> int:
     return 1 if failed else 0
 
 
-def fmt(paths: list[Path], *, ascii: bool, inplace: bool, valign: bool = True) -> int:
+def fmt(paths: list[Path], *, ascii: bool, inplace: bool) -> int:
     failed = False
     outputs: list[tuple[Path, str]] = []
     for path in paths:
+        text = path.read_text(encoding="utf-8")
         try:
-            rendered = format_spec(parse_file(path), ascii=ascii, valign=valign)
+            parse_text(text)  # validate syntax; fmt itself is token-level
         except ParseError as exc:
             failed = True
             print(error_line(path, exc), file=sys.stderr)
         else:
-            outputs.append((path, rendered))
+            outputs.append((path, respell(text, ascii=ascii)))
     if failed:
         return 1
     if inplace:
@@ -99,7 +100,6 @@ def build_parser() -> argparse.ArgumentParser:
     fmt_parser = subparsers.add_parser("fmt")
     fmt_parser.add_argument("--ascii", action="store_true")
     fmt_parser.add_argument("--inplace", action="store_true")
-    fmt_parser.add_argument("--no-valign", dest="valign", action="store_false")
     fmt_parser.add_argument("files", nargs="+", type=Path)
 
     print_parser = subparsers.add_parser("print")
@@ -113,7 +113,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "check":
         return check(args.files, syntax_only=args.syntax_only)
     if args.command == "fmt":
-        return fmt(args.files, ascii=args.ascii, inplace=args.inplace, valign=args.valign)
+        return fmt(args.files, ascii=args.ascii, inplace=args.inplace)
     return print_ast(args.files)
 
 

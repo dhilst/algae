@@ -4,9 +4,8 @@
 
 - Extension: `.alg`
 - Encoding: UTF-8
-- Comments: `#` to end of line, as in bash. `fmt` preserves them: standalone
-  comment lines stay above the next declaration, and a trailing comment stays
-  on its declaration's line.
+- Comments: `#` to end of line, as in bash. `fmt` preserves them verbatim,
+  along with all whitespace and layout.
 - Whitespace is insignificant.
 - A file contains top-level algebraic declarations; there is no `spec` wrapper.
 - Declarations end with `;`.
@@ -70,8 +69,9 @@ op_decl    ::= 'op' identifier ':' domain '→' type_expr ';'
 domain     ::=                    # empty domain for nullary operations
              | type_product
 
-var_decl   ::= 'var' identifier ':' type_expr ';'
-axiom_decl ::= 'axiom' expr ';'
+var_decl   ::= 'var' identifier (',' identifier)* ':' type_expr ';'
+axiom_decl ::= 'axiom' axiom_name? expr ';'
+axiom_name ::= identifier "'"*
 let_decl   ::= 'let' identifier '=' expr ';'
 ```
 
@@ -92,7 +92,17 @@ type_primary ::= identifier | 'ℕ' | 'ℤ' | 'ℝ' | '𝔹'
 
 `check` type-checks declarations and axioms (see Type Checking below); axioms
 are not proved or model-checked. `var` declarations are read as implicitly
-universally quantified over all axioms.
+universally quantified over all axioms. A multi-name declaration
+(`var e, f : Elem;`) declares every name at the same sort and is kept grouped
+by `fmt`.
+
+An axiom may carry an optional name — an identifier with trailing primes
+allowed (`axiom empty_size q.empty ⟺ q.size = 0;`, `axiom assoc' …;`) —
+which `check` requires to be unique across the module. The name is
+recognized only when the token after it begins a new expression; in
+particular, an identifier followed by `(` or `'` is read as the start of the
+axiom body (a call or a primed term), so a named axiom's body cannot start
+with a parenthesized expression — restructure or omit the name there.
 
 ```
 expr      ::= identifier
@@ -115,8 +125,8 @@ bool_op    ::= '∧' | '∨' | '⟹' | '⟺'
 ```
 
 `let` names an intermediate term so deeply nested axioms stay readable. Lets
-nest, so a chain of bindings reads top to bottom; the formatter breaks the
-line after each `in` and aligns the bindings:
+nest, so a chain of bindings conventionally breaks the line after each `in`
+with the bindings aligned:
 
 ```
 axiom let with_user = add_user(rbac, u) in
@@ -266,7 +276,7 @@ declaration's line. `check --syntax-only` skips type checking.
 
 ```
 algae.py check [--syntax-only] file.alg [file2.alg ...]
-algae.py fmt [--ascii --inplace --no-valign] file.alg [file2.alg ...]
+algae.py fmt [--ascii --inplace] file.alg [file2.alg ...]
 algae.py print file.alg [file2.alg ...]
 ```
 
@@ -274,12 +284,9 @@ algae.py print file.alg [file2.alg ...]
   (`<file>.alg: error at <line>, Expected <foo> found <bar>`), or type errors
   (`<file>.alg: type error at line <N>, <message>`). `--syntax-only` skips
   type checking.
-- `fmt` prints formatted source, or rewrites files with `--inplace`.
-- `fmt` converts aliases to Unicode by default; `--ascii` emits the canonical ASCII aliases.
-- `fmt` aligns separators vertically within each run of same-kind
-  declarations (`:` for op/var blocks, `=` for let blocks and single-line `=`
-  axioms); a standalone comment starts a new run. `--no-valign` disables the
-  padding.
+- `fmt` preserves the source verbatim — whitespace, layout, and comments —
+  and only respells symbol aliases: to Unicode by default, to the canonical
+  ASCII aliases with `--ascii`. `--inplace` rewrites the files.
 - `print` emits the parsed AST as JSON.
 
 ## Example

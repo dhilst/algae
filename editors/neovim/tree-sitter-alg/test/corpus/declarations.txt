@@ -163,3 +163,38 @@ axiom top(push(s, e)) = e; # trailing comment
               (identifier)))))
       (identifier)))
   (comment))
+
+==================
+multi-name var declarations
+==================
+
+var e, f : Elem;
+
+---
+
+(source_file
+  (var_declaration
+    name: (identifier)
+    name: (identifier)
+    type: (type_identifier)))
+
+==================
+named axioms
+==================
+
+axiom empty_size q = q;
+axiom q = q;
+
+---
+
+(source_file
+  (axiom_declaration
+    name: (axiom_name
+      (identifier))
+    body: (binary_expression
+      left: (identifier)
+      right: (identifier)))
+  (axiom_declaration
+    body: (binary_expression
+      left: (identifier)
+      right: (identifier))))

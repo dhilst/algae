@@ -27,9 +27,9 @@ def semantic_payload(module) -> list[tuple]:
         elif isinstance(decl, OpDecl):
             payload.append(("op", decl.name, decl.domain, decl.codomain))
         elif isinstance(decl, VarDecl):
-            payload.append(("var", decl.name, decl.sort))
+            payload.append(("var", decl.names, decl.sort))
         elif isinstance(decl, AxiomDecl):
-            payload.append(("axiom", decl.expr))
+            payload.append(("axiom", decl.name, decl.expr))
         elif isinstance(decl, LetDecl):
             payload.append(("let", decl.name, decl.expr))
     return payload
@@ -162,10 +162,7 @@ class AlgaeCliTests(unittest.TestCase):
 
         self.assertEqual(check_result.returncode, 0, check_result.stderr)
         self.assertEqual(fmt_result.returncode, 0, fmt_result.stderr)
-        self.assertIn(
-            "axiom let y = f(x) in\n      let z = f(y) in\n      f(z) = x;",
-            fmt_result.stdout,
-        )
+        self.assertIn("axiom let y = f(x) in let z = f(y) in f(z) = x;", fmt_result.stdout)
 
     def test_toplevel_let_parses_and_formats(self) -> None:
         source = "\n".join(
@@ -209,25 +206,24 @@ class AlgaeCliTests(unittest.TestCase):
             path = Path(directory) / "sugar.alg"
             path.write_text(source, encoding="utf-8")
             check_result = self.run_cli("check", str(path))
-            fmt_result = self.run_cli("fmt", "--no-valign", str(path))
-            ascii_result = self.run_cli("fmt", "--no-valign", "--ascii", str(path))
+            fmt_result = self.run_cli("fmt", str(path))
+            ascii_result = self.run_cli("fmt", "--ascii", str(path))
 
         self.assertEqual(check_result.returncode, 0, check_result.stderr)
         self.assertIn("axiom x.f(x).f(x) = f(f(x, x), x);", fmt_result.stdout)
         self.assertIn("axiom x ▷ f(x) = f(x, x);", fmt_result.stdout)
         self.assertIn("axiom x |> f(x) = f(x, x);", ascii_result.stdout)
 
-    def test_fmt_aligns_colons_unless_disabled(self) -> None:
+    def test_fmt_does_not_pad_separators(self) -> None:
         result = self.run_cli("fmt", "test/stack.alg")
-        plain = self.run_cli("fmt", "--no-valign", "test/stack.alg")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("op empty : → Stack;", result.stdout)
-        self.assertIn("op push  : Stack × Elem → Stack;", result.stdout)
-        self.assertIn("op pop   : Stack → Stack × Elem | Error;", result.stdout)
-        self.assertIn("axiom empty().pop   = empty_error;", result.stdout)
-        self.assertIn("op push : Stack × Elem → Stack;", plain.stdout)
-        self.assertIn("axiom empty().pop = empty_error;", plain.stdout)
+        self.assertIn("op push : Stack × Elem → Stack;", result.stdout)
+        self.assertIn("op pop : Stack → Stack × Elem | Error;", result.stdout)
+        self.assertIn("axiom empty().pop = empty_error;", result.stdout)
+        self.assertNotIn("  :", result.stdout)
+        self.assertNotIn("  =", result.stdout)
 
     def test_destructuring_let_parses_and_formats(self) -> None:
         source = "\n".join(
@@ -246,10 +242,7 @@ class AlgaeCliTests(unittest.TestCase):
             fmt_result = self.run_cli("fmt", str(path))
 
         self.assertEqual(check_result.returncode, 0, check_result.stdout)
-        self.assertIn(
-            "axiom let (a, _) = pair(x) in\n      a = x;",
-            fmt_result.stdout,
-        )
+        self.assertIn("axiom let (a, _) = pair(x) in a = x;", fmt_result.stdout)
 
     def test_check_reports_type_errors(self) -> None:
         source = "\n".join(
@@ -297,7 +290,7 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("op empty : → Stack;  # constructor", result.stdout)
         self.assertIn("# end of spec", result.stdout)
 
-    def test_fmt_inplace_rewrites_file(self) -> None:
+    def test_fmt_inplace_respells_but_preserves_layout(self) -> None:
         source = "sort Stack,Elem;op empty:arrow Stack;var s:Stack;axiom empty()=s;\n"
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "stack.alg"
@@ -307,10 +300,87 @@ class AlgaeCliTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, "")
-        self.assertIn("sort Stack, Elem;", rewritten)
-        self.assertIn("op empty : → Stack;", rewritten)
-        self.assertIn("axiom empty() = s;", rewritten)
+        # Only the alias is respelled; spacing and layout stay verbatim.
+        self.assertEqual(rewritten, "sort Stack,Elem;op empty:→ Stack;var s:Stack;axiom empty()=s;\n")
 
+    def test_fmt_preserves_whitespace_and_layout(self) -> None:
+        source = "\n".join(
+            [
+                "sort Elem;",
+                "",
+                "var q             : Elem;",
+                "var e, f, default : Elem;",
+                "axiom  e   =    f;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "layout.alg"
+            path.write_text(source, encoding="utf-8")
+            result = self.run_cli("fmt", str(path))
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, source)
+
+
+    def test_var_declares_multiple_names(self) -> None:
+        source = "\n".join(
+            [
+                "sort Elem;",
+                "var e, f : Elem;",
+                "axiom e = f;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "multivar.alg"
+            path.write_text(source, encoding="utf-8")
+            check_result = self.run_cli("check", str(path))
+            fmt_result = self.run_cli("fmt", str(path))
+            duplicate = self.check_source("sort Elem;\nvar e, e : Elem;\n")
+
+        self.assertEqual(check_result.returncode, 0, check_result.stdout)
+        self.assertIn("var e, f : Elem;", fmt_result.stdout)
+        self.assertEqual(duplicate.returncode, 1)
+        self.assertIn("duplicate var e", duplicate.stdout)
+
+    def test_axiom_names_parse_check_and_format(self) -> None:
+        source = "\n".join(
+            [
+                "sort Q;",
+                "op size : Q → ℕ;",
+                "op empty : Q → 𝔹;",
+                "var q : Q;",
+                "axiom empty_size q.empty <==> q.size = 0;",
+                "axiom assoc' q.size ≥ 0;",
+                "axiom q.empty ∨ ¬ q.empty;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "named.alg"
+            path.write_text(source, encoding="utf-8")
+            check_result = self.run_cli("check", str(path))
+            fmt_result = self.run_cli("fmt", str(path))
+            print_result = self.run_cli("print", str(path))
+
+        self.assertEqual(check_result.returncode, 0, check_result.stdout)
+        self.assertIn("axiom empty_size q.empty ⟺ q.size = 0;", fmt_result.stdout)
+        self.assertIn("axiom assoc' q.size ≥ 0;", fmt_result.stdout)
+        declarations = json.loads(print_result.stdout)["ast"]["declarations"]
+        names = [decl.get("name") for decl in declarations if decl["kind"] == "AxiomDecl"]
+        self.assertEqual(names, ["empty_size", "assoc'", None])
+
+    def test_axiom_name_does_not_swallow_expressions(self) -> None:
+        # `foo'` here is a prime expression, not an axiom name: `=` follows.
+        result = self.check_source("sort Q;\nvar q : Q;\naxiom q' = q;\n")
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_check_rejects_duplicate_axiom_names(self) -> None:
+        result = self.check_source("var b : 𝔹;\naxiom dup b;\naxiom dup ¬ b;\n")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("duplicate axiom name dup", result.stdout)
 
     def test_check_rejects_negative_literal_for_natural(self) -> None:
         result = self.check_source("var n : ℕ;\naxiom n = -1;\n")
@@ -422,7 +492,7 @@ class AlgaeCliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "types.alg"
             path.write_text(source, encoding="utf-8")
-            result = self.run_cli("fmt", "--no-valign", str(path))
+            result = self.run_cli("fmt", str(path))
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("op f : → A × (B | C);", result.stdout)
@@ -444,11 +514,11 @@ class AlgaeCliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "exprs.alg"
             path.write_text(source, encoding="utf-8")
-            result = self.run_cli("fmt", "--no-valign", str(path))
+            result = self.run_cli("fmt", str(path))
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("axiom (a + b) * c = d;", result.stdout)
-        self.assertIn("axiom a + b * c = d;", result.stdout)
+        self.assertIn("axiom (a + b) × c = d;", result.stdout)
+        self.assertIn("axiom a + b × c = d;", result.stdout)
 
     def test_fmt_round_trips_grouping(self) -> None:
         sources = [
