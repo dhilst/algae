@@ -23,10 +23,10 @@ op top : Stack -> Elem | Error;
 var s : Stack;
 var e : Elem;
 
-axiom top(push(s, e)) = e;
-axiom pop(push(s, e)) = s;
-axiom top(empty()) = empty_error;
-axiom pop(empty()) = empty_error;
+axiom push_top top(push(s, e)) = e;
+axiom push_pop pop(push(s, e)) = s;
+axiom empty_top top(empty()) = empty_error;
+axiom empty_pop pop(empty()) = empty_error;
 ```
 
 **Key conventions:**
@@ -34,7 +34,9 @@ axiom pop(empty()) = empty_error;
 - `op` declares operation signatures; an empty domain is written `op empty : -> Stack;`.
 - `|` in result types represents an algebraic sum/union, commonly for error alternatives.
 - `var` declarations are read as implicitly universally quantified over all axioms.
-- `axiom` gives equations or predicates that document intended behavior.
+- `axiom name expr;` gives equations or predicates that document intended behavior; the name is required and must be unique.
+- `lemma name expr;` records a derived fact, optionally followed by a `proof ... qed;` sketch whose steps cite axioms (`= expr by axiom_name;`). Lemmas are parsed and formatted but not verified.
+- `op f : T | Error ⇸ T;` (ASCII `-/->`) declares a partial operation, conventionally one that narrows a sum; `check` treats it like a total op for now.
 - `let name = expr;` at top level names a term shared by later axioms; `let ... in` scopes a binding inside one axiom.
 - `let (a, b) = expr in ...` destructures a product-typed value; `_` binds unused components (each `_` is a fresh variable, valid only in patterns). Sum-typed values cannot be destructured.
 - Application sugar: `x.f(a)` reads as `f(x, a)` (pipe-first) and `x ▷ f(a)` (alias `|>`) as `f(a, x)` (pipe-last). Prefer `.` when the spec targets object-oriented code and `▷` when it targets functional code.
@@ -153,7 +155,7 @@ Generate an implementation from a specification.
 | `sort Error = {missing}` | `Enum` | `enum` | string union/enum |
 | `op f : A × B -> C` | function/method | `fn` | function/method |
 | `A | Error` | union/exception/result object | `Result<A, Error>` | union/result object |
-| `axiom f(g(x)) = x` | unit test/property test | test/property | test/property |
+| `axiom inverse f(g(x)) = x` | unit test/property test | test/property | test/property |
 
 ## Subcommand: `verify`
 

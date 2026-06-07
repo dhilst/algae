@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .ast import AxiomDecl, LetDecl, Module, Node, OpDecl, SortDecl, VarDecl
+from .ast import AxiomDecl, LemmaDecl, LetDecl, Module, Node, OpDecl, SortDecl, VarDecl
 from .parser import PRECEDENCE, WORD_SYMBOLS, lex
 
 # Word aliases inverted, overridden where the canonical ASCII form is symbolic.
@@ -19,6 +19,7 @@ ASCII = {symbol: word for word, symbol in WORD_SYMBOLS.items()} | {
     "∧": "/\\",
     "∨": "\\/",
     "×": "*",
+    "⇸": "-/->",
 }
 
 
@@ -81,23 +82,45 @@ class Formatter:
                 return f"sort {decl.names[0]} = " + "{" + ", ".join(decl.values) + "};"
             return f"sort {', '.join(decl.names)};"
         if isinstance(decl, OpDecl):
-            # Domain items parse as type primaries, so looser types need parens.
-            domain = f" {self.sym('×')} ".join(
-                self.type_expr(item, self.TYPE_PRIMARY) for item in decl.domain
-            )
+            arrow = self.sym("⇸" if decl.partial else "→")
+            if len(decl.domain) == 1 and decl.domain[0].kind == "type_sum":
+                # A lone sum argument prints unparenthesized; its branches sit
+                # at product precedence so a nested arrow still gets parens
+                # and cannot be mistaken for the signature arrow.
+                domain = " | ".join(
+                    self.type_expr(item, self.TYPE_PRODUCT) for item in decl.domain[0].data["items"]
+                )
+            else:
+                # Domain items parse as type primaries, so looser types need parens.
+                domain = f" {self.sym('×')} ".join(
+                    self.type_expr(item, self.TYPE_PRIMARY) for item in decl.domain
+                )
             if domain:
-                return f"op {decl.name} : {domain} {self.sym('→')} {self.type_expr(decl.codomain)};"
-            return f"op {decl.name} : {self.sym('→')} {self.type_expr(decl.codomain)};"
+                return f"op {decl.name} : {domain} {arrow} {self.type_expr(decl.codomain)};"
+            return f"op {decl.name} : {arrow} {self.type_expr(decl.codomain)};"
         if isinstance(decl, VarDecl):
             return f"var {', '.join(decl.names)} : {self.type_expr(decl.sort)};"
         if isinstance(decl, AxiomDecl):
-            keyword = f"axiom {decl.name}" if decl.name else "axiom"
-            if isinstance(decl.expr, Node) and decl.expr.kind in ("let", "let_tuple"):
-                return self.format_axiom_lets(decl.expr, keyword)
-            return f"{keyword} {self.expr(decl.expr)};"
+            return self.format_rule_head(decl.expr, f"axiom {decl.name}")
+        if isinstance(decl, LemmaDecl):
+            lines = [self.format_rule_head(decl.expr, f"lemma {decl.name}")]
+            if decl.proof is not None:
+                lines.append("proof")
+                for step in decl.proof.data["steps"]:
+                    if step.kind == "proof_rewrite":
+                        lines.append(f"  = {self.expr(step.data['expr'])} by {step.data['rule']};")
+                    else:
+                        lines.append(f"  {self.expr(step.data['expr'])};")
+                lines.append("qed;")
+            return "\n".join(lines)
         if isinstance(decl, LetDecl):
             return f"let {decl.name} = {self.expr(decl.expr)};"
         raise TypeError(f"unsupported declaration: {decl!r}")
+
+    def format_rule_head(self, expr: Any, keyword: str) -> str:
+        if isinstance(expr, Node) and expr.kind in ("let", "let_tuple"):
+            return self.format_axiom_lets(expr, keyword)
+        return f"{keyword} {self.expr(expr)};"
 
     def format_axiom_lets(self, expr: Node, keyword: str = "axiom") -> str:
         # A let chain at the axiom spine breaks after each `in`, with the
@@ -131,7 +154,9 @@ class Formatter:
         if value.kind == "type_function":
             left = self.type_expr(data["left"], self.TYPE_PRODUCT)
             right = self.type_expr(data["right"], self.TYPE_ARROW)
-            return self.wrap(f"{left} {self.sym('→')} {right}", self.TYPE_ARROW, min_prec)
+            # `.get`: nodes synthesized by the checker do not set the key.
+            arrow = self.sym("⇸" if data.get("partial") else "→")
+            return self.wrap(f"{left} {arrow} {right}", self.TYPE_ARROW, min_prec)
         if value.kind == "type_product":
             text = f" {self.sym('×')} ".join(
                 self.type_expr(item, self.TYPE_PRIMARY) for item in data["items"]

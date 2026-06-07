@@ -1,7 +1,7 @@
 // Tree-sitter grammar for the .alg algebraic specification language.
-// Mirrors algae/parser.py: declarations (sort/op/var/axiom), equational
-// type expressions, and Pratt-parsed terms. Unicode symbols and their
-// ASCII / keyword aliases are interchangeable.
+// Mirrors algae/parser.py: declarations (sort/op/var/axiom/lemma/let),
+// equational type expressions, and Pratt-parsed terms. Unicode symbols and
+// their ASCII / keyword aliases are interchangeable.
 
 const PREC = {
   if: 0,
@@ -26,6 +26,7 @@ const TYPE_PREC = {
 };
 
 const ARROW = ['→', '->', 'arrow'];
+const PARTIAL_ARROW = ['⇸', '-/->'];
 const PRODUCT = ['×', '*', 'product'];
 
 function sep1(rule, separator) {
@@ -43,10 +44,6 @@ module.exports = grammar({
 
   word: $ => $.identifier,
 
-  conflicts: $ => [
-    [$.axiom_name, $._expression],
-  ],
-
   rules: {
     source_file: $ => repeat($._declaration),
 
@@ -55,6 +52,7 @@ module.exports = grammar({
       $.op_declaration,
       $.var_declaration,
       $.axiom_declaration,
+      $.lemma_declaration,
       $.let_declaration,
     ),
 
@@ -75,18 +73,23 @@ module.exports = grammar({
       '}',
     ),
 
-    // op name : domain → type;  (empty domain for nullary operations)
+    // op name : domain → type;  (empty domain for nullary operations,
+    // ⇸ for partial operations)
     op_declaration: $ => seq(
       'op',
       field('name', $.identifier),
       ':',
       optional(field('domain', $.domain)),
-      choice(...ARROW),
+      choice(choice(...ARROW), $.partial_arrow),
       field('codomain', $._type),
       ';',
     ),
 
-    domain: $ => sep1($._type_primary, choice(...PRODUCT)),
+    partial_arrow: $ => choice(...PARTIAL_ARROW),
+
+    // A top-level `|` folds the domain into a single sum-typed argument,
+    // grouping as in codomains: A × B | C is (A × B) | C.
+    domain: $ => sep1(sep1($._type_primary, choice(...PRODUCT)), '|'),
 
     var_declaration: $ => seq(
       'var',
@@ -97,18 +100,44 @@ module.exports = grammar({
       ';',
     ),
 
-    // axiom name? body;  — the optional name is an identifier with trailing
-    // primes; GLR disambiguates against the body's leading identifier, and
-    // the dynamic precedences mirror algae/parser.py: a bare identifier (or
-    // one followed by `(` or `'`) is the expression, not the name.
+    // axiom name body;  — the name is required: the first identifier after
+    // `axiom` (trailing primes allowed) is always the name.
     axiom_declaration: $ => seq(
       'axiom',
-      optional(field('name', $.axiom_name)),
+      field('name', $.axiom_name),
       field('body', $._expression),
       ';',
     ),
 
-    axiom_name: $ => prec.dynamic(-1, seq($.identifier, repeat("'"))),
+    axiom_name: $ => seq($.identifier, repeat("'")),
+
+    // lemma name body;  optionally followed by a proof block. Parsed and
+    // stored only; nothing is checked or proved yet.
+    lemma_declaration: $ => seq(
+      'lemma',
+      field('name', alias($.axiom_name, $.lemma_name)),
+      field('body', $._expression),
+      ';',
+      optional(field('proof', $.proof_block)),
+    ),
+
+    proof_block: $ => seq(
+      'proof',
+      repeat($.proof_step),
+      'qed',
+      ';',
+    ),
+
+    proof_step: $ => choice(
+      seq(field('term', $._expression), ';'),
+      seq(
+        '=',
+        field('term', $._expression),
+        'by',
+        field('rule', alias($.axiom_name, $.rule_name)),
+        ';',
+      ),
+    ),
 
     // let name = expr;  (top level, no `in`) names a term shared by axioms
     let_declaration: $ => seq(

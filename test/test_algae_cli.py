@@ -12,7 +12,7 @@ CLI = ROOT / "algae.py"
 
 sys.path.insert(0, str(ROOT))
 
-from algae.ast import AxiomDecl, LetDecl, OpDecl, SortDecl, VarDecl  # noqa: E402
+from algae.ast import AxiomDecl, LemmaDecl, LetDecl, OpDecl, SortDecl, VarDecl  # noqa: E402
 from algae.format import format_spec  # noqa: E402
 from algae.parser import parse_text  # noqa: E402
 
@@ -25,11 +25,13 @@ def semantic_payload(module) -> list[tuple]:
         if isinstance(decl, SortDecl):
             payload.append(("sort", decl.names, decl.values))
         elif isinstance(decl, OpDecl):
-            payload.append(("op", decl.name, decl.domain, decl.codomain))
+            payload.append(("op", decl.name, decl.domain, decl.codomain, decl.partial))
         elif isinstance(decl, VarDecl):
             payload.append(("var", decl.names, decl.sort))
         elif isinstance(decl, AxiomDecl):
             payload.append(("axiom", decl.name, decl.expr))
+        elif isinstance(decl, LemmaDecl):
+            payload.append(("lemma", decl.name, decl.expr, decl.proof))
         elif isinstance(decl, LetDecl):
             payload.append(("let", decl.name, decl.expr))
     return payload
@@ -89,7 +91,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "op pop : Stack arrow Stack | Error;",
                 "var s : Stack;",
                 "var e : Elem;",
-                "axiom pop(push(s, e)) neq s;",
+                "axiom pop_push pop(push(s, e)) neq s;",
                 "",
             ]
         )
@@ -122,7 +124,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "var z : Int;",
                 "var r : Real;",
                 "var b : Bool;",
-                "axiom b /\\ true \\/ false;",
+                "axiom tauto b /\\ true \\/ false;",
                 "",
             ]
         )
@@ -139,10 +141,10 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("var z : ℤ;", fmt_result.stdout)
         self.assertIn("var r : ℝ;", fmt_result.stdout)
         self.assertIn("var b : 𝔹;", fmt_result.stdout)
-        self.assertIn("axiom b ∧ true ∨ false;", fmt_result.stdout)
+        self.assertIn("axiom tauto b ∧ true ∨ false;", fmt_result.stdout)
         self.assertIn("op f : S * Nat arrow S;", ascii_result.stdout)
         self.assertIn("var b : Bool;", ascii_result.stdout)
-        self.assertIn("axiom b /\\ true \\/ false;", ascii_result.stdout)
+        self.assertIn("axiom tauto b /\\ true \\/ false;", ascii_result.stdout)
 
     def test_let_expression_parses_and_formats(self) -> None:
         source = "\n".join(
@@ -150,7 +152,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "sort S;",
                 "op f : S -> S;",
                 "var x : S;",
-                "axiom let y = f(x) in let z = f(y) in f(z) = x;",
+                "axiom chain let y = f(x) in let z = f(y) in f(z) = x;",
                 "",
             ]
         )
@@ -162,7 +164,7 @@ class AlgaeCliTests(unittest.TestCase):
 
         self.assertEqual(check_result.returncode, 0, check_result.stderr)
         self.assertEqual(fmt_result.returncode, 0, fmt_result.stderr)
-        self.assertIn("axiom let y = f(x) in let z = f(y) in f(z) = x;", fmt_result.stdout)
+        self.assertIn("axiom chain let y = f(x) in let z = f(y) in f(z) = x;", fmt_result.stdout)
 
     def test_toplevel_let_parses_and_formats(self) -> None:
         source = "\n".join(
@@ -172,7 +174,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "var x : S;",
                 "let y = f(x);",
                 "let z = f(y);",
-                "axiom f(z) = x;",
+                "axiom roundtrip f(z) = x;",
                 "",
             ]
         )
@@ -197,8 +199,8 @@ class AlgaeCliTests(unittest.TestCase):
                 "sort S;",
                 "op f : S × S -> S;",
                 "var x : S;",
-                "axiom x.f(x).f(x) = f(f(x, x), x);",
-                "axiom x |> f(x) = f(x, x);",
+                "axiom sugar_first x.f(x).f(x) = f(f(x, x), x);",
+                "axiom sugar_last x |> f(x) = f(x, x);",
                 "",
             ]
         )
@@ -210,9 +212,9 @@ class AlgaeCliTests(unittest.TestCase):
             ascii_result = self.run_cli("fmt", "--ascii", str(path))
 
         self.assertEqual(check_result.returncode, 0, check_result.stderr)
-        self.assertIn("axiom x.f(x).f(x) = f(f(x, x), x);", fmt_result.stdout)
-        self.assertIn("axiom x ▷ f(x) = f(x, x);", fmt_result.stdout)
-        self.assertIn("axiom x |> f(x) = f(x, x);", ascii_result.stdout)
+        self.assertIn("axiom sugar_first x.f(x).f(x) = f(f(x, x), x);", fmt_result.stdout)
+        self.assertIn("axiom sugar_last x ▷ f(x) = f(x, x);", fmt_result.stdout)
+        self.assertIn("axiom sugar_last x |> f(x) = f(x, x);", ascii_result.stdout)
 
     def test_fmt_does_not_pad_separators(self) -> None:
         result = self.run_cli("fmt", "test/stack.alg")
@@ -221,7 +223,7 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("op empty : → Stack;", result.stdout)
         self.assertIn("op push : Stack × Elem → Stack;", result.stdout)
         self.assertIn("op pop : Stack → Stack × Elem | Error;", result.stdout)
-        self.assertIn("axiom empty().pop = empty_error;", result.stdout)
+        self.assertIn("axiom empty_pop empty().pop = empty_error;", result.stdout)
         self.assertNotIn("  :", result.stdout)
         self.assertNotIn("  =", result.stdout)
 
@@ -231,7 +233,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "sort S, T;",
                 "op pair : S -> S × T;",
                 "var x : S;",
-                "axiom let (a, _) = pair(x) in a = x;",
+                "axiom pair_fst let (a, _) = pair(x) in a = x;",
                 "",
             ]
         )
@@ -242,7 +244,7 @@ class AlgaeCliTests(unittest.TestCase):
             fmt_result = self.run_cli("fmt", str(path))
 
         self.assertEqual(check_result.returncode, 0, check_result.stdout)
-        self.assertIn("axiom let (a, _) = pair(x) in a = x;", fmt_result.stdout)
+        self.assertIn("axiom pair_fst let (a, _) = pair(x) in a = x;", fmt_result.stdout)
 
     def test_check_reports_type_errors(self) -> None:
         source = "\n".join(
@@ -251,8 +253,8 @@ class AlgaeCliTests(unittest.TestCase):
                 "sort Error = {empty_error};",
                 "op pop : Stack -> Stack × Elem | Error;",
                 "var s : Stack;",
-                "axiom let (rest, x) = pop(s) in rest = s;",
-                "axiom missing(s) = s;",
+                "axiom pop_rest let (rest, x) = pop(s) in rest = s;",
+                "axiom missing_op missing(s) = s;",
                 "",
             ]
         )
@@ -275,7 +277,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "sort Stack;",
                 "op empty : arrow Stack;  # constructor",
                 "var s : Stack;",
-                "axiom empty() = s;",
+                "axiom empty_eq empty() = s;",
                 "# end of spec",
                 "",
             ]
@@ -291,7 +293,7 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("# end of spec", result.stdout)
 
     def test_fmt_inplace_respells_but_preserves_layout(self) -> None:
-        source = "sort Stack,Elem;op empty:arrow Stack;var s:Stack;axiom empty()=s;\n"
+        source = "sort Stack,Elem;op empty:arrow Stack;var s:Stack;axiom empty_eq empty()=s;\n"
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "stack.alg"
             path.write_text(source, encoding="utf-8")
@@ -301,7 +303,9 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, "")
         # Only the alias is respelled; spacing and layout stay verbatim.
-        self.assertEqual(rewritten, "sort Stack,Elem;op empty:→ Stack;var s:Stack;axiom empty()=s;\n")
+        self.assertEqual(
+            rewritten, "sort Stack,Elem;op empty:→ Stack;var s:Stack;axiom empty_eq empty()=s;\n"
+        )
 
     def test_fmt_preserves_whitespace_and_layout(self) -> None:
         source = "\n".join(
@@ -310,7 +314,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "",
                 "var q             : Elem;",
                 "var e, f, default : Elem;",
-                "axiom  e   =    f;",
+                "axiom  e_eq  e   =    f;",
                 "",
             ]
         )
@@ -328,7 +332,7 @@ class AlgaeCliTests(unittest.TestCase):
             [
                 "sort Elem;",
                 "var e, f : Elem;",
-                "axiom e = f;",
+                "axiom e_eq e = f;",
                 "",
             ]
         )
@@ -353,7 +357,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "var q : Q;",
                 "axiom empty_size q.empty <==> q.size = 0;",
                 "axiom assoc' q.size ≥ 0;",
-                "axiom q.empty ∨ ¬ q.empty;",
+                "axiom tauto (q.empty ∨ ¬ q.empty) = true;",
                 "",
             ]
         )
@@ -369,11 +373,19 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("axiom assoc' q.size ≥ 0;", fmt_result.stdout)
         declarations = json.loads(print_result.stdout)["ast"]["declarations"]
         names = [decl.get("name") for decl in declarations if decl["kind"] == "AxiomDecl"]
-        self.assertEqual(names, ["empty_size", "assoc'", None])
+        self.assertEqual(names, ["empty_size", "assoc'", "tauto"])
 
-    def test_axiom_name_does_not_swallow_expressions(self) -> None:
-        # `foo'` here is a prime expression, not an axiom name: `=` follows.
-        result = self.check_source("sort Q;\nvar q : Q;\naxiom q' = q;\n")
+    def test_anonymous_axiom_is_rejected(self) -> None:
+        # The first identifier after `axiom` is always the (required) name.
+        result = self.check_source("var b : 𝔹;\naxiom b = b;\n")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Expected expression found =", result.stdout)
+
+    def test_axiom_name_allows_paren_body_and_primes(self) -> None:
+        # A required name removes the old `name(args)` call ambiguity: the
+        # body may start with `(`, and names may carry trailing primes.
+        result = self.check_source("sort Q;\nvar q : Q;\naxiom refl' (q, q) = (q, q');\n")
         self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_check_rejects_duplicate_axiom_names(self) -> None:
@@ -382,19 +394,129 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("duplicate axiom name dup", result.stdout)
 
+    def test_partial_op_parses_checks_and_formats(self) -> None:
+        source = "\n".join(
+            [
+                "sort S;",
+                "sort Error = {oops};",
+                "op f : → S | Error;",
+                "op assert : S | Error ⇸ S;",
+                "op coerce : S -/-> S;",
+                "var x : S;",
+                "axiom assert_elim f().assert = x;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "partial.alg"
+            path.write_text(source, encoding="utf-8")
+            check_result = self.run_cli("check", str(path))
+            fmt_result = self.run_cli("fmt", str(path))
+            ascii_result = self.run_cli("fmt", "--ascii", str(path))
+            print_result = self.run_cli("print", str(path))
+
+        self.assertEqual(check_result.returncode, 0, check_result.stdout)
+        # fmt canonicalizes -/-> to ⇸; --ascii goes the other way.
+        self.assertIn("op assert : S | Error ⇸ S;", fmt_result.stdout)
+        self.assertIn("op coerce : S ⇸ S;", fmt_result.stdout)
+        self.assertIn("op assert : S | Error -/-> S;", ascii_result.stdout)
+        self.assertIn("op coerce : S -/-> S;", ascii_result.stdout)
+        declarations = json.loads(print_result.stdout)["ast"]["declarations"]
+        partial = {decl["name"]: decl["partial"] for decl in declarations if decl["kind"] == "OpDecl"}
+        self.assertEqual(partial, {"f": False, "assert": True, "coerce": True})
+
+    def test_op_domain_accepts_toplevel_sum(self) -> None:
+        # A top-level `|` folds the domain into one sum-typed argument,
+        # grouping as in codomains: A × B | C is (A × B) | C.
+        source = "\n".join(
+            [
+                "sort A, B;",
+                "sort Error = {oops};",
+                "op pair : A × B → A × B | Error;",
+                "op assert : A × B | Error → A × B;",
+                "var a : A;",
+                "var b : B;",
+                "axiom assert_elim pair(a, b).assert = (a, b);",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+        module = parse_text(source)
+        domain = [decl for decl in module.declarations if isinstance(decl, OpDecl)][1].domain
+        self.assertEqual(len(domain), 1)
+        self.assertEqual(domain[0].kind, "type_sum")
+
+    def test_lemma_parses_checks_formats_and_prints(self) -> None:
+        source = "\n".join(
+            [
+                "sort S;",
+                "op f : S → S;",
+                "var x : S;",
+                "axiom f_id f(x) = x;",
+                "lemma f_twice",
+                "  x.f.f = x;",
+                "proof",
+                "  x.f.f;",
+                "  = x.f by f_id;",
+                "  = x by f_id;",
+                "qed;",
+                "lemma f_thrice' x.f.f.f = x;",
+                "",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "lemmas.alg"
+            path.write_text(source, encoding="utf-8")
+            check_result = self.run_cli("check", str(path))
+            fmt_result = self.run_cli("fmt", str(path))
+            print_result = self.run_cli("print", str(path))
+
+        self.assertEqual(check_result.returncode, 0, check_result.stdout)
+        # fmt is token-level: the lemma and proof come back verbatim.
+        self.assertEqual(fmt_result.stdout, source)
+        declarations = json.loads(print_result.stdout)["ast"]["declarations"]
+        lemmas = [decl for decl in declarations if decl["kind"] == "LemmaDecl"]
+        self.assertEqual([lemma["name"] for lemma in lemmas], ["f_twice", "f_thrice'"])
+        steps = lemmas[0]["proof"]["data"]["steps"]
+        self.assertEqual(
+            [step["kind"] for step in steps], ["proof_start", "proof_rewrite", "proof_rewrite"]
+        )
+        self.assertEqual(steps[1]["data"]["rule"], "f_id")
+        self.assertIsNone(lemmas[1]["proof"])
+
+    def test_lemmas_are_not_checked(self) -> None:
+        # Phase 1: lemmas and proofs are parsed and stored only. Nonsense
+        # propositions, unknown rules, and unknown identifiers all pass.
+        source = "\n".join(
+            [
+                "sort S;",
+                "var a, b : S;",
+                "lemma nonsense a = b;",
+                "proof",
+                "  xyz;",
+                "  = abc by imaginary_rule;",
+                "qed;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+        self.assertEqual(result.returncode, 0, result.stdout)
+
     def test_check_rejects_negative_literal_for_natural(self) -> None:
-        result = self.check_source("var n : ℕ;\naxiom n = -1;\n")
+        result = self.check_source("var n : ℕ;\naxiom neg n = -1;\n")
 
         self.assertEqual(result.returncode, 1)
         self.assertIn("cannot equate ℕ with ℤ", result.stdout)
 
     def test_check_accepts_negative_literal_for_integer(self) -> None:
-        result = self.check_source("var z : ℤ;\naxiom z = -1;\n")
+        result = self.check_source("var z : ℤ;\naxiom neg z = -1;\n")
 
         self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_check_rejects_natural_subtraction_for_natural(self) -> None:
-        result = self.check_source("var n : ℕ;\naxiom n = 1 - 2;\n")
+        result = self.check_source("var n : ℕ;\naxiom sub n = 1 - 2;\n")
 
         self.assertEqual(result.returncode, 1)
         self.assertIn("cannot equate ℕ with ℤ", result.stdout)
@@ -404,10 +526,10 @@ class AlgaeCliTests(unittest.TestCase):
             [
                 "var z : ℤ;",
                 "var n : ℕ;",
-                "axiom z = 1 - 2;",  # ℕ - ℕ is ℤ
-                "axiom z = z - 1;",  # ℤ - ℕ stays ℤ
-                "axiom n = 1 + 2;",  # other arithmetic still ℕ
-                "axiom n = 2 * 3;",
+                "axiom sub_widens z = 1 - 2;",  # ℕ - ℕ is ℤ
+                "axiom sub_stays z = z - 1;",  # ℤ - ℕ stays ℤ
+                "axiom add_nat n = 1 + 2;",  # other arithmetic still ℕ
+                "axiom mul_nat n = 2 * 3;",
                 "",
             ]
         )
@@ -422,7 +544,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "op pair : S × T → S × T;",
                 "var s : S;",
                 "var t : T;",
-                "axiom let (x, x) = pair(s, t) in x = t;",
+                "axiom dup_binders let (x, x) = pair(s, t) in x = t;",
                 "",
             ]
         )
@@ -437,7 +559,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "sort S, T;",
                 "op triple : → S × T × S;",
                 "var s : S;",
-                "axiom let (_, _, x) = triple() in x = s;",
+                "axiom wildcards let (_, _, x) = triple() in x = s;",
                 "",
             ]
         )
@@ -453,7 +575,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "op f : → S | Error;",
                 "op g : S → S;",
                 "var x : S;",
-                "axiom g(f()) = x;",
+                "axiom narrow g(f()) = x;",
                 "",
             ]
         )
@@ -471,7 +593,7 @@ class AlgaeCliTests(unittest.TestCase):
                 "op g : S → S;",
                 "op cast : (S | Error) → S;",
                 "var x : S;",
-                "axiom g(cast(f())) = x;",
+                "axiom narrow g(cast(f())) = x;",
                 "",
             ]
         )
@@ -506,8 +628,8 @@ class AlgaeCliTests(unittest.TestCase):
                 "var b : ℕ;",
                 "var c : ℕ;",
                 "var d : ℕ;",
-                "axiom (a + b) * c = d;",
-                "axiom a + b * c = d;",
+                "axiom grouped (a + b) * c = d;",
+                "axiom ungrouped a + b * c = d;",
                 "",
             ]
         )
@@ -517,30 +639,35 @@ class AlgaeCliTests(unittest.TestCase):
             result = self.run_cli("fmt", str(path))
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("axiom (a + b) × c = d;", result.stdout)
-        self.assertIn("axiom a + b × c = d;", result.stdout)
+        self.assertIn("axiom grouped (a + b) × c = d;", result.stdout)
+        self.assertIn("axiom ungrouped a + b × c = d;", result.stdout)
 
     def test_fmt_round_trips_grouping(self) -> None:
         sources = [
-            "axiom (a + b) * c = d;",
-            "axiom a - (b - c) = d;",
-            "axiom (a ⟹ b) ⟹ c;",
-            "axiom a ⟹ b ⟹ c;",
-            "axiom ¬ (a ∧ b) ∨ c;",
-            "axiom (a ∨ b) ∧ c;",
-            "axiom (a + b).f = c;",
-            "axiom a ▷ f(b) = c;",
-            "axiom (a + b)' = c;",
-            "axiom x = (if a then b else c) + 1;",
-            "axiom (let y = f(x) in y) = z;",
-            "axiom - (a + b) = c;",
-            "axiom (- a) * b = c;",
-            "axiom a * (- b) = c;",
+            "axiom r (a + b) * c = d;",
+            "axiom r a - (b - c) = d;",
+            "axiom r (a ⟹ b) ⟹ c;",
+            "axiom r a ⟹ b ⟹ c;",
+            "axiom r ¬ (a ∧ b) ∨ c;",
+            "axiom r (a ∨ b) ∧ c;",
+            "axiom r (a + b).f = c;",
+            "axiom r a ▷ f(b) = c;",
+            "axiom r (a + b)' = c;",
+            "axiom r x = (if a then b else c) + 1;",
+            "axiom r (let y = f(x) in y) = z;",
+            "axiom r - (a + b) = c;",
+            "axiom r (- a) * b = c;",
+            "axiom r a * (- b) = c;",
             "op f : → A × (B | C);",
             "op g : (A → B) × C → D;",
+            "op h : A × B | C → D;",
+            "op i : A × B | C ⇸ D;",
+            "op j : (A ⇸ B) × C → D;",
+            "op k : A ⇸ B | C;",
             "var v : (A × B) × C;",
             "var w : A | (B | C);",
             "var q : Seq[A | B];",
+            "lemma l x = y;\nproof\n  x;\n  = y by step;\nqed;",
         ]
         for source in sources:
             with self.subTest(source=source):

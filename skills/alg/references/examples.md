@@ -14,10 +14,10 @@ op top : Stack -> Elem | Error;
 var s : Stack;
 var e : Elem;
 
-axiom top(push(s, e)) = e;
-axiom pop(push(s, e)) = s;
-axiom top(empty()) = empty_error;
-axiom pop(empty()) = empty_error;
+axiom push_top top(push(s, e)) = e;
+axiom push_pop pop(push(s, e)) = s;
+axiom empty_top top(empty()) = empty_error;
+axiom empty_pop pop(empty()) = empty_error;
 ```
 
 ## Key-Value Store
@@ -36,9 +36,9 @@ var s : Store;
 var k : Key;
 var v : Value;
 
-axiom get(put(s, k, v), k) = v;
-axiom has(put(s, k, v), k) = true;
-axiom get(empty_store(), k) = missing_key;
+axiom get_put get(put(s, k, v), k) = v;
+axiom has_put has(put(s, k, v), k) = true;
+axiom get_empty get(empty_store(), k) = missing_key;
 ```
 
 ## ASCII Aliases
@@ -55,5 +55,33 @@ var s : Store;
 var k : Key;
 var v : Value;
 
-axiom get(put(s, k, v), k) = v;
+axiom get_put get(put(s, k, v), k) = v;
+```
+
+## Partial Operations And Lemmas
+
+```
+sort Stack, Elem;
+sort Error = {empty_error};
+
+op push   : Stack × Elem → Stack;
+op pop    : Stack → Stack × Elem | Error;
+op assert : Stack × Elem | Error ⇸ Stack × Elem;
+op snd    : (Stack × Elem) → Elem;
+
+var s : Stack;
+var e : Elem;
+
+axiom push_pop s.push(e).pop = (s, e);
+axiom assert_elim (s, e).assert = (s, e);
+axiom snd_pair (s, e).snd = e;
+
+lemma pop_top
+  s.push(e).pop.assert.snd = e;
+proof
+  s.push(e).pop.assert.snd;
+  = (s, e).assert.snd by push_pop;
+  = (s, e).snd by assert_elim;
+  = e by snd_pair;
+qed;
 ```

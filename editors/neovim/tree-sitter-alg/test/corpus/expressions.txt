@@ -2,19 +2,23 @@
 operator precedence
 ==================
 
-axiom a implies b implies c;
-axiom a or b and c = d + e * f;
+axiom imp_chain a implies b implies c;
+axiom prec_mix a or b and c = d + e * f;
 
 ---
 
 (source_file
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (identifier)
       (binary_expression
         (identifier)
         (identifier))))
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (identifier)
       (binary_expression
@@ -31,13 +35,15 @@ axiom a or b and c = d + e * f;
 unicode and ascii aliases agree
 ==================
 
-axiom ¬(a = b) ∧ ⊤ ∨ ⊥ ⟹ true ⟺ a ≠ b;
-axiom not (a = b) and truth or falsehood implies true iff a neq b;
+axiom sym ¬(a = b) ∧ ⊤ ∨ ⊥ ⟹ true ⟺ a ≠ b;
+axiom words not (a = b) and truth or falsehood implies true iff a neq b;
 
 ---
 
 (source_file
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (binary_expression
         (binary_expression
@@ -54,6 +60,8 @@ axiom not (a = b) and truth or falsehood implies true iff a neq b;
         (identifier)
         (identifier))))
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (binary_expression
         (binary_expression
@@ -74,12 +82,14 @@ axiom not (a = b) and truth or falsehood implies true iff a neq b;
 if then else
 ==================
 
-axiom if size(s) > 0 then top(s) else empty_error = e;
+axiom cond if size(s) > 0 then top(s) else empty_error = e;
 
 ---
 
 (source_file
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (if_expression
       (binary_expression
         (call_expression
@@ -99,12 +109,14 @@ axiom if size(s) > 0 then top(s) else empty_error = e;
 let in chains
 ==================
 
-axiom let t = push(s, e) in let u = pop(t) in u = s;
+axiom lets let t = push(s, e) in let u = pop(t) in u = s;
 
 ---
 
 (source_file
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (let_expression
       (identifier)
       (call_expression
@@ -126,14 +138,16 @@ axiom let t = push(s, e) in let u = pop(t) in u = s;
 application sugar: pipe-first dot and pipe-last triangle
 ==================
 
-axiom s.push(e).pop = (s, e);
-axiom s |> push(e) |> pop = (e, s);
-axiom a + 1 ▷ f = f(a + 1);
+axiom dot_sugar s.push(e).pop = (s, e);
+axiom pipe_sugar s |> push(e) |> pop = (e, s);
+axiom loose_pipe a + 1 ▷ f = f(a + 1);
 
 ---
 
 (source_file
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (binary_expression
         (binary_expression
@@ -147,6 +161,8 @@ axiom a + 1 ▷ f = f(a + 1);
         (identifier)
         (identifier))))
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (binary_expression
         (binary_expression
@@ -160,6 +176,8 @@ axiom a + 1 ▷ f = f(a + 1);
         (identifier)
         (identifier))))
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (binary_expression
         (binary_expression
@@ -177,12 +195,14 @@ axiom a + 1 ▷ f = f(a + 1);
 destructuring let with wildcard
 ==================
 
-axiom let (rest, _) = pop(n) in size(rest) = size(n) - 1;
+axiom pop_size let (rest, _) = pop(n) in size(rest) = size(n) - 1;
 
 ---
 
 (source_file
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (let_expression
       (tuple_pattern
         (identifier)
@@ -207,12 +227,14 @@ axiom let (rest, _) = pop(n) in size(rest) = size(n) - 1;
 calls, primes, tuples, unit
 ==================
 
-axiom s' = f((a, b, c), (), "lit", 42);
+axiom prime_call s' = f((a, b, c), (), "lit", 42);
 
 ---
 
 (source_file
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (prime_expression
         (identifier))

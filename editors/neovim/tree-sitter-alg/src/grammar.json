@@ -31,6 +31,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "lemma_declaration"
+        },
+        {
+          "type": "SYMBOL",
           "name": "let_declaration"
         }
       ]
@@ -219,16 +223,25 @@
           "type": "CHOICE",
           "members": [
             {
-              "type": "STRING",
-              "value": "→"
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "→"
+                },
+                {
+                  "type": "STRING",
+                  "value": "->"
+                },
+                {
+                  "type": "STRING",
+                  "value": "arrow"
+                }
+              ]
             },
             {
-              "type": "STRING",
-              "value": "->"
-            },
-            {
-              "type": "STRING",
-              "value": "arrow"
+              "type": "SYMBOL",
+              "name": "partial_arrow"
             }
           ]
         },
@@ -246,12 +259,59 @@
         }
       ]
     },
+    "partial_arrow": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "⇸"
+        },
+        {
+          "type": "STRING",
+          "value": "-/->"
+        }
+      ]
+    },
     "domain": {
       "type": "SEQ",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "_type_primary"
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_type_primary"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "STRING",
+                        "value": "×"
+                      },
+                      {
+                        "type": "STRING",
+                        "value": "*"
+                      },
+                      {
+                        "type": "STRING",
+                        "value": "product"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "_type_primary"
+                  }
+                ]
+              }
+            }
+          ]
         },
         {
           "type": "REPEAT",
@@ -259,25 +319,46 @@
             "type": "SEQ",
             "members": [
               {
-                "type": "CHOICE",
-                "members": [
-                  {
-                    "type": "STRING",
-                    "value": "×"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "*"
-                  },
-                  {
-                    "type": "STRING",
-                    "value": "product"
-                  }
-                ]
+                "type": "STRING",
+                "value": "|"
               },
               {
-                "type": "SYMBOL",
-                "name": "_type_primary"
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "_type_primary"
+                  },
+                  {
+                    "type": "REPEAT",
+                    "content": {
+                      "type": "SEQ",
+                      "members": [
+                        {
+                          "type": "CHOICE",
+                          "members": [
+                            {
+                              "type": "STRING",
+                              "value": "×"
+                            },
+                            {
+                              "type": "STRING",
+                              "value": "*"
+                            },
+                            {
+                              "type": "STRING",
+                              "value": "product"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "SYMBOL",
+                          "name": "_type_primary"
+                        }
+                      ]
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -345,20 +426,12 @@
           "value": "axiom"
         },
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "FIELD",
-              "name": "name",
-              "content": {
-                "type": "SYMBOL",
-                "name": "axiom_name"
-              }
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "axiom_name"
+          }
         },
         {
           "type": "FIELD",
@@ -375,24 +448,154 @@
       ]
     },
     "axiom_name": {
-      "type": "PREC_DYNAMIC",
-      "value": -1,
-      "content": {
-        "type": "SEQ",
-        "members": [
-          {
-            "type": "SYMBOL",
-            "name": "identifier"
-          },
-          {
-            "type": "REPEAT",
-            "content": {
-              "type": "STRING",
-              "value": "'"
-            }
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "identifier"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "STRING",
+            "value": "'"
           }
-        ]
-      }
+        }
+      ]
+    },
+    "lemma_declaration": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "lemma"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "ALIAS",
+            "content": {
+              "type": "SYMBOL",
+              "name": "axiom_name"
+            },
+            "named": true,
+            "value": "lemma_name"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "body",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_expression"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ";"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "proof",
+              "content": {
+                "type": "SYMBOL",
+                "name": "proof_block"
+              }
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        }
+      ]
+    },
+    "proof_block": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "proof"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "proof_step"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "qed"
+        },
+        {
+          "type": "STRING",
+          "value": ";"
+        }
+      ]
+    },
+    "proof_step": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "term",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_expression"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ";"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "="
+            },
+            {
+              "type": "FIELD",
+              "name": "term",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_expression"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": "by"
+            },
+            {
+              "type": "FIELD",
+              "name": "rule",
+              "content": {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "axiom_name"
+                },
+                "named": true,
+                "value": "rule_name"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ";"
+            }
+          ]
+        }
+      ]
     },
     "let_declaration": {
       "type": "SEQ",
@@ -1676,12 +1879,7 @@
       "name": "comment"
     }
   ],
-  "conflicts": [
-    [
-      "axiom_name",
-      "_expression"
-    ]
-  ],
+  "conflicts": [],
   "precedences": [],
   "externals": [],
   "inline": [],

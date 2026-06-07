@@ -26,6 +26,7 @@ class OpDecl:
     name: str
     domain: list[Any]
     codomain: Any
+    partial: bool = False
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
@@ -43,7 +44,17 @@ class VarDecl:
 @dataclass(slots=True)
 class AxiomDecl:
     expr: Any
-    name: str | None = None
+    name: str
+    line: int = 0
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
+
+
+@dataclass(slots=True)
+class LemmaDecl:
+    expr: Any
+    name: str
+    proof: Any = None  # node("proof", steps=[...]) — parsed, never checked
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None

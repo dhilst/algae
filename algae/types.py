@@ -45,7 +45,11 @@ def same_type(a: Node, b: Node) -> bool:
     if a.kind == "type_sequence":
         return same_type(a.data["item"], b.data["item"])
     if a.kind == "type_function":
-        return same_type(a.data["left"], b.data["left"]) and same_type(a.data["right"], b.data["right"])
+        return (
+            a.data.get("partial", False) == b.data.get("partial", False)
+            and same_type(a.data["left"], b.data["left"])
+            and same_type(a.data["right"], b.data["right"])
+        )
     if a.kind in ("type_product", "type_sum"):
         items_a, items_b = a.data["items"], b.data["items"]
         return len(items_a) == len(items_b) and all(
@@ -106,6 +110,8 @@ class Checker:
                 self.collect_op(decl)
             elif isinstance(decl, VarDecl):
                 self.collect_var(decl)
+        # LemmaDecls are intentionally ignored: lemmas and their proofs are
+        # parsed and stored only; checking them is a future phase.
         axiom_names: set[str] = set()
         for decl in self.module.declarations:
             self.line = decl.line

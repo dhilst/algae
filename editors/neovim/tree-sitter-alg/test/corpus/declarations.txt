@@ -109,7 +109,7 @@ top-level let declarations
 let with_user = add_user(empty_rbac(), u);
 let with_role = add_role(with_user, r);
 
-axiom authorized(with_role, u, p) = false;
+axiom no_roles authorized(with_role, u, p) = false;
 
 ---
 
@@ -131,6 +131,8 @@ axiom authorized(with_role, u, p) = false;
         (identifier)
         (identifier))))
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (call_expression
         (identifier)
@@ -145,13 +147,15 @@ axioms with comments
 ==================
 
 # leading comment
-axiom top(push(s, e)) = e; # trailing comment
+axiom push_top top(push(s, e)) = e; # trailing comment
 
 ---
 
 (source_file
   (comment)
   (axiom_declaration
+    (axiom_name
+      (identifier))
     (binary_expression
       (call_expression
         (identifier)
@@ -183,7 +187,7 @@ named axioms
 ==================
 
 axiom empty_size q = q;
-axiom q = q;
+axiom assoc' (q, q).fst = q;
 
 ---
 
@@ -195,6 +199,93 @@ axiom q = q;
       left: (identifier)
       right: (identifier)))
   (axiom_declaration
+    name: (axiom_name
+      (identifier))
+    body: (binary_expression
+      left: (binary_expression
+        left: (tuple
+          (identifier)
+          (identifier))
+        right: (identifier))
+      right: (identifier))))
+
+==================
+partial op declarations
+==================
+
+op coerce : S ⇸ S;
+op assert : Stack × Elem | Error -/-> Stack × Elem;
+
+---
+
+(source_file
+  (op_declaration
+    name: (identifier)
+    domain: (domain
+      (type_identifier))
+    (partial_arrow)
+    codomain: (type_identifier))
+  (op_declaration
+    name: (identifier)
+    domain: (domain
+      (type_identifier)
+      (type_identifier)
+      (type_identifier))
+    (partial_arrow)
+    codomain: (product_type
+      left: (type_identifier)
+      right: (type_identifier))))
+
+==================
+lemma declarations
+==================
+
+lemma pop_top
+  s.push(e).pop = (s, e);
+proof
+  s.push(e).pop;
+  = (s, e) by push_pop;
+qed;
+
+lemma unproved x = x;
+
+---
+
+(source_file
+  (lemma_declaration
+    name: (lemma_name
+      (identifier))
+    body: (binary_expression
+      left: (binary_expression
+        left: (binary_expression
+          left: (identifier)
+          right: (call_expression
+            function: (identifier)
+            arguments: (arguments
+              (identifier))))
+        right: (identifier))
+      right: (tuple
+        (identifier)
+        (identifier)))
+    proof: (proof_block
+      (proof_step
+        term: (binary_expression
+          left: (binary_expression
+            left: (identifier)
+            right: (call_expression
+              function: (identifier)
+              arguments: (arguments
+                (identifier))))
+          right: (identifier)))
+      (proof_step
+        term: (tuple
+          (identifier)
+          (identifier))
+        rule: (rule_name
+          (identifier)))))
+  (lemma_declaration
+    name: (lemma_name
+      (identifier))
     body: (binary_expression
       left: (identifier)
       right: (identifier))))

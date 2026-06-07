@@ -17,6 +17,10 @@
   "op"
   "var"
   "axiom"
+  "lemma"
+  "proof"
+  "qed"
+  "by"
 ] @keyword
 
 [
@@ -66,6 +70,8 @@
 [
   "→"
   "->"
+  "⇸"
+  "-/->"
   "×"
   "¬"
   "∧"
@@ -129,5 +135,7 @@
   ":"
 ] @punctuation.delimiter
 
-; Axiom names
+; Axiom, lemma, and proof rule names
 (axiom_name) @label
+(lemma_name) @label
+(rule_name) @label

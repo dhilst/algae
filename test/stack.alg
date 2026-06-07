@@ -12,7 +12,7 @@ var e : Elem;
 
 # x.f(a) is pipe-first application sugar for f(x, a), so
 # s.push(e).pop reads as pop(push(s, e)).
-axiom s.push(e).pop = (s, e);
-axiom s.push(e).top = e;
-axiom empty().pop = empty_error;
-axiom empty().top = empty_error;
+axiom push_pop s.push(e).pop = (s, e);
+axiom push_top s.push(e).top = e;
+axiom empty_pop empty().pop = empty_error;
+axiom empty_top empty().top = empty_error;

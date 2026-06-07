@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .ast import AxiomDecl, LetDecl, Module, OpDecl, SortDecl, VarDecl, node
+from .ast import AxiomDecl, LemmaDecl, LetDecl, Module, OpDecl, SortDecl, VarDecl, node
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,7 +25,10 @@ class ParseFailure(Exception):
         super().__init__(expected)
 
 
-KEYWORDS = {"sort", "op", "var", "axiom", "true", "false", "if", "then", "else", "let", "in"}
+KEYWORDS = {
+    "sort", "op", "var", "axiom", "true", "false", "if", "then", "else", "let", "in",
+    "lemma", "proof", "qed", "by",
+}
 
 WORD_SYMBOLS = {
     "product": "×",
@@ -48,6 +51,7 @@ WORD_SYMBOLS = {
 
 ASCII_SYMBOLS = {
     "->": "→",
+    "-/->": "⇸",
     "==>": "⟹",
     "<==>": "⟺",
     "!=": "≠",
@@ -62,7 +66,7 @@ ASCII_SYMBOLS = {
     "|>": "▷",
 }
 
-UNICODE_SYMBOLS = set(WORD_SYMBOLS.values()) | {"▷"}
+UNICODE_SYMBOLS = set(WORD_SYMBOLS.values()) | {"▷", "⇸"}
 ASCII_SYMBOLS_BY_LENGTH = sorted(ASCII_SYMBOLS.items(), key=lambda item: len(item[0]), reverse=True)
 SINGLE_SYMBOLS = set("{}[](),;:=.+-*/<>|'")
 COMPARISONS = {"=", "≠", "<", "≤", ">", "≥"}
@@ -291,6 +295,8 @@ class AlgParser:
             return self.parse_var()
         if token.value == "axiom":
             return self.parse_axiom()
+        if token.value == "lemma":
+            return self.parse_lemma()
         if token.value == "let":
             return self.parse_let()
         self.fail("declaration")
@@ -320,12 +326,28 @@ class AlgParser:
         name = self.consume_ident("operation name")
         self.consume(":")
         domain: list[Any] = []
-        if not self.match("→"):
+        partial = False
+        if self.match("⇸"):
+            partial = True
+        elif not self.match("→"):
             domain = self.parse_type_product_items()
-            self.consume("→", "->")
+            if self.current.value == "|":
+                # A top-level `|` folds the domain into a single sum-typed
+                # argument: `A × B | C → D` takes one argument of type (A×B)|C,
+                # grouping as in codomains. Branches are products; an arrow in
+                # a branch needs parens so the signature arrow stays visible.
+                head = domain[0] if len(domain) == 1 else node("type_product", items=domain)
+                items = [head]
+                while self.match("|"):
+                    items.append(self.parse_type_product())
+                domain = [node("type_sum", items=items)]
+            if self.match("⇸"):
+                partial = True
+            else:
+                self.consume("→", "-> or -/->")
         codomain = self.parse_type_expr()
         self.consume(";")
-        return OpDecl(name, domain, codomain)
+        return OpDecl(name, domain, codomain, partial)
 
     def parse_var(self) -> VarDecl:
         # `var e, f : Elem;` declares every name at the same sort.
@@ -340,35 +362,49 @@ class AlgParser:
 
     def parse_axiom(self) -> AxiomDecl:
         self.consume_keyword("axiom")
-        name = self.parse_axiom_name()
+        name = self.parse_rule_name("axiom name")
         expr = self.parse_expr()
         self.consume(";")
         return AxiomDecl(expr, name)
 
-    def parse_axiom_name(self) -> str | None:
-        # `axiom name expr;` — the optional name is an identifier (trailing
-        # primes allowed, e.g. assoc') and is recognized only when the token
-        # after it begins a new expression. Anything else (an operator, `(`,
-        # `'`, `;`) means the identifier was the expression itself.
-        token = self.current
-        if token.kind != "IDENT" or token.value == "_":
-            return None
-        start = self.pos
-        name = token.value
-        self.advance()
+    def parse_rule_name(self, expected: str) -> str:
+        # Axiom, lemma, and `by` rule names are identifiers with trailing
+        # primes allowed, e.g. assoc'.
+        name = self.consume_ident(expected)
         while self.match("'"):
             name += "'"
-        if self.starts_expression(self.current):
-            return name
-        self.pos = start
-        return None
+        return name
 
-    def starts_expression(self, token: Token) -> bool:
-        if token.kind in ("IDENT", "NUMBER", "STRING"):
-            return True
-        if token.kind == "KEYWORD":
-            return token.value in {"if", "let", "true", "false"}
-        return token.value in {"¬", "⊤", "⊥"} or token.value in TYPE_BUILTINS
+    def parse_lemma(self) -> LemmaDecl:
+        # `lemma name expr;` optionally followed by a proof block. Both are
+        # parsed and stored only; nothing is checked or proved yet.
+        self.consume_keyword("lemma")
+        name = self.parse_rule_name("lemma name")
+        expr = self.parse_expr()
+        self.consume(";")
+        proof = None
+        if self.current.kind == "KEYWORD" and self.current.value == "proof":
+            proof = self.parse_proof()
+        return LemmaDecl(expr, name, proof)
+
+    def parse_proof(self) -> Any:
+        # proof_step ::= expr ';' | '=' expr 'by' rule_name ';'
+        self.consume_keyword("proof")
+        steps: list[Any] = []
+        while not (self.current.kind == "KEYWORD" and self.current.value == "qed"):
+            if self.match("="):
+                expr = self.parse_expr()
+                self.consume_keyword("by")
+                rule = self.parse_rule_name("rule name")
+                self.consume(";")
+                steps.append(node("proof_rewrite", expr=expr, rule=rule))
+            else:
+                expr = self.parse_expr()
+                self.consume(";")
+                steps.append(node("proof_start", expr=expr))
+        self.consume_keyword("qed")
+        self.consume(";")
+        return node("proof", steps=steps)
 
     def parse_let(self) -> LetDecl:
         self.consume_keyword("let")
@@ -393,7 +429,10 @@ class AlgParser:
         left = self.parse_type_product()
         if self.match("→"):
             right = self.parse_type_arrow()
-            return node("type_function", left=left, right=right)
+            return node("type_function", left=left, right=right, partial=False)
+        if self.match("⇸"):
+            right = self.parse_type_arrow()
+            return node("type_function", left=left, right=right, partial=True)
         return left
 
     def parse_type_product(self) -> Any:

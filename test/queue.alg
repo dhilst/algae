@@ -10,14 +10,14 @@ op size : Queue → ℕ;
 var q       : Queue;
 var e, f, d : Elem;
 
-axiom new().size = 0;
-axiom q.put(e).size = q.size + 1;
+axiom new_size new().size = 0;
+axiom put_size q.put(e).size = q.size + 1;
 
-axiom new().get(d)        = (new(), d);
-axiom new().put(e).get(d) = (new(), e);
+axiom get_default new().get(d)        = (new(), d);
+axiom get_last    new().put(e).get(d) = (new(), e);
 
-axiom q.put(e).put(f).get(d) = 
+axiom get_fifo q.put(e).put(f).get(d) =
       let (rest, x) = q.put(e).get(d) in (rest.put(f), x);
 
-axiom q.head(d) = let (_, x) = q.get(d) in x;
-axiom q.drop    = let (r, _) = q.get(d) in r;
+axiom head_get q.head(d) = let (_, x) = q.get(d) in x;
+axiom drop_get q.drop    = let (r, _) = q.get(d) in r;

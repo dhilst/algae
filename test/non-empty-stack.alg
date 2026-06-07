@@ -13,13 +13,13 @@ var s : NEStack;
 var e : Elem;
 
 # Popping undoes pushing; popping a singleton yields the lone element.
-axiom s.push(e).pop = (s, e);
-axiom singleton(e).pop = e;
+axiom push_pop s.push(e).pop = (s, e);
+axiom singleton_pop singleton(e).pop = e;
 # top reads the most recent element.
-axiom s.push(e).top = e;
-axiom singleton(e).top = e;
+axiom push_top s.push(e).top = e;
+axiom singleton_top singleton(e).top = e;
 # size counts elements.
-axiom s.push(e).size = s.size + 1;
-axiom singleton(e).size = 1;
+axiom push_size s.push(e).size = s.size + 1;
+axiom singleton_size singleton(e).size = 1;
 # The invariant that names the sort: a non-empty stack has at least one element.
-axiom s.size ≥ 1;
+axiom non_empty s.size ≥ 1;

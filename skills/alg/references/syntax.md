@@ -13,13 +13,13 @@
 ## Keywords
 
 ```
-sort  op  var  axiom  true  false  if  then  else  let  in
+sort  op  var  axiom  lemma  proof  qed  by  true  false  if  then  else  let  in
 ```
 
 The previous state-machine syntax is not part of this grammar. Its keywords
 (`spec`, `state`, `init`, `pre`, `post`, ...) are ordinary identifiers now, but
 old-syntax files still fail to parse since declarations must start with `sort`,
-`op`, `var`, or `axiom`.
+`op`, `var`, `axiom`, `lemma`, or `let`.
 
 ## Symbols And ASCII Aliases
 
@@ -33,6 +33,7 @@ below with `fmt --ascii`. Additional symbolic input spellings are accepted:
 |--------|-------|---------|
 | `×` | `*` (or `product`) | product |
 | `→` | `arrow` | operation/function arrow |
+| `⇸` | `-/->` | partial operation arrow |
 | `ℕ` | `Nat` | natural numbers |
 | `ℤ` | `Int` | integers |
 | `ℝ` | `Real` | reals |
@@ -59,28 +60,39 @@ read as implicitly universally quantified.
 ## Grammar
 
 ```
-file       ::= decl*
-decl       ::= sort_decl | op_decl | var_decl | axiom_decl | let_decl
+file        ::= decl*
+decl        ::= sort_decl | op_decl | var_decl | axiom_decl | lemma_decl | let_decl
 
-sort_decl  ::= 'sort' identifier (',' identifier)* ';'
-             | 'sort' identifier '=' '{' identifier (',' identifier)* '}' ';'
+sort_decl   ::= 'sort' identifier (',' identifier)* ';'
+              | 'sort' identifier '=' '{' identifier (',' identifier)* '}' ';'
 
-op_decl    ::= 'op' identifier ':' domain '→' type_expr ';'
-domain     ::=                    # empty domain for nullary operations
-             | type_product
+op_decl     ::= 'op' identifier ':' domain op_arrow type_expr ';'
+op_arrow    ::= '→' | '⇸'         # ⇸ declares a partial operation
+domain      ::=                    # empty domain for nullary operations
+              | type_product
+              | type_product ('|' type_product)+   # one sum-typed argument
 
-var_decl   ::= 'var' identifier (',' identifier)* ':' type_expr ';'
-axiom_decl ::= 'axiom' axiom_name? expr ';'
-axiom_name ::= identifier "'"*
-let_decl   ::= 'let' identifier '=' expr ';'
+var_decl    ::= 'var' identifier (',' identifier)* ':' type_expr ';'
+axiom_decl  ::= 'axiom' rule_name expr ';'
+rule_name   ::= identifier "'"*
+lemma_decl  ::= 'lemma' rule_name expr ';' proof_block?
+proof_block ::= 'proof' proof_step* 'qed' ';'
+proof_step  ::= expr ';'
+              | '=' expr 'by' rule_name ';'
+let_decl    ::= 'let' identifier '=' expr ';'
 ```
+
+A top-level `|` in an op domain folds the whole domain into a single
+sum-typed argument, grouping as in codomains (`×` binds tighter than `|`):
+`op assert : Stack × Elem | Error ⇸ Stack × Elem;` takes one argument of
+type `(Stack × Elem) | Error`. An arrow inside a domain branch needs parens.
 
 ## Type Expressions
 
 ```
 type_expr    ::= type_sum
 type_sum     ::= type_arrow ('|' type_arrow)*       # algebraic sum/union type
-type_arrow   ::= type_product ('→' type_arrow)?
+type_arrow   ::= type_product (('→' | '⇸') type_arrow)?
 type_product ::= type_primary ('×' type_primary)*
 type_primary ::= identifier | 'ℕ' | 'ℤ' | 'ℝ' | '𝔹'
                | 'Seq' '[' type_expr ']'
@@ -96,13 +108,11 @@ universally quantified over all axioms. A multi-name declaration
 (`var e, f : Elem;`) declares every name at the same sort and is kept grouped
 by `fmt`.
 
-An axiom may carry an optional name — an identifier with trailing primes
+Every axiom carries a required name — an identifier with trailing primes
 allowed (`axiom empty_size q.empty ⟺ q.size = 0;`, `axiom assoc' …;`) —
-which `check` requires to be unique across the module. The name is
-recognized only when the token after it begins a new expression; in
-particular, an identifier followed by `(` or `'` is read as the start of the
-axiom body (a call or a primed term), so a named axiom's body cannot start
-with a parenthesized expression — restructure or omit the name there.
+which `check` requires to be unique across the module. The first identifier
+after `axiom` is always the name; the body starts at the next token, so it
+may freely begin with `(`, a call, or a primed term.
 
 ```
 expr      ::= identifier
@@ -129,7 +139,7 @@ nest, so a chain of bindings conventionally breaks the line after each `in`
 with the bindings aligned:
 
 ```
-axiom let with_user = add_user(rbac, u) in
+axiom authorized_happy let with_user = add_user(rbac, u) in
       let with_role = add_role(with_user, r) in
       authorized(with_role, u, p) = true;
 ```
@@ -141,8 +151,8 @@ axiom that follows. This avoids repeating a common setup chain:
 let with_user = add_user(empty_rbac(), u);
 let with_role = add_role(with_user, r);
 
-axiom authorized(with_role, u, p) = false;
-axiom let revoked = remove_user(with_role, u) in authorized(revoked, u, p) = unknown_user;
+axiom no_roles authorized(with_role, u, p) = false;
+axiom removed let revoked = remove_user(with_role, u) in authorized(revoked, u, p) = unknown_user;
 ```
 
 Top-level lets are abbreviations: the parser records them but does not check
@@ -157,7 +167,7 @@ apart, naming its components:
 ```
 op pop : NEStack → Stack × Elem;
 
-axiom let (rest, top) = pop(n) in size(rest) = size(n) - 1;
+axiom pop_size let (rest, top) = pop(n) in size(rest) = size(n) - 1;
 ```
 
 The semantics are equational: `let (a, b) = t in body` reads as
@@ -172,6 +182,41 @@ components as the pattern has binders. A sum cannot be destructured — for
 error, because the `Error` branch has no components to bind. Destructuring is
 only available in `let ... in` expressions, not in top-level `let`
 declarations.
+
+## Partial Operations And Lemmas
+
+An op declared with `⇸` (ASCII `-/->`) is **partial**: applying it carries a
+proof obligation the spec does not discharge mechanically yet. The intended
+use is narrowing a sum to one of its branches:
+
+```
+op pop    : Stack → Stack × Elem | Error;
+op assert : Stack × Elem | Error ⇸ Stack × Elem;
+
+axiom assert_elim (s, e).assert = (s, e);
+```
+
+For now `⇸` is purely syntactic — `check` treats a partial op exactly like a
+total one and does not validate applicability.
+
+A `lemma` records a derived fact, optionally with a proof sketch — a start
+term followed by rewrite steps that each cite an axiom (or lemma) name:
+
+```
+lemma pop_top
+  s.push(e).pop.assert.snd = e;
+proof
+  s.push(e).pop.assert.snd;
+  = (s, e).assert.snd by push_pop;
+  = (s, e).snd by assert_elim;
+  = e by snd_pair;
+qed;
+```
+
+Lemma names are required, like axiom names. Lemmas and proofs are parsed and
+preserved (in the AST and by `fmt`) but **not** checked: the proposition is
+not type-checked, steps are not verified, and `by` references are not
+resolved. Verification is a future phase.
 
 ## Application Sugar
 
@@ -188,8 +233,8 @@ which position it lands:
 Both are left-associative, so chains thread the running value step by step:
 
 ```
-axiom s.push(e).pop = (s, e);                      # pop(push(s, e))
-axiom s |> push(e) |> pop = (e, s);                # with data-last signatures
+axiom push_pop s.push(e).pop = (s, e);             # pop(push(s, e))
+axiom push_pop' s |> push(e) |> pop = (e, s);      # with data-last signatures
 let store = empty_rbac().add_user(u).add_role(r);  # builder-style setup
 ```
 
@@ -207,8 +252,8 @@ becomes a method:
 op push : Stack × Elem → Stack;          # stack.push(elem) in the target
 op pop  : Stack → Stack × Elem | Error;
 
-axiom s.push(e).pop = (s, e);            # pop(push(s, e))
-axiom empty().pop = empty_error;
+axiom push_pop s.push(e).pop = (s, e);   # pop(push(s, e))
+axiom empty_pop empty().pop = empty_error;
 ```
 
 Prefer this style when the spec targets object-oriented code (Python classes,
@@ -226,8 +271,8 @@ functional targets, where structure-last signatures curry into pipelines
 op push : Elem × Stack → Stack;          # push elem stack in the target
 op pop  : Stack → Elem × Stack | Error;
 
-axiom s ▷ push(e) ▷ pop = (e, s);        # pop(push(e, s))
-axiom empty() ▷ pop = empty_error;
+axiom push_pop s ▷ push(e) ▷ pop = (e, s);  # pop(push(e, s))
+axiom empty_pop empty() ▷ pop = empty_error;
 ```
 
 Prefer this style when the spec targets functional code (OCaml, Haskell, F#,
@@ -267,7 +312,9 @@ Caveats:
 - Comparisons and boolean operators yield `𝔹`; `< ≤ > ≥` and arithmetic
   require numerics; `++` requires matching `Seq` operands; equations `=`/`≠`
   require compatible operand types (either direction).
-- An axiom body must type to `𝔹`.
+- An axiom body must type to `𝔹`, and axiom names must be unique.
+- Lemmas are **not** checked at all: propositions, proof steps, and `by`
+  references are parsed and stored only.
 
 Errors are reported as `<file>: type error at line <N>, <message>` with the
 declaration's line. `check --syntax-only` skips type checking.
@@ -303,8 +350,8 @@ op top   : Stack → Elem | Error;
 var s : Stack;
 var e : Elem;
 
-axiom s.push(e).pop = (s, e);
-axiom s.push(e).top = e;
-axiom empty().pop   = empty_error;
-axiom empty().top   = empty_error;
+axiom push_pop s.push(e).pop = (s, e);
+axiom push_top s.push(e).top = e;
+axiom empty_pop empty().pop = empty_error;
+axiom empty_top empty().top = empty_error;
 ```

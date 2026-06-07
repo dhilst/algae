@@ -11,6 +11,6 @@ var s : Store;
 var k : Key;
 var v : Value;
 
-axiom get(put(s, k, v), k) = v;
-axiom has(put(s, k, v), k) = true;
-axiom get(empty_store(), k) = missing_key;
+axiom get_put get(put(s, k, v), k) = v;
+axiom has_put has(put(s, k, v), k) = true;
+axiom get_empty get(empty_store(), k) = missing_key;
