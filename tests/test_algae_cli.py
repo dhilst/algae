@@ -73,23 +73,36 @@ class AlgaeCliTests(unittest.TestCase):
             return self.run_cli("check", str(path))
 
     def test_check_accepts_equational_fixtures(self) -> None:
-        result = self.run_cli("check", "test/stack.alg", "test/kvstore.alg", "test/base/container.alg")
+        result = self.run_cli("check", "examples/stack.alg", "examples/kvstore.alg", "examples/base/container.alg")
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("test/stack.alg: ok", result.stdout)
-        self.assertIn("test/kvstore.alg: ok", result.stdout)
-        self.assertIn("test/base/container.alg: ok", result.stdout)
+        self.assertIn("examples/stack.alg: ok", result.stdout)
+        self.assertIn("examples/kvstore.alg: ok", result.stdout)
+        self.assertIn("examples/base/container.alg: ok", result.stdout)
 
     def test_check_accepts_logic_fixture(self) -> None:
         # Propositional natural deduction: connective rules + lemmas with
         # apply/case proofs over Prop.
-        result = self.run_cli("check", "test/logic.alg")
+        result = self.run_cli("check", "examples/logic.alg")
 
         self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertIn("test/logic.alg: ok", result.stdout)
+        self.assertIn("examples/logic.alg: ok", result.stdout)
+
+    def test_all_examples_check(self) -> None:
+        # Every example spec must type-check — standalone specs and project
+        # specs alike (the latter resolve includes via their nearest
+        # alg-project.json). Guards the examples/ tree against rot.
+        paths = sorted(
+            str(p.relative_to(ROOT)) for p in (ROOT / "examples").rglob("*.alg")
+        )
+        self.assertTrue(paths, "no example .alg files found")
+        result = self.run_cli("check", *paths)
+        self.assertEqual(result.returncode, 0, result.stdout)
+        for path in paths:
+            self.assertIn(f"{path}: ok", result.stdout)
 
     def test_check_rejects_old_and_malformed_syntax(self) -> None:
-        paths = sorted(str(path.relative_to(ROOT)) for path in (ROOT / "test/reject").glob("*.alg"))
+        paths = sorted(str(path.relative_to(ROOT)) for path in (ROOT / "tests/reject").glob("*.alg"))
         result = self.run_cli("check", *paths)
 
         self.assertEqual(result.returncode, 1)
@@ -98,7 +111,7 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertNotIn(": ok", result.stdout)
 
     def test_print_outputs_json_ast(self) -> None:
-        result = self.run_cli("print", "test/stack.alg")
+        result = self.run_cli("print", "examples/stack.alg")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
@@ -132,7 +145,7 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("pop(push(s, e)) ≠ s", result.stdout)
 
     def test_fmt_ascii_outputs_keyword_aliases(self) -> None:
-        result = self.run_cli("fmt", "--ascii", "test/stack.alg")
+        result = self.run_cli("fmt", "--ascii", "examples/stack.alg")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Stack * Elem arrow Stack", result.stdout)
@@ -243,7 +256,7 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("axiom sugar_last x |> f(x) = f(x, x);", ascii_result.stdout)
 
     def test_fmt_does_not_pad_separators(self) -> None:
-        result = self.run_cli("fmt", "test/stack.alg")
+        result = self.run_cli("fmt", "examples/stack.alg")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("op empty : → Stack;", result.stdout)
@@ -713,13 +726,13 @@ class AlgaeCliTests(unittest.TestCase):
     # Rules, propositions, and proof branches --------------------------------
 
     def test_induction_fixture_checks(self) -> None:
-        result = self.run_cli("check", "test/nat-with-induction.alg")
+        result = self.run_cli("check", "examples/nat-with-induction.alg")
 
         self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertIn("test/nat-with-induction.alg: ok", result.stdout)
+        self.assertIn("examples/nat-with-induction.alg: ok", result.stdout)
 
     def test_rule_application_ast_shapes(self) -> None:
-        result = self.run_cli("print", "test/nat-with-induction.alg")
+        result = self.run_cli("print", "examples/nat-with-induction.alg")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         declarations = json.loads(result.stdout)["ast"]["declarations"]
@@ -769,16 +782,16 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(rendered, ["⊢ 0 + 0 = 0", "ih := n + 0 = n ⊢ s(n) + 0 = s(n)"])
 
     def test_rule_fixture_fmt_round_trips(self) -> None:
-        with open(ROOT / "test/nat-with-induction.alg", encoding="utf-8") as handle:
+        with open(ROOT / "examples/nat-with-induction.alg", encoding="utf-8") as handle:
             source = handle.read()
-        result = self.run_cli("fmt", "test/nat-with-induction.alg")
+        result = self.run_cli("fmt", "examples/nat-with-induction.alg")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         # fmt is token-level and whitespace-preserving: identical output.
         self.assertEqual(result.stdout, source)
 
     def test_rule_fixture_fmt_ascii_aliases(self) -> None:
-        result = self.run_cli("fmt", "--ascii", "test/nat-with-induction.alg")
+        result = self.run_cli("fmt", "--ascii", "examples/nat-with-induction.alg")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("apply induction(n, fun (n : Nat) => n + 0 = n);", result.stdout)
@@ -934,7 +947,7 @@ class AlgaeCliTests(unittest.TestCase):
         # equivalent module for rule declarations and proof branches.
         from algae.ast import to_jsonable
 
-        module = parse_text((ROOT / "test/nat-with-induction.alg").read_text(encoding="utf-8"))
+        module = parse_text((ROOT / "examples/nat-with-induction.alg").read_text(encoding="utf-8"))
         rendered = format_spec(module)
         reparsed = parse_text(rendered)
         self.assertEqual(to_jsonable(reparsed.declarations), to_jsonable(module.declarations))
@@ -943,8 +956,8 @@ class AlgaeCliTests(unittest.TestCase):
     # Quantifiers, parametric sorts, and modules -----------------------------
 
     def check_in_project(self, source: str) -> subprocess.CompletedProcess[str]:
-        # test/proj has an alg-project.json, so includes resolve there.
-        path = ROOT / "test/proj/_tmp_spec.alg"
+        # examples/proj has an alg-project.json, so includes resolve there.
+        path = ROOT / "examples/proj/_tmp_spec.alg"
         path.write_text(source, encoding="utf-8")
         try:
             return self.run_cli("check", str(path.relative_to(ROOT)))
@@ -974,9 +987,9 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_parametric_sort_checks(self) -> None:
-        result = self.run_cli("check", "test/proj/list.alg")
+        result = self.run_cli("check", "examples/proj/list.alg")
         self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertIn("test/proj/list.alg: ok", result.stdout)
+        self.assertIn("examples/proj/list.alg: ok", result.stdout)
 
     def test_parametric_sort_arity_errors(self) -> None:
         self.assertIn(
@@ -1000,12 +1013,12 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(semantic_payload(parse_text(rendered)), semantic_payload(module))
 
     def test_module_include_open_alias_ok(self) -> None:
-        result = self.run_cli("check", "test/proj/use_list.alg")
+        result = self.run_cli("check", "examples/proj/use_list.alg")
         self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertIn("test/proj/use_list.alg: ok", result.stdout)
+        self.assertIn("examples/proj/use_list.alg: ok", result.stdout)
 
     def test_module_print_shapes(self) -> None:
-        result = self.run_cli("print", "test/proj/use_list.alg")
+        result = self.run_cli("print", "examples/proj/use_list.alg")
         self.assertEqual(result.returncode, 0, result.stderr)
         kinds = [d["kind"] for d in json.loads(result.stdout)["ast"]["declarations"]]
         self.assertEqual(kinds[:3], ["IncludeDecl", "AliasDecl", "OpenDecl"])
@@ -1039,12 +1052,12 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("not exported by module list", result.stdout)
 
     def test_module_circular_include_rejected(self) -> None:
-        a = ROOT / "test/proj/_cyc_a.alg"
-        b = ROOT / "test/proj/_cyc_b.alg"
+        a = ROOT / "examples/proj/_cyc_a.alg"
+        b = ROOT / "examples/proj/_cyc_b.alg"
         a.write_text("include _cyc_b;\nsort A;\n", encoding="utf-8")
         b.write_text("include _cyc_a;\nsort B;\n", encoding="utf-8")
         try:
-            result = self.run_cli("check", "test/proj/_cyc_a.alg")
+            result = self.run_cli("check", "examples/proj/_cyc_a.alg")
         finally:
             a.unlink(missing_ok=True)
             b.unlink(missing_ok=True)
@@ -1152,8 +1165,8 @@ class AlgaeCliTests(unittest.TestCase):
 
     def test_module_transitive_and_vendor_includes(self) -> None:
         # usechain → mid → base::pair, where base::pair lives under vendor/.
-        vendor_pkg = ROOT / "test/proj/vendor/base"
-        mid = ROOT / "test/proj/mid.alg"
+        vendor_pkg = ROOT / "examples/proj/vendor/base"
+        mid = ROOT / "examples/proj/mid.alg"
         try:
             vendor_pkg.mkdir(parents=True, exist_ok=True)
             (vendor_pkg / "pair.alg").write_text(
@@ -1164,7 +1177,7 @@ class AlgaeCliTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout)
         finally:
             mid.unlink(missing_ok=True)
-            shutil.rmtree(ROOT / "test/proj/vendor", ignore_errors=True)
+            shutil.rmtree(ROOT / "examples/proj/vendor", ignore_errors=True)
 
     def test_module_open_name_collision(self) -> None:
         result = self.check_in_project(

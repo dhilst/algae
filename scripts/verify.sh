@@ -3,10 +3,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-FIXTURES=(test/stack.alg test/kvstore.alg test/rbac.alg test/base/container.alg)
+FIXTURES=(examples/stack.alg examples/kvstore.alg examples/rbac.alg examples/base/container.alg)
 
 echo "== pytest =="
-python -m pytest test/ -q
+python -m pytest tests/ -q
 
 echo "== check =="
 python algae.py check "${FIXTURES[@]}"
