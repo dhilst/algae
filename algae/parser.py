@@ -80,7 +80,6 @@ ASCII_SYMBOLS = {
     "/\\": "∧",
     "\\/": "∨",
     "++": "++",
-    "..": "..",
     "|>": "▷",
     "|-": "⊢",
     ":=": ":=",
@@ -187,28 +186,6 @@ def lex(text: str) -> tuple[Token, ...]:
                 index += 1
             raw = text[start:index]
             emit("NUMBER", raw, raw, start_line, start_col)
-            advance(raw)
-            continue
-        if char == '"':
-            start = index
-            index += 1
-            escaped = False
-            while index < len(text):
-                current = text[index]
-                index += 1
-                if escaped:
-                    escaped = False
-                elif current == "\\":
-                    escaped = True
-                elif current == '"':
-                    break
-            else:
-                raw = text[start:index]
-                emit("ERROR", raw, raw, start_line, start_col)
-                advance(raw)
-                continue
-            raw = text[start:index]
-            emit("STRING", raw[1:-1], raw, start_line, start_col)
             advance(raw)
             continue
         if char.isalpha() or char == "_":
@@ -780,9 +757,6 @@ class AlgParser:
         if token.kind == "NUMBER":
             self.advance()
             return node("number", value=token.value)
-        if token.kind == "STRING":
-            self.advance()
-            return node("string", value=token.value)
         if token.kind == "KEYWORD" and token.value in {"true", "false"}:
             self.advance()
             return node("bool", value=(token.value == "true"))

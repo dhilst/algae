@@ -122,10 +122,6 @@
           "named": true
         },
         {
-          "type": "string",
-          "named": true
-        },
-        {
           "type": "tuple",
           "named": true
         },
@@ -211,10 +207,6 @@
             "named": true
           },
           {
-            "type": "string",
-            "named": true
-          },
-          {
             "type": "tuple",
             "named": true
           },
@@ -292,10 +284,6 @@
           },
           {
             "type": "sequent",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -407,10 +395,6 @@
           },
           {
             "type": "quantifier_expression",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -634,10 +618,6 @@
             "named": true
           },
           {
-            "type": "string",
-            "named": true
-          },
-          {
             "type": "tuple",
             "named": true
           },
@@ -819,10 +799,6 @@
           },
           {
             "type": "quantifier_expression",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -1069,10 +1045,6 @@
             "named": true
           },
           {
-            "type": "string",
-            "named": true
-          },
-          {
             "type": "tuple",
             "named": true
           },
@@ -1143,10 +1115,6 @@
             "named": true
           },
           {
-            "type": "string",
-            "named": true
-          },
-          {
             "type": "tuple",
             "named": true
           },
@@ -1214,10 +1182,6 @@
           },
           {
             "type": "quantifier_expression",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -1323,10 +1287,6 @@
             "named": true
           },
           {
-            "type": "string",
-            "named": true
-          },
-          {
             "type": "tuple",
             "named": true
           },
@@ -1414,10 +1374,6 @@
           },
           {
             "type": "sequent",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -1552,10 +1508,6 @@
             "named": true
           },
           {
-            "type": "string",
-            "named": true
-          },
-          {
             "type": "tuple",
             "named": true
           },
@@ -1629,10 +1581,6 @@
           },
           {
             "type": "quantifier_expression",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -1717,10 +1665,6 @@
           },
           {
             "type": "quantifier_expression",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -1919,10 +1863,6 @@
           "named": true
         },
         {
-          "type": "string",
-          "named": true
-        },
-        {
           "type": "tuple",
           "named": true
         },
@@ -2047,10 +1987,6 @@
           },
           {
             "type": "quantifier_expression",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -2245,10 +2181,6 @@
             "named": true
           },
           {
-            "type": "string",
-            "named": true
-          },
-          {
             "type": "tuple",
             "named": true
           },
@@ -2365,10 +2297,6 @@
             "named": true
           },
           {
-            "type": "string",
-            "named": true
-          },
-          {
             "type": "tuple",
             "named": true
           },
@@ -2481,10 +2409,6 @@
             "named": true
           },
           {
-            "type": "string",
-            "named": true
-          },
-          {
             "type": "tuple",
             "named": true
           },
@@ -2576,10 +2500,6 @@
           },
           {
             "type": "sequent",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -2681,10 +2601,6 @@
           },
           {
             "type": "quantifier_expression",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -2952,10 +2868,6 @@
           "named": true
         },
         {
-          "type": "string",
-          "named": true
-        },
-        {
           "type": "tuple",
           "named": true
         },
@@ -3109,10 +3021,6 @@
           },
           {
             "type": "quantifier_expression",
-            "named": true
-          },
-          {
-            "type": "string",
             "named": true
           },
           {
@@ -3575,10 +3483,6 @@
   {
     "type": "st",
     "named": false
-  },
-  {
-    "type": "string",
-    "named": true
   },
   {
     "type": "then",

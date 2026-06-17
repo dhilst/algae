@@ -36,7 +36,6 @@ BOOL = node("type_builtin", name="𝔹")
 NAT = node("type_builtin", name="ℕ")
 INT = node("type_builtin", name="ℤ")
 PROP = node("type_builtin", name="Prop")  # the type of propositions, for rule predicates
-STRING = node("type_builtin", name="String")  # internal; string literals only
 COMPARISONS = {"=", "≠", "<", "≤", ">", "≥"}
 ORDERINGS = {"<", "≤", ">", "≥"}
 BOOL_OPS = {"∧", "∨", "⟹", "⟺"}
@@ -126,7 +125,7 @@ def subst_expr(expr: Any, subst: dict[str, Node]) -> Any:
     kind, data = expr.kind, expr.data
     if kind == "identifier":
         return subst.get(data["name"], expr)
-    if kind in ("number", "string", "bool", "bool_symbol", "builtin_set", "unit"):
+    if kind in ("number", "bool", "bool_symbol", "builtin_set", "unit"):
         return expr
     if kind == "tuple":
         return node("tuple", items=[subst_expr(i, subst) for i in data["items"]])
@@ -539,8 +538,6 @@ class Checker:
             return self.synth_qualified(data["module"], data["name"])
         if kind == "number":
             return NAT
-        if kind == "string":
-            return STRING
         if kind in ("bool", "bool_symbol"):
             return BOOL
         if kind == "builtin_set":

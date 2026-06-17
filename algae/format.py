@@ -255,8 +255,6 @@ class Formatter:
             return "::".join([*data["module"], data["name"]])
         if value.kind == "number":
             return data["value"]
-        if value.kind == "string":
-            return repr(data["value"])
         if value.kind == "bool":
             return "true" if data["value"] else "false"
         if value.kind == "bool_symbol":

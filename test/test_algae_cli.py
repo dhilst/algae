@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -1061,6 +1062,116 @@ class AlgaeCliTests(unittest.TestCase):
         source = "var p : 𝔹;\naxiom a (∀ (x : ℕ) st x = x) ∧ p;\naxiom b ¬ (∀ (x : ℕ) st x = x);\n"
         result = self.check_source(source)
         self.assertEqual(result.returncode, 0, result.stdout)
+
+    # Previously-untested working features --------------------------------
+
+    def test_exists_quantifier(self) -> None:
+        source = "var p : 𝔹;\naxiom e (∃ (x : ℕ) st x = x) ∨ p;\n"
+        result = self.check_source(source)
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+        module = parse_text(source)
+        rendered = format_spec(module)
+        self.assertIn("∃ (x : ℕ) st", rendered)
+        self.assertEqual(semantic_payload(parse_text(rendered)), semantic_payload(module))
+
+    def test_truth_and_falsehood_symbols(self) -> None:
+        result = self.check_source("axiom t ⊤ ∧ ¬ ⊥;\n")
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_sequence_concat_checks(self) -> None:
+        result = self.check_source("op xs : → Seq[ℕ];\naxiom a xs() ++ xs() = xs();\n")
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_sequence_concat_rejects_mismatched_element(self) -> None:
+        source = "op a : → Seq[ℕ];\nop b : → Seq[ℤ];\naxiom x a() ++ b() = a();\n"
+        result = self.check_source(source)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("++ requires matching Seq operands", result.stdout)
+
+    def test_multi_parameter_sort(self) -> None:
+        source = "\n".join(
+            [
+                "sort Map[K, V];",
+                "op empty : → Map[K, V];",
+                "op put : Map[K, V] × K × V → Map[K, V];",
+                "var m : Map[K, V];",
+                "var k : K;",
+                "var v : V;",
+                "axiom put_def put(m, k, v) = put(m, k, v);",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+        module = parse_text(source)
+        self.assertIn("sort Map[K, V];", format_spec(module))
+        self.assertEqual(
+            semantic_payload(parse_text(format_spec(module))), semantic_payload(module)
+        )
+
+    def test_multi_parameter_sort_arity_error(self) -> None:
+        result = self.check_source("sort Map[K, V];\nvar m : Map[K];\n")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("sort Map takes 2 type argument(s), got 1", result.stdout)
+
+    def test_type_variable_cannot_take_arguments(self) -> None:
+        result = self.check_source("sort List[T];\nop bad : → T[ℕ];\n")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("type variable T cannot take type arguments", result.stdout)
+
+    def test_lambda_with_non_proposition_body(self) -> None:
+        # A λ whose body is not a proposition has a plain function type (ℕ → ℕ).
+        result = self.check_source("var n : ℕ;\naxiom a (λ (x : ℕ) => x)(n) = n;\n")
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_axiom_lemma_binder_forms(self) -> None:
+        # Explicit binders on an axiom and a lemma, and the implicit free-var form.
+        self.assertEqual(
+            self.check_source("sort T;\naxiom f (x : T) x = x;\n").returncode, 0
+        )
+        self.assertEqual(
+            self.check_source("sort T;\nlemma g (x : T) x = x;\n").returncode, 0
+        )
+        self.assertEqual(
+            self.check_source("sort T;\nvar a : T;\naxiom h a = a;\n").returncode, 0
+        )
+
+    def test_builtin_type_in_term_position_is_rejected(self) -> None:
+        result = self.check_source("axiom a ℕ = ℕ;\n")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("ℕ is a sort, not a term", result.stdout)
+
+    def test_module_include_without_with(self) -> None:
+        # An include without `with` leaves the module's parameters abstract.
+        result = self.check_in_project(
+            "include list;\nsort Elem;\nvar xs : list::List[Elem];\n"
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_module_transitive_and_vendor_includes(self) -> None:
+        # usechain → mid → base::pair, where base::pair lives under vendor/.
+        vendor_pkg = ROOT / "test/proj/vendor/base"
+        mid = ROOT / "test/proj/mid.alg"
+        try:
+            vendor_pkg.mkdir(parents=True, exist_ok=True)
+            (vendor_pkg / "pair.alg").write_text(
+                "sort Pair[A, B];\nop mk : A × B → Pair[A, B];\n", encoding="utf-8"
+            )
+            mid.write_text("include base::pair;\nsort Mid;\n", encoding="utf-8")
+            result = self.check_in_project("include mid;\nsort Top;\n")
+            self.assertEqual(result.returncode, 0, result.stdout)
+        finally:
+            mid.unlink(missing_ok=True)
+            shutil.rmtree(ROOT / "test/proj/vendor", ignore_errors=True)
+
+    def test_module_open_name_collision(self) -> None:
+        result = self.check_in_project(
+            "include list;\nopen list (cons);\nopen list (cons);\n"
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("collides", result.stdout)
 
 
 if __name__ == "__main__":

@@ -227,7 +227,7 @@ axiom pop_size let (rest, _) = pop(n) in size(rest) = size(n) - 1;
 calls, primes, tuples, unit
 ==================
 
-axiom prime_call s' = f((a, b, c), (), "lit", 42);
+axiom prime_call s' = f((a, b, c), (), 42);
 
 ---
 
@@ -246,7 +246,6 @@ axiom prime_call s' = f((a, b, c), (), "lit", 42);
             (identifier)
             (identifier))
           (unit)
-          (string)
           (number))))))
 
 ==================

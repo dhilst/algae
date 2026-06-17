@@ -334,7 +334,6 @@ module.exports = grammar({
       $.identifier,
       $.qualified_identifier,
       $.number,
-      $.string,
       $.boolean,
       $.builtin_type,
       $.unit,
@@ -452,12 +451,6 @@ module.exports = grammar({
     identifier: $ => /[A-Za-z_][A-Za-z0-9_]*/,
 
     number: $ => /[0-9]+/,
-
-    string: $ => token(seq(
-      '"',
-      repeat(choice(/[^"\\]/, seq('\\', /./))),
-      '"',
-    )),
 
     comment: $ => token(seq('#', /.*/)),
   },

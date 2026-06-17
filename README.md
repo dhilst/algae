@@ -2,7 +2,7 @@
 
 A Claude Code plugin and Codex CLI skill for writing lightweight algebraic specifications using equational notation.
 
-`.alg` files describe sorts, operation signatures, variables, and axioms. The parser checks syntax only; it does not perform type checking, model checking, or equational reasoning.
+`.alg` files describe sorts, operation signatures, variables, axioms, lemmas, inference rules, and modules. `check` parses **and type-checks** them (sorts, operations, variables, axioms, lemma/rule propositions, and rule application). It does not perform model checking or equational/proof verification — proofs are parsed and their structure checked, but rewrite steps are not discharged.
 
 ## Quick Example
 
@@ -53,8 +53,9 @@ claude plugin add /path/to/algae
 
 ## Language Overview
 
-- **Declarations**: `sort`, `op`, `var`, `axiom`, `lemma`
-- **Operation signatures**: `op push : Stack × Elem -> Stack;`
+- **Declarations**: `sort`, `op`, `var`, `axiom`, `lemma`, `rule`, `include`, `open`, `alias`, `let`
+- **Operation signatures**: `op push : Stack × Elem -> Stack;` (nullary `→ T`, sum-typed `… | Error`, partial `⇸`)
+- **Axioms/lemmas as quantified propositions**: `axiom f a = a;` (free vars from `var`), `axiom f (a : T) a = a;` (explicit binders), or `axiom f = forall (a : T) st a = a;` — all equivalent
 - **Sum/error result types**: `Stack | Error`
 - **Explicit narrowing**: `T | Error` never narrows to `T` implicitly; declare `op cast : (T | Error) -> T;` and wrap happy-path uses with `cast(...)` (convention)
 - **Partial operations**: `op assert : T | Error -/-> T;` (`-/->` is ASCII for `⇸`) marks an op whose application carries a proof obligation; purely syntactic for now

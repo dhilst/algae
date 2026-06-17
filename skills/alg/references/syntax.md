@@ -194,8 +194,9 @@ binder list, because no `:` follows the names.
 
 ```
 expr      ::= identifier | qualified_name
-            | literal
+            | literal                            # number, true/false, ⊤/⊥
             | expr '(' args ')'
+            | expr "'"                           # prime: a primed term (e.g. x', f(a)')
             | '(' expr ')'
             | expr comparison expr
             | expr bool_op expr
@@ -221,6 +222,11 @@ position they are parenthesized. A `λ` body that is a proposition gives the
 abstraction codomain `Prop`, so `λ (n : ℕ) => n + 0 = n` has type `ℕ → Prop`; a
 multi-binder `λ (a : A, b : B) => …` takes a product domain `A × B`, applied as
 `f(a, b)`. Connectives (`∧ ∨ ⟹ ⟺ ¬`) accept both `𝔹` and `Prop` operands.
+
+A trailing `'` (prime) is a postfix on any term, not just on declaration names:
+`x'`, `s.pop'`, `f(a)'`. A primed term has the same type as the term it follows
+(the prime is a naming convention, e.g. "the next state"); it carries no extra
+checking. Binder names may also carry primes (`(a b' : T)`).
 
 `let` names an intermediate term so deeply nested axioms stay readable. Lets
 nest, so a chain of bindings conventionally breaks the line after each `in`
@@ -490,7 +496,9 @@ Caveats:
 `check` parses and then type-checks. The rules:
 
 - Every identifier in an axiom must resolve: a local let binding, a declared
-  `var`, an enum value, a top-level `let`, or an op.
+  `var`, an enum value, a top-level `let`, or an op. A type name used in *term*
+  position (e.g. `ℕ`, `Prop`, or a sort) is a type error: "`… is a sort, not a
+  term`".
 - Ops may be **overloaded**: the same name with different domains is resolved
   by argument types. Unresolvable or ambiguous calls are errors.
 - Number literals are `ℕ`. Numeric sorts are **strict**: `ℕ`, `ℤ`, and `ℝ`

@@ -8,7 +8,6 @@
 
 ; Literals
 (number) @number
-(string) @string
 (boolean) @boolean
 
 ; Declaration keywords
