@@ -11,6 +11,7 @@ from typing import Sequence
 from .ast import to_jsonable
 from .format import respell
 from .parser import ParseError, parse_file, parse_text
+from .project import ModuleLoader
 from .types import check_module
 
 
@@ -27,7 +28,8 @@ def check(paths: list[Path], *, syntax_only: bool = False) -> int:
             failed = True
             print(error_line(path, exc))
             continue
-        issues = [] if syntax_only else check_module(module)
+        loader = ModuleLoader.for_file(path)
+        issues = [] if syntax_only else check_module(module, loader=loader)
         if issues:
             failed = True
             for issue in issues:

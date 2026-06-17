@@ -1,46 +1,32 @@
-sort Nat;
+# Induction over the built-in naturals ℕ. `0` is the numeric literal; `s` is
+# successor. This exercises rule declarations, propositions/sequents, and rule
+# application with explicit cases. Nothing is proof-checked yet.
+op s : ℕ → ℕ;
 
-op 0 : → Nat;
-op s : Nat → Nat;
+var m, n : ℕ;
 
-op + : Nat × Nat → Nat;
+axiom add_zero_left ⊢ 0 + m = m;
+axiom add_succ_left ⊢ s(n) + m = s(n + m);
 
-var n, m : Nat;
+rule induction(x : ℕ, P : ℕ → Prop)
+  ⊢ P(0)
+  P(x) ⊢ P(s(x))
+  ─────────────────────
+  ⊢ ∀ (n : ℕ) st P(n)
+end
 
-axiom add_zero_left
-  0 + m = m;
-
-axiom add_succ_left
-  s(n) + m = s(n + m);
-
-rule induction(n, P) {
-  case base : P(0),
-  case step : P(n) ⊢ P(s(n))
-              ──────────────
-                  P(n);
-};
-
-lemma add_zero_right
-  n + 0 = n;
+lemma add_zero_right ⊢ n + 0 = n;
 proof
-  by induction(n);
+  apply induction(n, λ (n : ℕ) => n + 0 = n);
 
-  case base;
-    ──────────
-    0 + 0 = 0;
-
+  case [⊢ 0 + 0 = 0]
     0 + 0;
-    = 0 by add_zero_left(m := 0);
+    = 0 by add_zero_left;
   qed;
 
-  case step;
-    ih : n + 0 = n;
-    ───────────────
-    s(n) + 0 = s(n);
-
+  case [ih := n + 0 = n ⊢ s(n) + 0 = s(n)]
     s(n) + 0;
-    = s(n + 0) by add_succ_left(m := 0);
+    = s(n + 0) by add_succ_left;
     = s(n) by ih;
   qed;
-
 qed;

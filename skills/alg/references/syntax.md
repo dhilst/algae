@@ -13,13 +13,15 @@
 ## Keywords
 
 ```
-sort  op  var  axiom  lemma  proof  qed  by  true  false  if  then  else  let  in
+sort  op  var  axiom  lemma  rule  proof  qed  by  apply  case  end  st
+include  open  with  alias
+true  false  if  then  else  let  in
 ```
 
 The previous state-machine syntax is not part of this grammar. Its keywords
 (`spec`, `state`, `init`, `pre`, `post`, ...) are ordinary identifiers now, but
 old-syntax files still fail to parse since declarations must start with `sort`,
-`op`, `var`, `axiom`, `lemma`, or `let`.
+`op`, `var`, `axiom`, `lemma`, `rule`, `include`, `open`, `alias`, or `let`.
 
 ## Symbols And ASCII Aliases
 
@@ -27,7 +29,7 @@ Unicode symbols and their ASCII aliases (keywords or symbolic spellings) are
 interchangeable. The formatter emits Unicode by default and emits the aliases
 below with `fmt --ascii`. Additional symbolic input spellings are accepted:
 `->` for `→`, `==>` for `⟹`, `<==>` for `⟺`, `!=` for `≠`, `<=` for `≤`,
-`>=` for `≥`, `&&` for `∧`, `||` for `∨`.
+`>=` for `≥`, `&&` for `∧`, `||` for `∨`, `|-` for `⊢`.
 
 | Symbol | Alias | Meaning |
 |--------|-------|---------|
@@ -38,6 +40,7 @@ below with `fmt --ascii`. Additional symbolic input spellings are accepted:
 | `ℤ` | `Int` | integers |
 | `ℝ` | `Real` | reals |
 | `𝔹` | `Bool` | booleans |
+| `Prop` | `Prop` | proposition type (rule predicates) |
 | `¬` | `not` | negation |
 | `∧` | `/\` (or `and`) | conjunction |
 | `∨` | `\/` (or `or`) | disjunction |
@@ -49,11 +52,27 @@ below with `fmt --ascii`. Additional symbolic input spellings are accepted:
 | `⊤` | `truth` | logical top |
 | `⊥` | `falsehood` | logical bottom |
 | `▷` | `\|>` | pipe-last application sugar |
+| `⊢` | `\|-` | sequent turnstile (assumptions ⊢ goal) |
+| `∀` | `forall` | universal quantifier (`∀ (n : ℕ) st …`) |
+| `∃` | `exists` | existential quantifier |
+| `λ` | `fun` | abstraction (`λ (n : ℕ) => …`) |
+| `=>` | `=>` | lambda body separator |
+| `:=` | `:=` | assumption naming / `with` binding (`h := A`, `T := Elem`) |
+| `::` | `::` | namespace separator (`list::cons`) |
 
-Set-theory notation (`∈`, `⊆`, `∪`, `∩`, `∅`, `℘`, `∀`/`∃` quantifiers, set and
-mapping literals) is not part of the grammar. Specifications are equational:
-behavior is captured by axioms over constructor terms, with `var` declarations
-read as implicitly universally quantified.
+`st` (a keyword) separates a quantifier's binders from its body. `::` separates
+the segments of a qualified name or module path.
+
+The box-drawing rule bar `─` (one or more, e.g. `─────`) separates a rule's
+premises from its conclusion. It is not a symbol alias — write it as `─`
+(U+2500); `fmt` preserves it verbatim.
+
+Set-theory notation (`∈`, `⊆`, `∪`, `∩`, `∅`, `℘`, set and mapping literals) is
+not part of the grammar. Specifications are equational: behavior is captured by
+axioms over constructor terms, with `var` declarations read as implicitly
+universally quantified. The `∀`/`∃` quantifiers and `λ` abstraction exist only
+inside propositions — rule premises, conclusions, and predicate arguments — not
+in ordinary equational terms.
 
 `empty` and `top` are ordinary identifiers so they can name operations.
 
@@ -61,9 +80,11 @@ read as implicitly universally quantified.
 
 ```
 file        ::= decl*
-decl        ::= sort_decl | op_decl | var_decl | axiom_decl | lemma_decl | let_decl
+decl        ::= sort_decl | op_decl | var_decl | axiom_decl | lemma_decl
+              | rule_decl | include_decl | open_decl | alias_decl | let_decl
 
 sort_decl   ::= 'sort' identifier (',' identifier)* ';'
+              | 'sort' identifier '[' identifier (',' identifier)* ']' ';'  # parametric
               | 'sort' identifier '=' '{' identifier (',' identifier)* '}' ';'
 
 op_decl     ::= 'op' identifier ':' domain op_arrow type_expr ';'
@@ -73,14 +94,47 @@ domain      ::=                    # empty domain for nullary operations
               | type_product ('|' type_product)+   # one sum-typed argument
 
 var_decl    ::= 'var' identifier (',' identifier)* ':' type_expr ';'
-axiom_decl  ::= 'axiom' rule_name expr ';'
+axiom_decl  ::= 'axiom' rule_name binders? prop ';'
+              | 'axiom' rule_name '=' prop ';'
 rule_name   ::= identifier "'"*
-lemma_decl  ::= 'lemma' rule_name expr ';' proof_block?
+lemma_decl  ::= 'lemma' rule_name binders? prop ';' proof_block?
+              | 'lemma' rule_name '=' prop ';' proof_block?
+
+binders     ::= '(' binder_entry (',' binder_entry)* ')'   # ( a : A, b b' : B )
+binder_entry::= identifier+ ':' type_expr                  # co-typed names share a type
+
+prop        ::= expr | sequent              # a proposition
+sequent     ::= assumptions? '⊢' expr
+assumptions ::= assumption (',' assumption)*
+assumption  ::= expr | identifier ':=' expr  # an optionally-named hypothesis
+
+rule_decl   ::= 'rule' identifier binders
+                prop*                        # premises
+                RULE_BAR                     # one or more '─'
+                prop                         # conclusion
+                'end'
+
+include_decl ::= 'include' module_path ('with' '(' with_binding (',' with_binding)* ')')? ';'
+open_decl    ::= 'open' module_path '(' identifier (',' identifier)* ')' ';'
+alias_decl   ::= 'alias' identifier '=' module_path ';'
+module_path  ::= identifier ('::' identifier)*
+with_binding ::= identifier ':=' type_expr
+
 proof_block ::= 'proof' proof_step* 'qed' ';'
 proof_step  ::= expr ';'
               | '=' expr 'by' rule_name ';'
+              | apply_step
+apply_step  ::= 'apply' rule_name '(' args? ')' ';' case_block+
+case_block  ::= 'case' '[' case_sequent ']' proof_step* 'qed' ';'
+case_sequent::= (identifier ':=' expr (',' …)*)? '⊢' expr   # the branch's subgoal
+
 let_decl    ::= 'let' identifier '=' expr ';'
 ```
+
+`binders` is the one binder-list form used everywhere (quantifiers, `λ`, rule
+parameters, axiom/lemma parameters): a single parenthesised, comma-separated
+list of entries, where an entry may give several space-separated names one
+shared type — `(a : A, b b' : B, c : C)`.
 
 A top-level `|` in an op domain folds the whole domain into a single
 sum-typed argument, grouping as in codomains (`×` binds tighter than `|`):
@@ -94,11 +148,22 @@ type_expr    ::= type_sum
 type_sum     ::= type_arrow ('|' type_arrow)*       # algebraic sum/union type
 type_arrow   ::= type_product (('→' | '⇸') type_arrow)?
 type_product ::= type_primary ('×' type_primary)*
-type_primary ::= identifier | 'ℕ' | 'ℤ' | 'ℝ' | '𝔹'
+type_primary ::= type_name | 'ℕ' | 'ℤ' | 'ℝ' | '𝔹' | 'Prop'
                | 'Seq' '[' type_expr ']'
                | '(' type_expr ')'
                | '()'
+type_name    ::= module_path ('[' type_expr (',' type_expr)* ']')?   # List[T], list::List[Elem]
 ```
+
+`Prop` is the type of propositions. It is built in (not a sort) and exists only
+for rule parameters such as `P : ℕ → Prop`; it does not participate in
+algebraic specifications.
+
+A **parametric sort** `sort List[T];` introduces a type constructor of arity 1.
+Its parameters are module-wide type variables, in scope for every signature
+(`op cons : T → List[T] → List[T];`). A use must supply the right number of
+arguments: `List[Elem]`, `list::List[Elem]`. A name may be qualified with a
+module path (`list::List`) once the module is included.
 
 ## Terms And Axioms
 
@@ -110,12 +175,25 @@ by `fmt`.
 
 Every axiom carries a required name — an identifier with trailing primes
 allowed (`axiom empty_size q.empty ⟺ q.size = 0;`, `axiom assoc' …;`) —
-which `check` requires to be unique across the module. The first identifier
-after `axiom` is always the name; the body starts at the next token, so it
-may freely begin with `(`, a call, or a primed term.
+which `check` requires to be unique across the module (axiom, lemma, and rule
+names share one namespace).
+
+An axiom (and a lemma) is a quantified proposition. Three equivalent forms:
 
 ```
-expr      ::= identifier
+axiom f foo = foo;                        # foo's type comes from `var foo : T;`
+axiom f (foo : T) foo = foo;              # explicit binder
+axiom f = forall (foo : T) st foo = foo;  # the proposition written out
+```
+
+The first identifier after `axiom` is always the name. The body then starts
+either at `=` (the proposition form), at a `( name … : type )` binder list, or
+directly (free variables resolve to declared `var`s). A body that begins with a
+parenthesised expression — `axiom refl' (q, q) = (q, q');` — is a term, not a
+binder list, because no `:` follows the names.
+
+```
+expr      ::= identifier | qualified_name
             | literal
             | expr '(' args ')'
             | '(' expr ')'
@@ -125,6 +203,10 @@ expr      ::= identifier
             | expr '▷' expr
             | 'if' expr 'then' expr 'else' expr
             | 'let' let_lhs '=' expr 'in' expr
+            | 'λ' binders '=>' expr             # abstraction: λ (a : A, b : B) => …
+            | ('∀' | '∃') binders 'st' expr     # quantifier:  ∀ (a : A, b : B) st …
+
+qualified_name ::= identifier ('::' identifier)*   # list::cons
 
 let_lhs    ::= identifier
              | '(' binder ',' binder (',' binder)* ')'   # destructuring
@@ -133,6 +215,12 @@ binder     ::= identifier | '_'
 comparison ::= '=' | '≠' | '<' | '≤' | '>' | '≥'
 bool_op    ::= '∧' | '∨' | '⟹' | '⟺'
 ```
+
+`λ`, `∀`, and `∃` extend greedily to the right (like `if`/`let`); in an operand
+position they are parenthesized. A `λ` body that is a proposition gives the
+abstraction codomain `Prop`, so `λ (n : ℕ) => n + 0 = n` has type `ℕ → Prop`; a
+multi-binder `λ (a : A, b : B) => …` takes a product domain `A × B`, applied as
+`f(a, b)`. Connectives (`∧ ∨ ⟹ ⟺ ¬`) accept both `𝔹` and `Prop` operands.
 
 `let` names an intermediate term so deeply nested axioms stay readable. Lets
 nest, so a chain of bindings conventionally breaks the line after each `in`
@@ -213,10 +301,117 @@ proof
 qed;
 ```
 
-Lemma names are required, like axiom names. Lemmas and proofs are parsed and
-preserved (in the AST and by `fmt`) but **not** checked: the proposition is
-not type-checked, steps are not verified, and `by` references are not
-resolved. Verification is a future phase.
+Lemma names are required, like axiom names. A lemma's proposition **is**
+type-checked (it must be a proposition — `𝔹` or `Prop`). The proof's rewrite
+steps are still parsed and preserved but not verified: rewrite terms are not
+checked and `by` references are not resolved. Full proof verification is a
+future phase.
+
+## Propositions, Rules, And Proof Branches
+
+A **proposition** is either a plain boolean `expr` or a **sequent** of the form
+`assumptions ⊢ goal`. An assumption is a boolean expression. In a `case` subgoal
+it is named with `h := A` (the hypothesis a proof step may cite by name); in a
+rule premise it is left **unnamed** — names are introduced only at the `case`.
+Axioms, lemmas, and rules all state propositions:
+
+```
+axiom add_zero_left ⊢ 0 + m = m;
+axiom add_succ_left ⊢ s(n) + m = s(n + m);
+```
+
+A **rule** declares a named inference rule: typed parameters, zero or more
+premise propositions (with **unnamed** assumptions), a rule bar `─────`, a
+conclusion proposition, and `end`. A `T → Prop` parameter is a predicate over
+`T`:
+
+```
+rule induction(x : ℕ, P : ℕ → Prop)
+  ⊢ P(0)
+  P(x) ⊢ P(s(x))
+  ─────────────────────
+  ⊢ ∀ (n : ℕ) st P(n)
+end
+```
+
+Inside a proof, `apply` invokes a rule and opens one `case` per premise. Each
+predicate argument is given **explicitly** as a `λ` abstraction (nothing is
+inferred). A `case` writes its branch's **full sequent** explicitly — the named
+hypotheses and the goal — so the proof state is visible in the source. A premise
+with no hypotheses is discharged with `case [⊢ goal]`:
+
+```
+lemma add_zero_right ⊢ n + 0 = n;
+proof
+  apply induction(n, λ (n : ℕ) => n + 0 = n);
+
+  case [⊢ 0 + 0 = 0]
+    0 + 0;
+    = 0 by add_zero_left;
+  qed;
+
+  case [ih := n + 0 = n ⊢ s(n) + 0 = s(n)]
+    s(n) + 0;
+    = s(n + 0) by add_succ_left;
+    = s(n) by ih;
+  qed;
+qed;
+```
+
+Rule names share one namespace with axiom and lemma names and must be unique.
+Applying a rule **computes** each branch's subgoal by substituting the arguments
+into the premise and β-reducing the predicate applications, and **verifies** the
+written `case` sequent against it: the rule above computes `⊢ 0 + 0 = 0` and
+`n + 0 = n ⊢ s(n) + 0 = s(n)`, which the two cases must state (the author chooses
+the hypothesis names). The checker validates that the rule exists, the argument
+count and types match the parameters, the number of cases equals the number of
+premises, and each written subgoal — every hypothesis proposition and the goal —
+matches the computed one. The proof steps within a case are not otherwise
+verified.
+
+## Modules
+
+Specifications can be split across files. A **project** is rooted at the nearest
+ancestor directory containing `alg-project.json`:
+
+```json
+{ "include_path": ["."], "vendor": "vendor" }
+```
+
+A module path `foo::bar` resolves to `foo/bar.alg`, searched across the
+`include_path` directories and then the `vendor/` directory (both relative to
+the project root). `std` is reserved for the future vendored standard library. A
+file that uses no `include`/`open` needs no project file.
+
+- `include foo::bar with (T := Elem);` brings the module's declarations in under
+  the qualified namespace `foo::bar` (`foo::bar::cons`). `with` instantiates the
+  module's type parameters; omitting it leaves them as abstract type variables.
+- `alias bar = foo::bar;` shortens a namespace, so `bar::cons` means
+  `foo::bar::cons`.
+- `open foo::bar (nil, cons);` additionally exposes the named declarations
+  unqualified. The name list is required, and `open` needs a prior `include`.
+
+```
+# list.alg
+sort List[T];
+op nil  : → List[T];
+op cons : T → List[T] → List[T];
+
+# use_list.alg
+include list with (T := Elem);
+alias l = list;
+open list (nil, cons);
+sort Elem;
+var e : Elem;
+var xs : list::List[Elem];
+axiom built cons(e)(xs) = l::cons(e)(xs);
+```
+
+`check` resolves includes (with `with`-substitution applied), validates each
+included module on its own, and type-checks qualified and opened references
+against the imported signatures. Includes are resolved transitively with
+cycle detection. `fmt` and `print` operate on a single file and do not load
+included modules.
 
 ## Application Sugar
 
@@ -309,12 +504,25 @@ Caveats:
   wraps the fallible term, e.g. `assign_role(cast(with_perm), u, r)`. This is
   what lets setup chains compose error-returning ops while keeping every
   narrowing visible in the spec. A sum-typed value can never be destructured.
-- Comparisons and boolean operators yield `𝔹`; `< ≤ > ≥` and arithmetic
-  require numerics; `++` requires matching `Seq` operands; equations `=`/`≠`
-  require compatible operand types (either direction).
-- An axiom body must type to `𝔹`, and axiom names must be unique.
-- Lemmas are **not** checked at all: propositions, proof steps, and `by`
-  references are parsed and stored only.
+- Comparisons yield `𝔹`; `< ≤ > ≥` and arithmetic require numerics; `++`
+  requires matching `Seq` operands; equations `=`/`≠` require compatible operand
+  types (either direction). Connectives (`∧ ∨ ⟹ ⟺ ¬`) accept `𝔹` or `Prop`
+  operands and yield `Prop` when either operand is a `Prop`, else `𝔹`.
+- A **parametric sort** `sort List[T];` has an arity; uses must supply that many
+  type arguments (`List[Elem]`), and its parameters are module-wide type
+  variables. A **qualified** name `mod::name` (and an `alias`) resolves against
+  an included module's namespaced declarations.
+- An axiom/lemma proposition must type to `𝔹` or `Prop`; in a sequent, every
+  assumption and the goal must. Explicit `(binders)` are checked in scope; the
+  three axiom/lemma forms are equivalent.
+- Axiom, lemma, and rule names share one namespace and must be unique.
+- A rule's parameters, premises, and conclusion are type-checked, and a premise
+  assumption may not be named. Applying a rule checks the argument count and
+  types, the case count against the number of premises, and each written `case`
+  sequent against the subgoal computed from the premise (every hypothesis
+  proposition and the goal must match; hypothesis names are the author's
+  choice). Rewrite steps and `by` references inside proofs are parsed only, not
+  verified.
 
 Errors are reported as `<file>: type error at line <N>, <message>` with the
 declaration's line. `check --syntax-only` skips type checking.

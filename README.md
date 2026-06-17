@@ -59,8 +59,10 @@ claude plugin add /path/to/algae
 - **Explicit narrowing**: `T | Error` never narrows to `T` implicitly; declare `op cast : (T | Error) -> T;` and wrap happy-path uses with `cast(...)` (convention)
 - **Partial operations**: `op assert : T | Error -/-> T;` (`-/->` is ASCII for `⇸`) marks an op whose application carries a proof obligation; purely syntactic for now
 - **Lemmas with proof sketches**: `lemma name expr; proof ... qed;` — parsed and formatted, not yet verified
+- **Inference rules and proofs**: `rule`, `apply`/`case`, propositions (`⊢`), and quantifiers (`∀ (n : ℕ) st …`)
+- **Parametric sorts**: `sort List[T];`, used as `List[Elem]`
+- **Modules**: `include foo::bar with (T := Elem);`, `open`, and `alias`, resolved through an `alg-project.json` project root
 - **ASCII aliases** available for Unicode symbols, such as `*`, `arrow`, `/\`, `\/`, `Nat`, `Bool`, `neq`, and `implies`
-- **Single-file specs**: no `spec`, `import`, or `extends`
 
 See [skills/alg/references/syntax.md](skills/alg/references/syntax.md) for the full language reference.
 

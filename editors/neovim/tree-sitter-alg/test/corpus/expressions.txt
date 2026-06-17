@@ -248,3 +248,183 @@ axiom prime_call s' = f((a, b, c), (), "lit", 42);
           (unit)
           (string)
           (number))))))
+
+==================
+quantifiers and lambda
+==================
+
+axiom q forall (a : ℕ, b b' : ℤ) st a = b;
+axiom e exists (x : ℕ) st x = x;
+axiom l = (fun (n : ℕ) => n) ▷ f;
+
+---
+
+(source_file
+  (axiom_declaration
+    (axiom_name
+      (identifier))
+    (quantifier_expression
+      (binders
+        (binder_entry
+          (binder_name
+            (identifier))
+          (builtin_type))
+        (binder_entry
+          (binder_name
+            (identifier))
+          (binder_name
+            (identifier))
+          (builtin_type)))
+      (binary_expression
+        (identifier)
+        (identifier))))
+  (axiom_declaration
+    (axiom_name
+      (identifier))
+    (quantifier_expression
+      (binders
+        (binder_entry
+          (binder_name
+            (identifier))
+          (builtin_type)))
+      (binary_expression
+        (identifier)
+        (identifier))))
+  (axiom_declaration
+    (axiom_name
+      (identifier))
+    (binary_expression
+      (parenthesized_expression
+        (lambda_expression
+          (binders
+            (binder_entry
+              (binder_name
+                (identifier))
+              (builtin_type)))
+          (identifier)))
+      (identifier))))
+
+==================
+sequents and qualified names
+==================
+
+axiom seq h := a, b ⊢ c;
+var xs : list::List[Elem];
+axiom q list::cons(e, xs) = xs;
+
+---
+
+(source_file
+  (axiom_declaration
+    (axiom_name
+      (identifier))
+    (sequent
+      (assumption
+        (identifier)
+        (identifier))
+      (assumption
+        (identifier))
+      (identifier)))
+  (var_declaration
+    (identifier)
+    (type_application
+      (qualified_type
+        (type_identifier)
+        (type_identifier))
+      (type_identifier)))
+  (axiom_declaration
+    (axiom_name
+      (identifier))
+    (binary_expression
+      (call_expression
+        (qualified_identifier
+          (identifier)
+          (identifier))
+        (arguments
+          (identifier)
+          (identifier)))
+      (identifier))))
+
+==================
+proof with apply and cases
+==================
+
+lemma l x = x;
+proof
+  apply induction(n, fun (n : Nat) => n + 0 = n);
+  case [|- 0 + 0 = 0]
+    0 + 0;
+    = 0 by add_zero;
+  qed;
+  case [ih := n + 0 = n |- s(n) + 0 = s(n)]
+    s(n);
+  qed;
+qed;
+
+---
+
+(source_file
+  (lemma_declaration
+    (lemma_name
+      (identifier))
+    (binary_expression
+      (identifier)
+      (identifier))
+    (proof_block
+      (proof_step
+        (apply_step
+          (rule_name
+            (identifier))
+          (arguments
+            (identifier)
+            (lambda_expression
+              (binders
+                (binder_entry
+                  (binder_name
+                    (identifier))
+                  (builtin_type)))
+              (binary_expression
+                (binary_expression
+                  (identifier)
+                  (number))
+                (identifier))))
+          (case_block
+            (sequent
+              (binary_expression
+                (binary_expression
+                  (number)
+                  (number))
+                (number)))
+            (proof_step
+              (binary_expression
+                (number)
+                (number)))
+            (proof_step
+              (number)
+              (rule_name
+                (identifier))))
+          (case_block
+            (sequent
+              (assumption
+                (identifier)
+                (binary_expression
+                  (binary_expression
+                    (identifier)
+                    (number))
+                  (identifier)))
+              (binary_expression
+                (binary_expression
+                  (call_expression
+                    (identifier)
+                    (arguments
+                      (identifier)))
+                  (number))
+                (call_expression
+                  (identifier)
+                  (arguments
+                    (identifier)))))
+            (proof_step
+              (call_expression
+                (identifier)
+                (arguments
+                  (identifier))))))))))

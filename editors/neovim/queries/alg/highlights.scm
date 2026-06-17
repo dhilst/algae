@@ -18,9 +18,17 @@
   "var"
   "axiom"
   "lemma"
+  "rule"
+  "end"
   "proof"
   "qed"
   "by"
+  "apply"
+  "case"
+  "include"
+  "open"
+  "with"
+  "alias"
 ] @keyword
 
 [
@@ -28,18 +36,33 @@
   "in"
 ] @keyword
 
+; Quantifier separator
+"st" @keyword
+
 [
   "if"
   "then"
   "else"
 ] @keyword.conditional
 
+; Quantifiers and lambda (Unicode and word aliases)
+[
+  "∀"
+  "∃"
+  "forall"
+  "exists"
+  "λ"
+  "fun"
+] @keyword.operator
+
 ; Types
 (sort_identifier) @type
 (type_identifier) @type
 (builtin_type) @type.builtin
+(type_parameter) @type.parameter
 
-((sequence_type
+; `Seq[...]` is the one built-in container constructor.
+((type_application
   constructor: (type_identifier) @type.builtin)
   (#eq? @type.builtin "Seq"))
 
@@ -47,6 +70,9 @@
 
 ; Declared names
 (op_declaration
+  name: (identifier) @function)
+
+(rule_declaration
   name: (identifier) @function)
 
 (var_declaration
@@ -63,8 +89,26 @@
 (let_declaration
   name: (identifier) @variable)
 
+; Binder names (λ / ∀ / ∃ / rule and axiom/lemma parameters)
+(binder_entry
+  name: (binder_name) @variable.parameter)
+
+; Named sequent assumptions (rule premises and the hypotheses a case binds in
+; its explicit subgoal `case [ h := … ⊢ … ]`)
+(assumption
+  name: (identifier) @label)
+
 (call_expression
   function: (identifier) @function.call)
+
+; Module paths and qualified names. In `foo::bar::name`, the leading segments
+; are namespaces and the final segment is the name (overridden below).
+(module_path (identifier) @module)
+(alias_declaration name: (identifier) @module)
+(qualified_identifier (identifier) @module)
+(qualified_identifier (identifier) @variable .)
+(call_expression
+  function: (qualified_identifier (identifier) @function.call .))
 
 ; Symbolic operators
 [
@@ -103,7 +147,13 @@
   "▷"
   "|>"
   "."
+  "⊢"
+  "|-"
+  "=>"
+  ":="
 ] @operator
+
+(rule_bar) @operator
 
 ; Word aliases for operators
 [
@@ -133,6 +183,7 @@
   ";"
   ","
   ":"
+  "::"
 ] @punctuation.delimiter
 
 ; Axiom, lemma, and proof rule names

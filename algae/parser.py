@@ -6,7 +6,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .ast import AxiomDecl, LemmaDecl, LetDecl, Module, OpDecl, SortDecl, VarDecl, node
+from .ast import (
+    AliasDecl,
+    AxiomDecl,
+    IncludeDecl,
+    LemmaDecl,
+    LetDecl,
+    Module,
+    OpDecl,
+    OpenDecl,
+    RuleDecl,
+    SortDecl,
+    VarDecl,
+    node,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,7 +40,8 @@ class ParseFailure(Exception):
 
 KEYWORDS = {
     "sort", "op", "var", "axiom", "true", "false", "if", "then", "else", "let", "in",
-    "lemma", "proof", "qed", "by",
+    "lemma", "proof", "qed", "by", "rule", "apply", "case", "end", "st",
+    "include", "open", "with", "alias",
 }
 
 WORD_SYMBOLS = {
@@ -47,6 +61,10 @@ WORD_SYMBOLS = {
     "geq": "≥",
     "truth": "⊤",
     "falsehood": "⊥",
+    "fun": "λ",
+    "forall": "∀",
+    "exists": "∃",
+    "Prop": "Prop",  # built-in proposition type; no separate Unicode glyph
 }
 
 ASCII_SYMBOLS = {
@@ -64,13 +82,17 @@ ASCII_SYMBOLS = {
     "++": "++",
     "..": "..",
     "|>": "▷",
+    "|-": "⊢",
+    ":=": ":=",
+    "=>": "=>",
+    "::": "::",
 }
 
-UNICODE_SYMBOLS = set(WORD_SYMBOLS.values()) | {"▷", "⇸"}
+UNICODE_SYMBOLS = set(WORD_SYMBOLS.values()) | {"▷", "⇸", "⊢"}
 ASCII_SYMBOLS_BY_LENGTH = sorted(ASCII_SYMBOLS.items(), key=lambda item: len(item[0]), reverse=True)
 SINGLE_SYMBOLS = set("{}[](),;:=.+-*/<>|'")
 COMPARISONS = {"=", "≠", "<", "≤", ">", "≥"}
-TYPE_BUILTINS = {"ℕ", "ℤ", "ℝ", "𝔹"}
+TYPE_BUILTINS = {"ℕ", "ℤ", "ℝ", "𝔹", "Prop"}
 PRECEDENCE = {
     "⟺": 1,
     "⟹": 2,
@@ -125,6 +147,16 @@ def lex(text: str) -> tuple[Token, ...]:
                 index += 1
             raw = text[start:index]
             emit("COMMENT", raw[1:].strip(), raw, line, column)
+            advance(raw)
+            continue
+        if char == "─":
+            # A run of box-drawing dashes is the rule bar separating premises
+            # from the conclusion. Any length collapses to one RULE_BAR token.
+            start = index
+            while index < len(text) and text[index] == "─":
+                index += 1
+            raw = text[start:index]
+            emit("RULE_BAR", "─", raw, line, column)
             advance(raw)
             continue
         start_line, start_col = line, column
@@ -297,29 +329,91 @@ class AlgParser:
             return self.parse_axiom()
         if token.value == "lemma":
             return self.parse_lemma()
+        if token.value == "rule":
+            return self.parse_rule()
+        if token.value == "include":
+            return self.parse_include()
+        if token.value == "open":
+            return self.parse_open()
+        if token.value == "alias":
+            return self.parse_alias()
         if token.value == "let":
             return self.parse_let()
         self.fail("declaration")
 
+    def parse_module_path(self) -> list[str]:
+        # foo::bar::baz  →  ["foo", "bar", "baz"]
+        parts = [self.consume_ident("module name")]
+        while self.match("::"):
+            parts.append(self.consume_ident("module name"))
+        return parts
+
+    def parse_include(self) -> IncludeDecl:
+        # include foo::bar with (T := type, R := type);
+        self.consume_keyword("include")
+        path = self.parse_module_path()
+        bindings: list[Any] = []
+        if self.current.kind == "KEYWORD" and self.current.value == "with":
+            self.advance()
+            self.consume("(")
+            while True:
+                name = self.consume_ident("parameter name")
+                self.consume(":=")
+                bindings.append((name, self.parse_type_expr()))
+                if self.match(")"):
+                    break
+                self.consume(",")
+        self.consume(";")
+        return IncludeDecl(path, bindings)
+
+    def parse_open(self) -> OpenDecl:
+        # open foo::bar (nil, cons);   (the name list is required)
+        self.consume_keyword("open")
+        path = self.parse_module_path()
+        self.consume("(")
+        names = [self.consume_ident("imported name")]
+        while self.match(","):
+            names.append(self.consume_ident("imported name"))
+        self.consume(")")
+        self.consume(";")
+        return OpenDecl(path, names)
+
+    def parse_alias(self) -> AliasDecl:
+        # alias bar = foo::bar;
+        self.consume_keyword("alias")
+        name = self.consume_ident("alias name")
+        self.consume("=")
+        path = self.parse_module_path()
+        self.consume(";")
+        return AliasDecl(name, path)
+
     def parse_sort(self) -> SortDecl:
         self.consume_keyword("sort")
         names = [self.consume_ident("sort name")]
-        while self.match(","):
-            names.append(self.consume_ident("sort name"))
+        params: list[str] = []
+        if self.match("["):
+            # Parametric sort: sort List[T]; only one sort name may carry params.
+            params.append(self.consume_ident("type parameter"))
+            while self.match(","):
+                params.append(self.consume_ident("type parameter"))
+            self.consume("]")
         values = None
-        if self.match("="):
-            if len(names) != 1:
-                self.fail("single sort before enum definition")
-            self.consume("{")
-            values = []
-            if not self.match("}"):
-                while True:
-                    values.append(self.consume_ident("enum value"))
-                    if self.match("}"):
-                        break
-                    self.consume(",")
+        if not params:
+            while self.match(","):
+                names.append(self.consume_ident("sort name"))
+            if self.match("="):
+                if len(names) != 1:
+                    self.fail("single sort before enum definition")
+                self.consume("{")
+                values = []
+                if not self.match("}"):
+                    while True:
+                        values.append(self.consume_ident("enum value"))
+                        if self.match("}"):
+                            break
+                        self.consume(",")
         self.consume(";")
-        return SortDecl(names, values)
+        return SortDecl(names, values, params=params)
 
     def parse_op(self) -> OpDecl:
         self.consume_keyword("op")
@@ -363,9 +457,19 @@ class AlgParser:
     def parse_axiom(self) -> AxiomDecl:
         self.consume_keyword("axiom")
         name = self.parse_rule_name("axiom name")
-        expr = self.parse_expr()
+        params, prop = self.parse_decl_prop()
         self.consume(";")
-        return AxiomDecl(expr, name)
+        return AxiomDecl(prop, name, params=params)
+
+    def parse_decl_prop(self) -> tuple[list[Any], Any]:
+        # The body of an axiom/lemma. Three equivalent forms:
+        #   name = prop            (literal `=`; body is a proposition)
+        #   name (a : T, …) prop   (explicit binders ≡ forall over them)
+        #   name prop              (free vars bound implicitly from `var`)
+        if self.match("="):
+            return [], self.parse_prop()
+        params = self.parse_binder_list() if self.looks_like_binder_list() else []
+        return params, self.parse_prop()
 
     def parse_rule_name(self, expected: str) -> str:
         # Axiom, lemma, and `by` rule names are identifiers with trailing
@@ -376,23 +480,104 @@ class AlgParser:
         return name
 
     def parse_lemma(self) -> LemmaDecl:
-        # `lemma name expr;` optionally followed by a proof block. Both are
-        # parsed and stored only; nothing is checked or proved yet.
+        # `lemma name [binders] prop;` optionally followed by a proof block.
+        # The proposition is checked; the proof is parsed and stored only.
         self.consume_keyword("lemma")
         name = self.parse_rule_name("lemma name")
-        expr = self.parse_expr()
+        params, prop = self.parse_decl_prop()
         self.consume(";")
         proof = None
         if self.current.kind == "KEYWORD" and self.current.value == "proof":
             proof = self.parse_proof()
-        return LemmaDecl(expr, name, proof)
+        return LemmaDecl(prop, name, proof, params=params)
+
+    def parse_prop(self) -> Any:
+        # prop ::= expr | sequent ; sequent ::= assumptions? '⊢' expr
+        # A bare expr is its own proposition; a sequent carries assumptions.
+        if self.match("⊢"):
+            return node("sequent", assumptions=[], goal=self.parse_expr())
+        first = self.parse_assumption()
+        if self.current.value in (",", "⊢"):
+            assumptions = [first]
+            while self.match(","):
+                assumptions.append(self.parse_assumption())
+            self.consume("⊢", "⊢ (turnstile)")
+            return node("sequent", assumptions=assumptions, goal=self.parse_expr())
+        if first.data["name"] is not None:
+            self.fail("⊢ (turnstile) after a named assumption")
+        return first.data["expr"]
+
+    def parse_assumption(self) -> Any:
+        # assumption ::= expr | identifier ':=' expr
+        if self.current.kind == "IDENT" and self.tokens[self.pos + 1].value == ":=":
+            name = self.consume_ident("assumption name")
+            self.consume(":=")
+            return node("assumption", name=name, expr=self.parse_expr())
+        return node("assumption", name=None, expr=self.parse_expr())
+
+    def parse_binder_list(self) -> list[Any]:
+        # ( name+ : type (',' name+ : type)* )  →  flat list of (name, type).
+        # Co-typed names are space-separated (`b b' : B`); entries are
+        # comma-separated. Shared by λ, quantifiers, rule and axiom/lemma params.
+        self.consume("(")
+        binders: list[Any] = []
+        if self.match(")"):
+            return binders
+        while True:
+            names = [self.parse_rule_name("binder name")]
+            while self.current.kind == "IDENT":
+                names.append(self.parse_rule_name("binder name"))
+            self.consume(":")
+            btype = self.parse_type_expr()
+            binders.extend((name, btype) for name in names)
+            if self.match(")"):
+                break
+            self.consume(",")
+        return binders
+
+    def looks_like_binder_list(self) -> bool:
+        # True when the upcoming `( ... )` opens a binder list (`( IDENT+ :`),
+        # not an expression that merely starts with `(` such as a tuple body.
+        if self.current.value != "(":
+            return False
+        index = self.pos + 1
+        if self.tokens[index].kind != "IDENT":
+            return False
+        while self.tokens[index].kind == "IDENT":
+            index += 1
+            if self.tokens[index].value == "'":  # primed binder name
+                index += 1
+        return self.tokens[index].value == ":"
+
+    def parse_rule(self) -> RuleDecl:
+        # rule name(params) premise* ───── prop end
+        self.consume_keyword("rule")
+        name = self.parse_rule_name("rule name")
+        params = self.parse_binder_list()
+        premises: list[Any] = []
+        while self.current.kind not in ("RULE_BAR", "EOF"):
+            premises.append(self.parse_prop())
+        self.consume("─", "rule bar (─────)")
+        conclusion = self.parse_prop()
+        self.consume_keyword("end")
+        return RuleDecl(name, params, premises, conclusion)
 
     def parse_proof(self) -> Any:
-        # proof_step ::= expr ';' | '=' expr 'by' rule_name ';'
         self.consume_keyword("proof")
+        steps = self.parse_proof_steps()
+        self.consume_keyword("qed")
+        self.consume(";")
+        return node("proof", steps=steps)
+
+    def parse_proof_steps(self) -> list[Any]:
+        # Steps up to (but not consuming) the terminating `qed`. Shared by the
+        # top-level proof body and each `case` block.
+        # proof_step ::= apply_step | '=' expr 'by' rule_name ';' | expr ';'
         steps: list[Any] = []
         while not (self.current.kind == "KEYWORD" and self.current.value == "qed"):
-            if self.match("="):
+            if self.current.kind == "KEYWORD" and self.current.value == "apply":
+                steps.append(self.parse_apply())
+            elif self.match("="):
                 expr = self.parse_expr()
                 self.consume_keyword("by")
                 rule = self.parse_rule_name("rule name")
@@ -402,9 +587,44 @@ class AlgParser:
                 expr = self.parse_expr()
                 self.consume(";")
                 steps.append(node("proof_start", expr=expr))
+        return steps
+
+    def parse_apply(self) -> Any:
+        # apply name(args); case_block+
+        # The case blocks end at the first non-`case` token; no closing `qed`.
+        self.consume_keyword("apply")
+        name = self.parse_rule_name("rule name")
+        self.consume("(")
+        args = self.parse_expr_list(")")
+        self.consume(";")
+        cases: list[Any] = []
+        while self.current.kind == "KEYWORD" and self.current.value == "case":
+            cases.append(self.parse_case())
+        return node("apply", rule=name, args=args, cases=cases)
+
+    def parse_case(self) -> Any:
+        # case [ (name := prop,)* ⊢ goal ] proof_step* qed;
+        # Every hypothesis is named and the goal is explicit; the written
+        # sequent is verified against the rule's premise at check time.
+        self.consume_keyword("case")
+        self.consume("[")
+        assumptions: list[Any] = []
+        if self.current.value != "⊢":
+            while True:
+                name = self.consume_ident("hypothesis name")
+                self.consume(":=", ":= (a case hypothesis must be named)")
+                assumptions.append(node("assumption", name=name, expr=self.parse_expr()))
+                if self.current.value == "⊢":
+                    break
+                self.consume(",")
+        self.consume("⊢", "⊢ (a case states its subgoal)")
+        goal = self.parse_expr()
+        self.consume("]")
+        sequent = node("sequent", assumptions=assumptions, goal=goal)
+        steps = self.parse_proof_steps()
         self.consume_keyword("qed")
         self.consume(";")
-        return node("proof", steps=steps)
+        return node("case", sequent=sequent, steps=steps)
 
     def parse_let(self) -> LetDecl:
         self.consume_keyword("let")
@@ -452,12 +672,20 @@ class AlgParser:
     def parse_type_primary(self) -> Any:
         token = self.current
         if token.kind == "IDENT":
-            name = self.consume_ident()
-            if name == "Seq" and self.match("["):
+            parts = [self.consume_ident()]
+            while self.match("::"):
+                parts.append(self.consume_ident("type name"))
+            if len(parts) == 1 and parts[0] == "Seq" and self.match("["):
                 item = self.parse_type_expr()
                 self.consume("]")
                 return node("type_sequence", item=item)
-            return node("type_name", name=name)
+            args: list[Any] = []
+            if self.match("["):
+                args.append(self.parse_type_expr())
+                while self.match(","):
+                    args.append(self.parse_type_expr())
+                self.consume("]")
+            return node("type_name", module=parts[:-1], name=parts[-1], args=args)
         if token.value in TYPE_BUILTINS:
             self.advance()
             return node("type_builtin", name=token.value)
@@ -491,6 +719,22 @@ class AlgParser:
         if token.value in {"¬", "-"}:
             self.advance()
             return node("unary", op=token.value, value=self.parse_binary(9))
+        if token.value == "λ":
+            # λ (a : A, b : B) => body  (ASCII: fun (...) => body). The body
+            # extends greedily to the right, like if/let.
+            self.advance()
+            binders = self.parse_binder_list()
+            self.consume("=>")
+            body = self.parse_expr()
+            return node("lambda", binders=binders, body=body)
+        if token.value in {"∀", "∃"}:
+            # ∀ (a : A, b b' : B) st body  /  ∃ (...) st body
+            self.advance()
+            binders = self.parse_binder_list()
+            self.consume_keyword("st")
+            body = self.parse_expr()
+            kind = "forall" if token.value == "∀" else "exists"
+            return node(kind, binders=binders, body=body)
         if token.kind == "KEYWORD" and token.value == "if":
             self.advance()
             condition = self.parse_expr()
@@ -527,8 +771,12 @@ class AlgParser:
         if token.kind == "IDENT":
             if token.value == "_":
                 self.fail("expression ('_' is only valid in destructuring patterns)")
-            self.advance()
-            return node("identifier", name=token.value)
+            parts = [self.consume_ident()]
+            while self.match("::"):
+                parts.append(self.consume_ident("qualified name"))
+            if len(parts) > 1:
+                return node("qualified", module=parts[:-1], name=parts[-1])
+            return node("identifier", name=parts[0])
         if token.kind == "NUMBER":
             self.advance()
             return node("number", value=token.value)

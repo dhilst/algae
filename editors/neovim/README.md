@@ -56,14 +56,25 @@ and run `make -C /path/to/algae/editors/neovim` once.
 
 ## Grammar notes
 
-The grammar mirrors `algae/parser.py`: top-level `sort` / `op` / `var` /
-`axiom` declarations, equational type expressions (`×`, `→`, `|`, `Seq[...]`),
-and Pratt-style operator precedence for terms (including `if`/`then`/`else`
-and `let`/`in`). Unicode symbols and their ASCII / keyword aliases
-(`->`/`arrow`, `/\`/`and`, `Nat`/`ℕ`, ...) are interchangeable, as in the
-reference parser.
+The grammar mirrors `algae/parser.py`. It covers:
 
-One deliberate superset: `Seq[...]` parses as any `identifier [ type ]`, so
-unknown constructors still produce a tree instead of an error node; the
-highlight query only marks `Seq` as a builtin. Use `algae.py check` for real
-validation.
+- **Declarations**: `sort` (including parametric `sort List[T]`), `op`, `var`,
+  `axiom`/`lemma` (with optional binder parameters and the `= prop` form),
+  `rule`, `include` / `open` / `alias`, and top-level `let`.
+- **Propositions**: sequents `assumptions ⊢ goal` with named assumptions
+  (`h := A`), used by axioms, lemmas, and rule premises/conclusions.
+- **Proofs**: `proof … qed`, rewrite steps (`= t by name;`), and `apply` with
+  `case [..]` branches.
+- **Types**: `×`, `→`/`⇸`, `|`, type application (`List[T]`, `Seq[T]`,
+  `list::List[Elem]`), and qualified names.
+- **Terms**: Pratt-style operator precedence, `if`/`then`/`else`, `let`/`in`,
+  quantifiers (`∀ (n : ℕ) st …`, `∃`), and lambda (`λ (n : ℕ) => …` / `fun`).
+
+Unicode symbols and their ASCII / keyword aliases (`->`/`arrow`, `/\`/`and`,
+`Nat`/`ℕ`, `|-`/`⊢`, `forall`/`∀`, `fun`/`λ`, ...) are interchangeable, as in
+the reference parser. The rule bar between premises and conclusion is a run of
+the box-drawing dash `─` (U+2500). Use `algae.py check` for real validation
+(type checking, module resolution); the grammar only describes shape.
+
+Corpus tests live in `tree-sitter-alg/test/corpus/`; run them with
+`tree-sitter test` from `tree-sitter-alg/`.

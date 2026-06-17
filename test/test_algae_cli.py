@@ -13,8 +13,25 @@ CLI = ROOT / "algae.py"
 sys.path.insert(0, str(ROOT))
 
 from algae.ast import AxiomDecl, LemmaDecl, LetDecl, OpDecl, SortDecl, VarDecl  # noqa: E402
-from algae.format import format_spec  # noqa: E402
+from algae.format import Formatter, format_spec  # noqa: E402
 from algae.parser import parse_text  # noqa: E402
+from algae.types import Checker  # noqa: E402
+
+# Shared preamble for rule-application tests: successor, a base axiom, and the
+# induction rule over ℕ.
+INDUCTION_PREAMBLE = "\n".join(
+    [
+        "op s : ℕ → ℕ;",
+        "var m, n : ℕ;",
+        "axiom add_zero_left ⊢ 0 + m = m;",
+        "rule induction(x : ℕ, P : ℕ → Prop)",
+        "  ⊢ P(0)",
+        "  P(x) ⊢ P(s(x))",
+        "  ─────",
+        "  ⊢ ∀ (n : ℕ) st P(n)",
+        "end",
+    ]
+)
 
 
 def semantic_payload(module) -> list[tuple]:
@@ -23,15 +40,15 @@ def semantic_payload(module) -> list[tuple]:
     payload: list[tuple] = []
     for decl in module.declarations:
         if isinstance(decl, SortDecl):
-            payload.append(("sort", decl.names, decl.values))
+            payload.append(("sort", decl.names, decl.values, decl.params))
         elif isinstance(decl, OpDecl):
             payload.append(("op", decl.name, decl.domain, decl.codomain, decl.partial))
         elif isinstance(decl, VarDecl):
             payload.append(("var", decl.names, decl.sort))
         elif isinstance(decl, AxiomDecl):
-            payload.append(("axiom", decl.name, decl.expr))
+            payload.append(("axiom", decl.name, decl.expr, decl.params))
         elif isinstance(decl, LemmaDecl):
-            payload.append(("lemma", decl.name, decl.expr, decl.proof))
+            payload.append(("lemma", decl.name, decl.expr, decl.proof, decl.params))
         elif isinstance(decl, LetDecl):
             payload.append(("let", decl.name, decl.expr))
     return payload
@@ -61,6 +78,14 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertIn("test/stack.alg: ok", result.stdout)
         self.assertIn("test/kvstore.alg: ok", result.stdout)
         self.assertIn("test/base/container.alg: ok", result.stdout)
+
+    def test_check_accepts_logic_fixture(self) -> None:
+        # Propositional natural deduction: connective rules + lemmas with
+        # apply/case proofs over Prop.
+        result = self.run_cli("check", "test/logic.alg")
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("test/logic.alg: ok", result.stdout)
 
     def test_check_rejects_old_and_malformed_syntax(self) -> None:
         paths = sorted(str(path.relative_to(ROOT)) for path in (ROOT / "test/reject").glob("*.alg"))
@@ -376,11 +401,17 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(names, ["empty_size", "assoc'", "tauto"])
 
     def test_anonymous_axiom_is_rejected(self) -> None:
-        # The first identifier after `axiom` is always the (required) name.
-        result = self.check_source("var b : 𝔹;\naxiom b = b;\n")
+        # An axiom still requires a name; `axiom = …` (no name) is rejected.
+        result = self.check_source("var b : 𝔹;\naxiom = b;\n")
 
         self.assertEqual(result.returncode, 1)
-        self.assertIn("Expected expression found =", result.stdout)
+        self.assertIn("Expected axiom name", result.stdout)
+
+    def test_axiom_equals_proposition_form(self) -> None:
+        # `axiom name = prop;` names a proposition (the `= forall …` form).
+        result = self.check_source("var b : 𝔹;\naxiom tauto = b ∨ ¬ b;\n")
+
+        self.assertEqual(result.returncode, 0, result.stdout)
 
     def test_axiom_name_allows_paren_body_and_primes(self) -> None:
         # A required name removes the old `name(args)` call ambiguity: the
@@ -486,14 +517,14 @@ class AlgaeCliTests(unittest.TestCase):
         self.assertEqual(steps[1]["data"]["rule"], "f_id")
         self.assertIsNone(lemmas[1]["proof"])
 
-    def test_lemmas_are_not_checked(self) -> None:
-        # Phase 1: lemmas and proofs are parsed and stored only. Nonsense
-        # propositions, unknown rules, and unknown identifiers all pass.
+    def test_lemma_proof_steps_are_not_checked(self) -> None:
+        # The lemma proposition is checked, but the proof's rewrite steps are
+        # parsed only: unknown identifiers and unresolved `by` rules all pass.
         source = "\n".join(
             [
                 "sort S;",
                 "var a, b : S;",
-                "lemma nonsense a = b;",
+                "lemma plausible a = b;",
                 "proof",
                 "  xyz;",
                 "  = abc by imaginary_rule;",
@@ -676,6 +707,360 @@ class AlgaeCliTests(unittest.TestCase):
                 reparsed = parse_text(rendered)
                 self.assertEqual(semantic_payload(reparsed), semantic_payload(module), rendered)
                 self.assertEqual(format_spec(reparsed), rendered)
+
+
+    # Rules, propositions, and proof branches --------------------------------
+
+    def test_induction_fixture_checks(self) -> None:
+        result = self.run_cli("check", "test/nat-with-induction.alg")
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("test/nat-with-induction.alg: ok", result.stdout)
+
+    def test_rule_application_ast_shapes(self) -> None:
+        result = self.run_cli("print", "test/nat-with-induction.alg")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        declarations = json.loads(result.stdout)["ast"]["declarations"]
+        kinds = [decl["kind"] for decl in declarations]
+        self.assertIn("RuleDecl", kinds)
+        rule = next(decl for decl in declarations if decl["kind"] == "RuleDecl")
+        self.assertEqual([name for name, _ in rule["params"]], ["x", "P"])
+        self.assertEqual(rule["premises"][0]["kind"], "sequent")
+        self.assertEqual(rule["conclusion"]["data"]["goal"]["kind"], "forall")
+        lemma = next(decl for decl in declarations if decl["kind"] == "LemmaDecl")
+        apply_step = lemma["proof"]["data"]["steps"][0]
+        self.assertEqual(apply_step["kind"], "apply")
+        self.assertEqual(apply_step["data"]["rule"], "induction")
+        self.assertEqual(apply_step["data"]["args"][1]["kind"], "lambda")
+        cases = apply_step["data"]["cases"]
+        # Each case carries its explicit written sequent.
+        self.assertEqual(cases[0]["data"]["sequent"]["data"]["assumptions"], [])
+        self.assertEqual(
+            cases[1]["data"]["sequent"]["data"]["assumptions"][0]["data"]["name"], "ih"
+        )
+
+    def test_rule_application_explicit_subgoals(self) -> None:
+        # Each case writes its full sequent; the checker verifies it against the
+        # subgoal obtained by instantiating the premise.
+        module = parse_text("\n".join([INDUCTION_PREAMBLE, ""]) + "\n".join(
+            [
+                "lemma add_zero_right ⊢ n + 0 = n;",
+                "proof",
+                "  apply induction(n, λ (n : ℕ) => n + 0 = n);",
+                "  case [⊢ 0 + 0 = 0]",
+                "    0 + 0;",
+                "  qed;",
+                "  case [ih := n + 0 = n ⊢ s(n) + 0 = s(n)]",
+                "    s(n) + 0;",
+                "  qed;",
+                "qed;",
+                "",
+            ]
+        ))
+        issues = Checker(module).check()
+        self.assertEqual(issues, [])
+
+        fmt = Formatter()
+        lemma = next(decl for decl in module.declarations if isinstance(decl, LemmaDecl))
+        cases = lemma.proof.data["steps"][0].data["cases"]
+        rendered = [fmt.prop(case.data["sequent"]) for case in cases]
+        self.assertEqual(rendered, ["⊢ 0 + 0 = 0", "ih := n + 0 = n ⊢ s(n) + 0 = s(n)"])
+
+    def test_rule_fixture_fmt_round_trips(self) -> None:
+        with open(ROOT / "test/nat-with-induction.alg", encoding="utf-8") as handle:
+            source = handle.read()
+        result = self.run_cli("fmt", "test/nat-with-induction.alg")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        # fmt is token-level and whitespace-preserving: identical output.
+        self.assertEqual(result.stdout, source)
+
+    def test_rule_fixture_fmt_ascii_aliases(self) -> None:
+        result = self.run_cli("fmt", "--ascii", "test/nat-with-induction.alg")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("apply induction(n, fun (n : Nat) => n + 0 = n);", result.stdout)
+        self.assertIn("|- forall (n : Nat) st P(n)", result.stdout)
+        # The box-drawing rule bar is not a symbol token, so it is preserved.
+        self.assertIn("─────", result.stdout)
+
+    def test_apply_rejects_arg_count_mismatch(self) -> None:
+        source = "\n".join(
+            [
+                INDUCTION_PREAMBLE,
+                "lemma l ⊢ n + 0 = n;",
+                "proof",
+                "  apply induction(n);",
+                "  case [⊢ 0 + 0 = 0] 0; qed;",
+                "  case [ih := n + 0 = n ⊢ s(n) + 0 = s(n)] 0; qed;",
+                "qed;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("rule induction expects 2 argument(s), got 1", result.stdout)
+
+    def test_apply_rejects_wrong_subgoal(self) -> None:
+        # The written case subgoal must equal the instantiated premise.
+        source = "\n".join(
+            [
+                INDUCTION_PREAMBLE,
+                "lemma l ⊢ n + 0 = n;",
+                "proof",
+                "  apply induction(n, λ (n : ℕ) => n + 0 = n);",
+                "  case [⊢ 0 + 0 = 0] 0; qed;",
+                "  case [ih := n = n ⊢ s(n) + 0 = s(n)] 0; qed;",
+                "qed;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("does not match the premise", result.stdout)
+
+    def test_apply_rejects_unnamed_case_hypothesis(self) -> None:
+        source = "\n".join(
+            [
+                INDUCTION_PREAMBLE,
+                "lemma l ⊢ n + 0 = n;",
+                "proof",
+                "  apply induction(n, λ (n : ℕ) => n + 0 = n);",
+                "  case [⊢ 0 + 0 = 0] 0; qed;",
+                "  case [n + 0 = n ⊢ s(n) + 0 = s(n)] 0; qed;",
+                "qed;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("a case hypothesis must be named", result.stdout)
+
+    def test_rule_premise_rejects_named_assumption(self) -> None:
+        source = "\n".join(
+            [
+                "rule bad(A : Prop, B : Prop)",
+                "  h := A ⊢ B",
+                "  ─────",
+                "  ⊢ A",
+                "end",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("rule premise assumptions must be unnamed", result.stdout)
+
+    def test_apply_rejects_case_count_mismatch(self) -> None:
+        source = "\n".join(
+            [
+                INDUCTION_PREAMBLE,
+                "lemma l ⊢ n + 0 = n;",
+                "proof",
+                "  apply induction(n, λ (n : ℕ) => n + 0 = n);",
+                "  case [⊢ 0 + 0 = 0] 0; qed;",
+                "qed;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("rule induction has 2 premise(s) but 1 case(s) given", result.stdout)
+
+    def test_apply_rejects_non_predicate_argument(self) -> None:
+        # Passing a bare 𝔹 proposition where a ℕ → Prop predicate is required.
+        source = "\n".join(
+            [
+                INDUCTION_PREAMBLE,
+                "lemma l ⊢ n + 0 = n;",
+                "proof",
+                "  apply induction(n, n + 0 = n);",
+                "  case [⊢ 0 + 0 = 0] 0; qed;",
+                "  case [ih := n + 0 = n ⊢ s(n) + 0 = s(n)] 0; qed;",
+                "qed;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("argument for P has type 𝔹, expected ℕ → Prop", result.stdout)
+
+    def test_apply_rejects_unknown_rule(self) -> None:
+        source = "\n".join(
+            [
+                INDUCTION_PREAMBLE,
+                "lemma l ⊢ n + 0 = n;",
+                "proof",
+                "  apply nonexistent(n);",
+                "  case [⊢ 0 + 0 = 0] 0; qed;",
+                "qed;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unknown rule nonexistent", result.stdout)
+
+    def test_rejects_non_proposition_goal(self) -> None:
+        result = self.check_source("var n : ℕ;\naxiom bad ⊢ n + 0;\n")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("goal must be a proposition, got ℕ", result.stdout)
+
+    def test_rejects_duplicate_name_across_axiom_and_rule(self) -> None:
+        source = "\n".join(
+            [
+                INDUCTION_PREAMBLE,
+                "axiom induction ⊢ 0 + m = m;",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("duplicate axiom name induction", result.stdout)
+
+    def test_rule_fixture_format_spec_round_trips(self) -> None:
+        # The AST pretty-printer (not the token formatter) reproduces an
+        # equivalent module for rule declarations and proof branches.
+        from algae.ast import to_jsonable
+
+        module = parse_text((ROOT / "test/nat-with-induction.alg").read_text(encoding="utf-8"))
+        rendered = format_spec(module)
+        reparsed = parse_text(rendered)
+        self.assertEqual(to_jsonable(reparsed.declarations), to_jsonable(module.declarations))
+
+
+    # Quantifiers, parametric sorts, and modules -----------------------------
+
+    def check_in_project(self, source: str) -> subprocess.CompletedProcess[str]:
+        # test/proj has an alg-project.json, so includes resolve there.
+        path = ROOT / "test/proj/_tmp_spec.alg"
+        path.write_text(source, encoding="utf-8")
+        try:
+            return self.run_cli("check", str(path.relative_to(ROOT)))
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_quantifier_st_multibinder(self) -> None:
+        source = "axiom q ∀ (a : ℕ, b b' : ℤ) st a = a ∧ b = b';\n"
+        result = self.check_source(source)
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+        module = parse_text(source)
+        rendered = format_spec(module)
+        self.assertIn("∀ (a : ℕ, b b' : ℤ) st", rendered)
+        self.assertEqual(semantic_payload(parse_text(rendered)), semantic_payload(module))
+
+    def test_lambda_multibinder_checks(self) -> None:
+        source = "\n".join(
+            [
+                "sort A, B;",
+                "op f : A × B → A;",
+                "axiom a = ∀ (x : A, y : B) st (λ (u : A, v : B) => f(u, v) = u)(x, y);",
+                "",
+            ]
+        )
+        result = self.check_source(source)
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_parametric_sort_checks(self) -> None:
+        result = self.run_cli("check", "test/proj/list.alg")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("test/proj/list.alg: ok", result.stdout)
+
+    def test_parametric_sort_arity_errors(self) -> None:
+        self.assertIn(
+            "sort List takes 1 type argument(s), got 0",
+            self.check_source("sort List[T];\nvar x : List;\n").stdout,
+        )
+        self.assertIn(
+            "sort List takes 1 type argument(s), got 2",
+            self.check_source("sort List[T];\nsort A;\nvar x : List[A, A];\n").stdout,
+        )
+        self.assertIn(
+            "unknown sort Nope",
+            self.check_source("sort List[T];\nvar x : Nope[T];\n").stdout,
+        )
+
+    def test_parametric_sort_round_trips(self) -> None:
+        source = "sort List[T];\nop cons : T → List[T] → List[T];\n"
+        module = parse_text(source)
+        rendered = format_spec(module)
+        self.assertIn("sort List[T];", rendered)
+        self.assertEqual(semantic_payload(parse_text(rendered)), semantic_payload(module))
+
+    def test_module_include_open_alias_ok(self) -> None:
+        result = self.run_cli("check", "test/proj/use_list.alg")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("test/proj/use_list.alg: ok", result.stdout)
+
+    def test_module_print_shapes(self) -> None:
+        result = self.run_cli("print", "test/proj/use_list.alg")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        kinds = [d["kind"] for d in json.loads(result.stdout)["ast"]["declarations"]]
+        self.assertEqual(kinds[:3], ["IncludeDecl", "AliasDecl", "OpenDecl"])
+
+    def test_module_open_requires_include(self) -> None:
+        result = self.check_in_project("open list (nil);\nsort Elem;\n")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("open of un-included module list", result.stdout)
+
+    def test_module_missing_module(self) -> None:
+        result = self.check_in_project("include nope::missing;\n")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("module nope::missing not found", result.stdout)
+
+    def test_module_with_monomorphization_rejects_wrong_element(self) -> None:
+        result = self.check_in_project(
+            "include list with (T := Elem);\n"
+            "sort Elem, Other;\n"
+            "var o : Other;\n"
+            "var xs : list::List[Elem];\n"
+            "axiom a list::cons(o, xs) = xs;\n"
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("no signature of list::cons matches (Other,", result.stdout)
+
+    def test_module_open_unexported_name(self) -> None:
+        result = self.check_in_project(
+            "include list with (T := Elem);\nopen list (bogus);\nsort Elem;\n"
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("not exported by module list", result.stdout)
+
+    def test_module_circular_include_rejected(self) -> None:
+        a = ROOT / "test/proj/_cyc_a.alg"
+        b = ROOT / "test/proj/_cyc_b.alg"
+        a.write_text("include _cyc_b;\nsort A;\n", encoding="utf-8")
+        b.write_text("include _cyc_a;\nsort B;\n", encoding="utf-8")
+        try:
+            result = self.run_cli("check", "test/proj/_cyc_a.alg")
+        finally:
+            a.unlink(missing_ok=True)
+            b.unlink(missing_ok=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("circular include", result.stdout)
+
+    def test_include_without_project_is_rejected(self) -> None:
+        # check_source writes to a temp dir with no alg-project.json.
+        result = self.check_source("include list;\n")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("alg-project.json", result.stdout)
+
+    def test_proposition_connectives_accept_prop(self) -> None:
+        # A quantified proposition (Prop) can be combined with connectives.
+        source = "var p : 𝔹;\naxiom a (∀ (x : ℕ) st x = x) ∧ p;\naxiom b ¬ (∀ (x : ℕ) st x = x);\n"
+        result = self.check_source(source)
+        self.assertEqual(result.returncode, 0, result.stdout)
 
 
 if __name__ == "__main__":

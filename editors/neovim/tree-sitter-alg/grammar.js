@@ -1,9 +1,12 @@
 // Tree-sitter grammar for the .alg algebraic specification language.
-// Mirrors algae/parser.py: declarations (sort/op/var/axiom/lemma/let),
-// equational type expressions, and Pratt-parsed terms. Unicode symbols and
-// their ASCII / keyword aliases are interchangeable.
+// Mirrors algae/parser.py: declarations (sort/op/var/axiom/lemma/rule/
+// include/open/alias/let), propositions and sequents, equational type
+// expressions (incl. parametric sorts and qualified names), and Pratt-parsed
+// terms with quantifiers and lambda. Unicode symbols and their ASCII / keyword
+// aliases are interchangeable.
 
 const PREC = {
+  binder: 0, // λ / ∀ / ∃ / if / let — extend greedily to the right
   if: 0,
   let: 0,
   iff: 1,
@@ -28,6 +31,10 @@ const TYPE_PREC = {
 const ARROW = ['→', '->', 'arrow'];
 const PARTIAL_ARROW = ['⇸', '-/->'];
 const PRODUCT = ['×', '*', 'product'];
+const TURNSTILE = ['⊢', '|-'];
+const LAMBDA = ['λ', 'fun'];
+const FORALL = ['∀', 'forall'];
+const EXISTS = ['∃', 'exists'];
 
 function sep1(rule, separator) {
   return seq(rule, repeat(seq(separator, rule)));
@@ -44,6 +51,16 @@ module.exports = grammar({
 
   word: $ => $.identifier,
 
+  conflicts: $ => [
+    // An assumption is an expression; a bare-expression proposition is too. The
+    // turnstile decides which once it (doesn't) appear.
+    [$._prop, $.assumption],
+    // An empty `()` could open a binder list or be the unit value.
+    [$.binders, $.unit],
+    // A primed binder name `b'` vs a primed expression `b'` inside `(`.
+    [$.axiom_name, $._expression],
+  ],
+
   rules: {
     source_file: $ => repeat($._declaration),
 
@@ -53,14 +70,19 @@ module.exports = grammar({
       $.var_declaration,
       $.axiom_declaration,
       $.lemma_declaration,
+      $.rule_declaration,
+      $.include_declaration,
+      $.open_declaration,
+      $.alias_declaration,
       $.let_declaration,
     ),
 
-    // sort A, B;  |  sort A = {x, y};
+    // sort A, B;  |  sort A = {x, y};  |  sort List[T];  (parametric)
     sort_declaration: $ => seq(
       'sort',
       field('name', alias($.identifier, $.sort_identifier)),
       optional(choice(
+        seq('[', sep1(field('param', alias($.identifier, $.type_parameter)), ','), ']'),
         repeat1(seq(',', field('name', alias($.identifier, $.sort_identifier)))),
         seq('=', field('values', $.enum_values)),
       )),
@@ -100,26 +122,80 @@ module.exports = grammar({
       ';',
     ),
 
-    // axiom name body;  — the name is required: the first identifier after
-    // `axiom` (trailing primes allowed) is always the name.
+    // axiom name [binders] prop;  |  axiom name = prop;
+    // The name is required (trailing primes allowed). An axiom/lemma is a
+    // quantified proposition; explicit binders ≡ forall over them.
     axiom_declaration: $ => seq(
       'axiom',
       field('name', $.axiom_name),
-      field('body', $._expression),
+      choice(
+        seq('=', field('body', $._prop)),
+        seq(field('parameters', $.binders), field('body', $._prop)),
+        field('body', $._prop),
+      ),
       ';',
     ),
 
     axiom_name: $ => seq($.identifier, repeat("'")),
 
-    // lemma name body;  optionally followed by a proof block. Parsed and
-    // stored only; nothing is checked or proved yet.
+    // lemma name [binders] prop;  optionally followed by a proof block.
     lemma_declaration: $ => seq(
       'lemma',
       field('name', alias($.axiom_name, $.lemma_name)),
-      field('body', $._expression),
+      choice(
+        seq('=', field('body', $._prop)),
+        seq(field('parameters', $.binders), field('body', $._prop)),
+        field('body', $._prop),
+      ),
       ';',
       optional(field('proof', $.proof_block)),
     ),
+
+    // rule name(params) premise* ───── conclusion end
+    rule_declaration: $ => seq(
+      'rule',
+      field('name', $.identifier),
+      field('parameters', $.binders),
+      repeat(field('premise', $._prop)),
+      $.rule_bar,
+      field('conclusion', $._prop),
+      'end',
+    ),
+
+    // A line of one or more box-drawing dashes separates premises from goal.
+    rule_bar: $ => token(/─+/),
+
+    include_declaration: $ => seq(
+      'include',
+      field('module', $.module_path),
+      optional(seq('with', '(', commaSep($.with_binding), ')')),
+      ';',
+    ),
+
+    with_binding: $ => seq(
+      field('name', $.identifier),
+      ':=',
+      field('type', $._type),
+    ),
+
+    open_declaration: $ => seq(
+      'open',
+      field('module', $.module_path),
+      '(',
+      sep1(field('name', $.identifier), ','),
+      ')',
+      ';',
+    ),
+
+    alias_declaration: $ => seq(
+      'alias',
+      field('name', $.identifier),
+      '=',
+      field('module', $.module_path),
+      ';',
+    ),
+
+    module_path: $ => sep1($.identifier, '::'),
 
     proof_block: $ => seq(
       'proof',
@@ -137,6 +213,28 @@ module.exports = grammar({
         field('rule', alias($.axiom_name, $.rule_name)),
         ';',
       ),
+      $.apply_step,
+    ),
+
+    // apply rule(args); case [binders] … qed;  (cases end at the next
+    // non-`case` token; the apply has no closing `qed` of its own)
+    apply_step: $ => seq(
+      'apply',
+      field('rule', alias($.axiom_name, $.rule_name)),
+      field('arguments', $.arguments),
+      ';',
+      repeat1($.case_block),
+    ),
+
+    // case [ name := prop, … ⊢ goal ]  — the branch's explicit sequent
+    case_block: $ => seq(
+      'case',
+      '[',
+      field('subgoal', $.sequent),
+      ']',
+      repeat($.proof_step),
+      'qed',
+      ';',
     ),
 
     // let name = expr;  (top level, no `in`) names a term shared by axioms
@@ -148,7 +246,34 @@ module.exports = grammar({
       ';',
     ),
 
-    // Types -------------------------------------------------------------
+    // Propositions --------------------------------------------------------
+
+    _prop: $ => choice($.sequent, $._expression),
+
+    // assumptions? ⊢ goal
+    sequent: $ => seq(
+      optional(sep1($.assumption, ',')),
+      choice(...TURNSTILE),
+      field('goal', $._expression),
+    ),
+
+    assumption: $ => choice(
+      seq(field('name', $.identifier), ':=', field('value', $._expression)),
+      field('value', $._expression),
+    ),
+
+    // Binder lists --------------------------------------------------------
+
+    // ( a : A, b b' : B )  — shared by λ, ∀/∃, rule and axiom/lemma params
+    binders: $ => seq('(', commaSep($.binder_entry), ')'),
+
+    binder_entry: $ => seq(
+      repeat1(field('name', alias($.axiom_name, $.binder_name))),
+      ':',
+      field('type', $._type),
+    ),
+
+    // Types ---------------------------------------------------------------
 
     _type: $ => choice(
       $.sum_type,
@@ -177,21 +302,26 @@ module.exports = grammar({
 
     _type_primary: $ => choice(
       $.builtin_type,
-      $.sequence_type,
+      $.type_application,
+      $.qualified_type,
       $.unit_type,
       $.parenthesized_type,
       alias($.identifier, $.type_identifier),
     ),
 
-    builtin_type: $ => choice('ℕ', 'ℤ', 'ℝ', '𝔹', 'Nat', 'Int', 'Real', 'Bool'),
+    builtin_type: $ => choice('ℕ', 'ℤ', 'ℝ', '𝔹', 'Prop', 'Nat', 'Int', 'Real', 'Bool'),
 
-    // Only `Seq` is valid here today; accepting any constructor keeps the
-    // parser robust and lets queries pick out `Seq` specifically.
-    sequence_type: $ => seq(
-      field('constructor', alias($.identifier, $.type_identifier)),
+    // List[T], Seq[T], list::List[Elem] — a constructor applied to type args.
+    type_application: $ => seq(
+      field('constructor', choice($.qualified_type, alias($.identifier, $.type_identifier))),
       '[',
-      field('item', $._type),
+      sep1(field('argument', $._type), ','),
       ']',
+    ),
+
+    qualified_type: $ => seq(
+      alias($.identifier, $.type_identifier),
+      repeat1(seq('::', alias($.identifier, $.type_identifier))),
     ),
 
     unit_type: $ => seq('(', ')'),
@@ -202,6 +332,7 @@ module.exports = grammar({
 
     _expression: $ => choice(
       $.identifier,
+      $.qualified_identifier,
       $.number,
       $.string,
       $.boolean,
@@ -215,7 +346,14 @@ module.exports = grammar({
       $.binary_expression,
       $.if_expression,
       $.let_expression,
+      $.lambda_expression,
+      $.quantifier_expression,
     ),
+
+    qualified_identifier: $ => prec(PREC.postfix, seq(
+      $.identifier,
+      repeat1(seq('::', $.identifier)),
+    )),
 
     binary_expression: $ => {
       const table = [
@@ -269,6 +407,22 @@ module.exports = grammar({
       '=',
       field('value', $._expression),
       'in',
+      field('body', $._expression),
+    )),
+
+    // λ (a : A, b : B) => body   (ASCII: fun (…) => body)
+    lambda_expression: $ => prec.right(PREC.binder, seq(
+      choice(...LAMBDA),
+      field('parameters', $.binders),
+      '=>',
+      field('body', $._expression),
+    )),
+
+    // ∀ (a : A, b : B) st body   /   ∃ (…) st body
+    quantifier_expression: $ => prec.right(PREC.binder, seq(
+      field('quantifier', choice(...FORALL, ...EXISTS)),
+      field('parameters', $.binders),
+      'st',
       field('body', $._expression),
     )),
 

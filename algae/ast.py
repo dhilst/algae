@@ -16,6 +16,7 @@ class Module:
 class SortDecl:
     names: list[str]
     values: list[str] | None = None
+    params: list[str] = field(default_factory=list)  # type parameters: sort List[T]
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
@@ -45,6 +46,7 @@ class VarDecl:
 class AxiomDecl:
     expr: Any
     name: str
+    params: list[Any] = field(default_factory=list)  # explicit binders ≡ forall
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
@@ -55,6 +57,7 @@ class LemmaDecl:
     expr: Any
     name: str
     proof: Any = None  # node("proof", steps=[...]) — parsed, never checked
+    params: list[Any] = field(default_factory=list)  # explicit binders ≡ forall
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
@@ -64,6 +67,44 @@ class LemmaDecl:
 class LetDecl:
     name: str
     expr: Any
+    line: int = 0
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
+
+
+@dataclass(slots=True)
+class IncludeDecl:
+    path: list[str]  # module path: include foo::bar  →  ["foo", "bar"]
+    bindings: list[Any] = field(default_factory=list)  # (param_name, type_expr) from `with`
+    line: int = 0
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
+
+
+@dataclass(slots=True)
+class OpenDecl:
+    path: list[str]
+    names: list[str]  # the explicit names brought into scope unqualified
+    line: int = 0
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
+
+
+@dataclass(slots=True)
+class AliasDecl:
+    alias: str
+    path: list[str]  # alias bar = foo::bar;  →  alias="bar", path=["foo","bar"]
+    line: int = 0
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
+
+
+@dataclass(slots=True)
+class RuleDecl:
+    name: str
+    params: list[Any]  # list of (param_name, type_expr) tuples
+    premises: list[Any]  # prop nodes (bare expr or node("sequent", ...))
+    conclusion: Any  # prop node
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
