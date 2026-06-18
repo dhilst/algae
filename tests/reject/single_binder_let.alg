@@ -1,4 +1,2 @@
-sort S;
-var x : S;
-
-axiom let (a) = x in a = x;
+sort S : Sort;
+eq bad(x : S) let (a) = x in a = x;

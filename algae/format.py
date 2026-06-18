@@ -12,7 +12,7 @@ from typing import Any
 
 from .ast import (
     AliasDecl,
-    AxiomDecl,
+    EqDecl,
     IncludeDecl,
     LemmaDecl,
     LetDecl,
@@ -20,9 +20,10 @@ from .ast import (
     Node,
     OpDecl,
     OpenDecl,
+    ParamDecl,
+    PropDecl,
     RuleDecl,
     SortDecl,
-    VarDecl,
 )
 from .parser import PRECEDENCE, WORD_SYMBOLS, lex
 
@@ -92,11 +93,9 @@ class Formatter:
 
     def format_decl(self, decl: Any) -> str:
         if isinstance(decl, SortDecl):
-            if decl.values is not None:
-                return f"sort {decl.names[0]} = " + "{" + ", ".join(decl.values) + "};"
-            if decl.params:
-                return f"sort {decl.names[0]}[{', '.join(decl.params)}];"
-            return f"sort {', '.join(decl.names)};"
+            return f"sort {decl.name} : {self.type_expr(decl.kind_expr)};"
+        if isinstance(decl, ParamDecl):
+            return f"param {decl.name} : {self.type_expr(decl.kind_expr)};"
         if isinstance(decl, OpDecl):
             arrow = self.sym("⇸" if decl.partial else "→")
             if len(decl.domain) == 1 and decl.domain[0].kind == "type_sum":
@@ -114,33 +113,43 @@ class Formatter:
             if domain:
                 return f"op {decl.name} : {domain} {arrow} {self.type_expr(decl.codomain)};"
             return f"op {decl.name} : {arrow} {self.type_expr(decl.codomain)};"
-        if isinstance(decl, VarDecl):
-            return f"var {', '.join(decl.names)} : {self.type_expr(decl.sort)};"
-        if isinstance(decl, AxiomDecl):
-            return self.format_rule_head(decl.expr, f"axiom {self.decl_head(decl.name, decl.params)}")
+        if isinstance(decl, EqDecl):
+            return self.format_decl_head(decl.expr, f"eq {self.decl_head(decl.name, decl.params)}")
+        if isinstance(decl, PropDecl):
+            return self.format_decl_head(decl.expr, f"prop {self.decl_head(decl.name, decl.params)}")
         if isinstance(decl, LemmaDecl):
-            lines = [self.format_rule_head(decl.expr, f"lemma {self.decl_head(decl.name, decl.params)}")]
+            lines = [self.format_decl_head(decl.expr, f"lemma {self.decl_head(decl.name, decl.params)}")]
             if decl.proof is not None:
                 lines.append("proof")
                 lines.extend(self.format_proof_steps(decl.proof.data["steps"], "  "))
-                lines.append("qed;")
+                lines.append(f"{decl.proof.data['terminator']};")
             return "\n".join(lines)
         if isinstance(decl, RuleDecl):
             lines = [f"rule {decl.name}{self.binder_list(decl.params)}"]
             for premise in decl.premises:
-                lines.append(f"  {self.prop(premise)}")
+                lines.append(f"  case {premise.data['name']}")
+                lines.append(f"    {self.prop(premise.data['prop'])}")
+                lines.append("  end;")
             lines.append("  ─────────────────────")
             lines.append(f"  {self.prop(decl.conclusion)}")
-            lines.append("end")
+            lines.append("end;")
             return "\n".join(lines)
         if isinstance(decl, LetDecl):
             return f"let {decl.name} = {self.expr(decl.expr)};"
         if isinstance(decl, IncludeDecl):
-            path = "::".join(decl.path)
+            head = f"include {'::'.join(decl.path)}"
             if decl.bindings:
                 bindings = ", ".join(f"{name} := {self.type_expr(t)}" for name, t in decl.bindings)
-                return f"include {path} with ({bindings});"
-            return f"include {path};"
+                head += f" with ({bindings})"
+            if decl.obligations:
+                lines = [head + " props"]
+                for case in decl.obligations:
+                    lines.append(f"  case {case.data['name']}")
+                    lines.extend(self.format_proof_steps(case.data["steps"], "    "))
+                    lines.append(f"  {case.data['terminator']};")
+                lines.append(f"{decl.obligations_terminator};")
+                return "\n".join(lines)
+            return head + ";"
         if isinstance(decl, OpenDecl):
             return f"open {'::'.join(decl.path)} ({', '.join(decl.names)});"
         if isinstance(decl, AliasDecl):
@@ -150,25 +159,60 @@ class Formatter:
     def format_proof_steps(self, steps: list[Any], indent: str) -> list[str]:
         lines: list[str] = []
         for step in steps:
-            if step.kind == "apply":
-                args = ", ".join(self.expr(arg) for arg in step.data["args"])
-                lines.append(f"{indent}apply {step.data['rule']}({args});")
-                for case in step.data["cases"]:
-                    lines.append(f"{indent}case [{self.prop(case.data['sequent'])}]")
-                    lines.extend(self.format_proof_steps(case.data["steps"], indent + "  "))
-                    lines.append(f"{indent}qed;")
-            elif step.kind == "proof_rewrite":
-                lines.append(f"{indent}= {self.expr(step.data['expr'])} by {step.data['rule']};")
+            tactic = step.data["tactic"]
+            result = step.data["result"]
+            lines.append(f"{indent}goal")
+            lines.append(f"{indent}  {self.prop(step.data['goal'])}")
+            if tactic.kind == "apply":
+                # cases follow `by apply …`; the subproof terminator follows
+                # `therefore <result>`.
+                args = ", ".join(self.expr(arg) for arg in tactic.data["args"])
+                lines.append(f"{indent}by apply {tactic.data['rule']}({args})")
+                for case in tactic.data["cases"]:
+                    lines.append(f"{indent}  case {case.data['name']}")
+                    lines.extend(self.format_proof_steps(case.data["steps"], indent + "    "))
+                    lines.append(f"{indent}  {case.data['terminator']};")
+                if isinstance(result, Node) and result.kind == "done":
+                    lines.append(f"{indent}therefore done")
+                else:
+                    lines.append(f"{indent}therefore")
+                    lines.append(f"{indent}  {self.prop(result)}")
+                lines.append(f"{indent}{tactic.data['terminator']};")
             else:
-                lines.append(f"{indent}{self.expr(step.data['expr'])};")
+                tactic_lines = self.format_tactic_lines(tactic)
+                lines.append(f"{indent}by {tactic_lines[0]}")
+                lines.extend(f"{indent}{line}" for line in tactic_lines[1:])
+                if isinstance(result, Node) and result.kind == "done":
+                    lines.append(f"{indent}therefore done;")
+                else:
+                    lines.append(f"{indent}therefore")
+                    lines.append(f"{indent}  {self.prop(result)};")
         return lines
 
-    def decl_head(self, name: str, params: list[Any]) -> str:
-        return name if not params else f"{name} {self.binder_list(params)}"
+    def format_tactic_lines(self, tactic: Node) -> list[str]:
+        # Returns lines whose first element is meant to follow `by `. Apply is
+        # rendered by format_proof_steps (its cases/terminator straddle the step).
+        if tactic.kind == "wip_tactic":
+            return ["wip"]
+        if tactic.kind == "rewrite":
+            thm = self.format_theorem(tactic.data["theorem"])
+            lhs = self.expr(tactic.data["lhs"])
+            rhs = self.expr(tactic.data["rhs"])
+            return [f"rewrite {tactic.data['direction']} {thm} with ({lhs} := {rhs})"]
+        raise TypeError(f"unsupported tactic: {tactic!r}")
 
-    def format_rule_head(self, expr: Any, keyword: str) -> str:
+    def format_theorem(self, theorem: Node) -> str:
+        name = theorem.data["name"]
+        if theorem.data.get("applied"):
+            return f"{name}(" + ", ".join(self.expr(arg) for arg in theorem.data["args"]) + ")"
+        return name
+
+    def decl_head(self, name: str, params: list[Any]) -> str:
+        return name if not params else f"{name}{self.binder_list(params)}"
+
+    def format_decl_head(self, expr: Any, keyword: str) -> str:
         if isinstance(expr, Node) and expr.kind in ("let", "let_tuple"):
-            return self.format_axiom_lets(expr, keyword)
+            return self.format_decl_lets(expr, keyword)
         return f"{keyword} {self.prop(expr)};"
 
     def prop(self, value: Any) -> str:
@@ -180,12 +224,14 @@ class Formatter:
         return self.expr(value)
 
     def assumption(self, value: Node) -> str:
+        if value.kind == "context_var":
+            return f"{value.data['name']} : {self.type_expr(value.data['type'])}"
         rendered = self.expr(value.data["expr"])
         name = value.data["name"]
         return f"{name} := {rendered}" if name is not None else rendered
 
-    def format_axiom_lets(self, expr: Node, keyword: str = "axiom") -> str:
-        # A let chain at the axiom spine breaks after each `in`, with the
+    def format_decl_lets(self, expr: Node, keyword: str) -> str:
+        # A let chain at the declaration spine breaks after each `in`, with the
         # bindings and final body aligned under the first one.
         lines: list[str] = []
         current: Any = expr
@@ -253,8 +299,6 @@ class Formatter:
             return data["name"]
         if value.kind == "qualified":
             return "::".join([*data["module"], data["name"]])
-        if value.kind == "number":
-            return data["value"]
         if value.kind == "bool":
             return "true" if data["value"] else "false"
         if value.kind == "bool_symbol":

@@ -7,28 +7,35 @@
 (comment) @comment
 
 ; Literals
-(number) @number
 (boolean) @boolean
 
 ; Declaration keywords
 [
   "sort"
+  "param"
   "op"
-  "var"
-  "axiom"
+  "eq"
+  "prop"
   "lemma"
   "rule"
   "end"
   "proof"
-  "qed"
   "by"
   "apply"
   "case"
+  "goal"
+  "rewrite"
+  "therefore"
   "include"
   "open"
   "with"
   "alias"
+  "props"
 ] @keyword
+
+(done) @keyword
+(terminator) @keyword
+(wip_tactic) @keyword
 
 [
   "let"
@@ -58,14 +65,11 @@
 (sort_identifier) @type
 (type_identifier) @type
 (builtin_type) @type.builtin
-(type_parameter) @type.parameter
 
 ; `Seq[...]` is the one built-in container constructor.
 ((type_application
   constructor: (type_identifier) @type.builtin)
   (#eq? @type.builtin "Seq"))
-
-(enum_value) @constant
 
 ; Declared names
 (op_declaration
@@ -73,9 +77,6 @@
 
 (rule_declaration
   name: (identifier) @function)
-
-(var_declaration
-  name: (identifier) @variable.parameter)
 
 (let_expression
   name: (identifier) @variable)
@@ -88,13 +89,22 @@
 (let_declaration
   name: (identifier) @variable)
 
-; Binder names (λ / ∀ / ∃ / rule and axiom/lemma parameters)
+; Binder names (λ / ∀ / ∃ / rule and eq/prop/lemma parameters)
 (binder_entry
   name: (binder_name) @variable.parameter)
 
-; Named sequent assumptions (rule premises and the hypotheses a case binds in
-; its explicit subgoal `case [ h := … ⊢ … ]`)
+; Typed context variables in a sequent (`n : Nat ⊢ …`)
+(context_var
+  name: (identifier) @variable.parameter)
+
+; Named sequent assumptions (`h := …`)
 (assumption
+  name: (identifier) @label)
+
+; Premise and proof-case names
+(rule_premise
+  name: (identifier) @label)
+(case_block
   name: (identifier) @label)
 
 (call_expression
@@ -116,6 +126,7 @@
   "⇸"
   "-/->"
   "×"
+  "*"
   "¬"
   "∧"
   "∨"
@@ -125,21 +136,13 @@
   "≠"
   "!="
   "<"
-  "≤"
-  "<="
   ">"
-  "≥"
-  ">="
   "&&"
   "||"
   "/\\"
   "\\/"
   "==>"
   "<==>"
-  "+"
-  "-"
-  "*"
-  "/"
   "++"
   "|"
   "'"
@@ -164,16 +167,12 @@
   "implies"
   "iff"
   "neq"
-  "leq"
-  "geq"
 ] @keyword.operator
 
 ; Punctuation
 [
   "("
   ")"
-  "{"
-  "}"
   "["
   "]"
 ] @punctuation.bracket
@@ -185,7 +184,8 @@
   "::"
 ] @punctuation.delimiter
 
-; Axiom, lemma, and proof rule names
-(axiom_name) @label
+; eq, prop, lemma, rule, and proof-rule names
+(decl_name) @label
+(prop_name) @label
 (lemma_name) @label
 (rule_name) @label

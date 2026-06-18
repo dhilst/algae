@@ -1,5 +1,6 @@
-sort S;
-var x : S;
-lemma refl x = x;
+sort S : Sort;
+op a : → S;
+lemma l a = a;
 proof
-  x;
+  goal
+    ⊢ a = a

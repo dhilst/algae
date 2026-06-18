@@ -1,5 +1,3 @@
-var n : ℕ;
-rule induction(x : ℕ, P : ℕ → Prop)
-  ⊢ P(0)
+rule r(A : Prop)
   ─────
-  ⊢ ∀ (n : ℕ) st P(n)
+  ⊢ A

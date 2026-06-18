@@ -14,9 +14,17 @@ class Module:
 
 @dataclass(slots=True)
 class SortDecl:
-    names: list[str]
-    values: list[str] | None = None
-    params: list[str] = field(default_factory=list)  # type parameters: sort List[T]
+    name: str
+    kind_expr: Any  # kind expression over the Sort primitive: Sort, Sort → Sort, …
+    line: int = 0
+    leading_comments: list[str] = field(default_factory=list)
+    trailing_comment: str | None = None
+
+
+@dataclass(slots=True)
+class ParamDecl:
+    name: str
+    kind_expr: Any  # abstract sort/constructor kind: Sort, Sort → Sort, …
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
@@ -34,19 +42,20 @@ class OpDecl:
 
 
 @dataclass(slots=True)
-class VarDecl:
-    names: list[str]
-    sort: Any
+class EqDecl:
+    expr: Any  # an equation lhs = rhs (a `binary` node with op "=")
+    name: str
+    params: list[Any] = field(default_factory=list)  # schematic binder params
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
 
 
 @dataclass(slots=True)
-class AxiomDecl:
-    expr: Any
+class PropDecl:
+    expr: Any  # an equation lhs = rhs; an instantiation obligation, not trusted
     name: str
-    params: list[Any] = field(default_factory=list)  # explicit binders ≡ forall
+    params: list[Any] = field(default_factory=list)  # schematic binder params
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
@@ -54,10 +63,10 @@ class AxiomDecl:
 
 @dataclass(slots=True)
 class LemmaDecl:
-    expr: Any
+    expr: Any  # an equation lhs = rhs
     name: str
-    proof: Any = None  # node("proof", steps=[...]) — parsed, never checked
-    params: list[Any] = field(default_factory=list)  # explicit binders ≡ forall
+    proof: Any = None  # node("proof", steps=[...]) — parsed, never discharged
+    params: list[Any] = field(default_factory=list)  # schematic binder params
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
@@ -76,6 +85,8 @@ class LetDecl:
 class IncludeDecl:
     path: list[str]  # module path: include foo::bar  →  ["foo", "bar"]
     bindings: list[Any] = field(default_factory=list)  # (param_name, type_expr) from `with`
+    obligations: list[Any] = field(default_factory=list)  # node("case", ...) proving props
+    obligations_terminator: str | None = None  # "qed"/"wip" closing the `props` block
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)
     trailing_comment: str | None = None
@@ -102,8 +113,8 @@ class AliasDecl:
 @dataclass(slots=True)
 class RuleDecl:
     name: str
-    params: list[Any]  # list of (param_name, type_expr) tuples
-    premises: list[Any]  # prop nodes (bare expr or node("sequent", ...))
+    params: list[Any]  # list of (param_name, type_or_kind_expr) tuples
+    premises: list[Any]  # node("rule_premise", name=str, prop=sequent) blocks
     conclusion: Any  # prop node
     line: int = 0
     leading_comments: list[str] = field(default_factory=list)

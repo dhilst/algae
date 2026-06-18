@@ -1,1 +1,1 @@
-op push Stack × Elem -> Stack;
+op push Stack × Elem → Stack;

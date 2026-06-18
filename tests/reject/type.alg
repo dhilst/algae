@@ -1,1 +1,1 @@
-type Name = ℕ;
+type Name = Nat;

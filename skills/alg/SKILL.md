@@ -7,39 +7,43 @@ allowed-tools: [Read, Write, Edit, Bash, Glob, Grep]
 
 # Algebraic Specifications (`.alg`)
 
-`.alg` files are lightweight algebraic specifications. They describe sorts, operation signatures, variables, and axioms. `algae.py check` parses and type-checks them; there is no model checking or proof.
+`.alg` files are lightweight algebraic specifications. They describe sorts (with kinds), module parameters, operation signatures, equations, proof obligations, lemmas, and inference rules. `algae.py check` parses and type-checks them; there is no model checking, and proofs are structure-checked but not discharged.
 
 ## Quick Reference
 
 ```
-sort Stack, Elem;
-sort Error = {empty_error};
+sort Stack : Sort;
+sort Elem : Sort;
+sort Error : Sort;
 
-op empty : -> Stack;
-op push : Stack × Elem -> Stack;
-op pop : Stack -> Stack | Error;
-op top : Stack -> Elem | Error;
+op empty_error : → Error;
 
-var s : Stack;
-var e : Elem;
+op empty : → Stack;
+op push : Stack × Elem → Stack;
+op pop : Stack → Stack × Elem | Error;
+op top : Stack → Elem | Error;
 
-axiom push_top top(push(s, e)) = e;
-axiom push_pop pop(push(s, e)) = s;
-axiom empty_top top(empty()) = empty_error;
-axiom empty_pop pop(empty()) = empty_error;
+eq push_top(s : Stack, e : Elem) top(push(s, e)) = e;
+eq push_pop(s : Stack, e : Elem) pop(push(s, e)) = (s, e);
+eq empty_top empty().top = empty_error;
+eq empty_pop empty().pop = empty_error;
 ```
 
 **Key conventions:**
-- `sort` declares carrier sets or enum-like constructor sets.
-- `op` declares operation signatures; an empty domain is written `op empty : -> Stack;`.
+- `sort Name : Sort;` declares a carrier sort; `sort List : Sort → Sort;` declares a sort constructor, applied as `List[Elem]`.
+- `param T : Sort;` declares a module parameter, bound by `include … with (T := …)`.
+- `op` declares operation signatures; an empty domain is written `op empty : → Stack;`. A **nullary op is a constant** used bare (`z`, `empty_error`).
+- Named constructors are ordinary nullary ops (`op missing_key : → Error;`), not enum sorts.
 - `|` in result types represents an algebraic sum/union, commonly for error alternatives.
-- `var` declarations are read as implicitly universally quantified over all axioms.
-- `axiom name expr;` gives equations or predicates that document intended behavior; the name is required and must be unique.
-- `lemma name expr;` records a derived fact, optionally followed by a `proof ... qed;` sketch whose steps cite axioms (`= expr by axiom_name;`). Lemmas are parsed and formatted but not verified.
+- `eq name(binders) lhs = rhs;` is a trusted equation; the binders are its schematic variables (there are no top-level `var`s). The name is required and unique.
+- `prop name(binders) lhs = rhs;` is a proof obligation, discharged at the `include` site that instantiates the module declaring it.
+- `lemma name(binders) lhs = rhs;` optionally followed by a `proof ... qed;` block of `goal <state> by <tactic> therefore <state | done>;` steps. Tactics are `rewrite >`/`rewrite <` and `wip` (which end the step at `;`), and `apply rule(args) <case ... qed;>* therefore <state> qed;` — an apply is a subproof, so its `qed`/`wip` terminator comes after the step's `therefore` (a zero-premise rule is `apply reflexivity(Nat, z) therefore done qed;`). Lemmas are structure-checked, not discharged.
+- `wip` ("work in progress") discharges a goal provisionally, to be finished later; it is viral, so any subproof (proof block, `case`, `apply`, or include `props` block) that uses it must be closed with `wip` instead of `qed`.
 - `op f : T | Error ⇸ T;` (ASCII `-/->`) declares a partial operation, conventionally one that narrows a sum; `check` treats it like a total op for now.
-- `let name = expr;` at top level names a term shared by later axioms; `let ... in` scopes a binding inside one axiom.
-- `let (a, b) = expr in ...` destructures a product-typed value; `_` binds unused components (each `_` is a fresh variable, valid only in patterns). Sum-typed values cannot be destructured.
-- Application sugar: `x.f(a)` reads as `f(x, a)` (pipe-first) and `x ▷ f(a)` (alias `|>`) as `f(a, x)` (pipe-last). Prefer `.` when the spec targets object-oriented code and `▷` when it targets functional code.
+- `rule` declares an inference rule with named premise `case … end;` blocks; sequent contexts (`⊢`) may carry typed variables and assumptions.
+- `let name = expr;` at top level names a term shared by later declarations; `let ... in` scopes a binding inside one body. `let (a, b) = expr in ...` destructures a product (`_` binds unused components). Sum-typed values cannot be destructured.
+- There are **no built-in numeric sorts** (`Nat`, `Int`, `Real` are ordinary identifiers), no number literals, and no built-in arithmetic. Numbers, if needed, are user-declared.
+- Application sugar: `x.f(a)` reads as `f(x, a)` (pipe-first) and `x ▷ f(a)` (alias `|>`) as `f(a, x)` (pipe-last). Prefer `.` for object-oriented targets and `▷` for functional ones.
 - Lowercase ASCII aliases such as `product`, `arrow`, `neq`, and `implies` parse as Unicode symbols, but prefer the Unicode symbols (`×`, `→`, `∧`, `∨`) when writing specs.
 - See [references/syntax.md](references/syntax.md) for the full grammar.
 - See [references/examples.md](references/examples.md) for example specs.
@@ -51,8 +55,8 @@ If activated while implementing or reviewing code (rather than via an explicit `
 1. Scan for `.alg` files that specify the module you are about to implement.
 2. Read the sorts to identify domain concepts and error constructors.
 3. Map each `op` to the implementation's public functions or methods.
-4. Use `var` and `axiom` declarations as behavioral laws and test ideas.
-5. Preserve the distinction between checking and proving: `check` validates syntax and types, but axioms are not proved or model-checked.
+4. Use `eq`/`prop`/`lemma` declarations as behavioral laws and test ideas.
+5. Preserve the distinction between checking and proving: `check` validates syntax and types, but equations are not proved or model-checked.
 
 When reviewing code against a spec, follow the conformance checks of the `verify` subcommand below.
 
@@ -70,12 +74,11 @@ Create or update an equational `.alg` specification.
 
 **If given a natural language description:**
 1. Identify the module's domain concepts, error cases, and public operations.
-2. Declare concepts with `sort`, using enum sorts for named constructors such as errors.
-3. Declare public operations with `op name : Domain -> Codomain;`.
+2. Declare concepts with `sort Name : Sort;` (or `sort C : Sort → …` for type constructors); declare named error constructors as nullary ops (`op missing_key : → Error;`).
+3. Declare public operations with `op name : Domain → Codomain;`.
 4. Use `|` in codomains for algebraic alternatives, such as `Value | Error`.
-5. Declare variables with `var`; they are read as implicitly universal over axioms.
-6. Add `axiom` declarations for key equations and behavioral laws.
-7. Write one complete `.alg` file next to the code it specifies.
+5. Write `eq` declarations for key equations, introducing variables as binders (`eq f(x : T) … = …;`).
+6. Write one complete `.alg` file next to the code it specifies.
 
 **If given source code:**
 For thorough extraction from code, prefer `/alg extract`. This shortcut should:
@@ -87,9 +90,11 @@ For thorough extraction from code, prefer `/alg extract`. This shortcut should:
 
 **Style rules:**
 - Prefer Unicode symbols (`×`, `→`, `∧`, `∨`) over ASCII aliases.
-- Specs are equational: no set-theory notation (`∈`, `∪`, `∅`, quantifiers, set literals).
+- Specs are equational: no set-theory notation (`∈`, `∪`, `∅`, set literals).
+- Introduce variables as binders on each `eq`/`prop`/`lemma`; there are no top-level `var`s.
+- Use nullary ops for named constructors, not enum sorts; there are no built-in numeric sorts.
 - Keep specs concise and equational.
-- Do not use `spec`, `state`, `init`, `pre`, `post`, `ret`, `prop`, `import`, or `extends`.
+- Do not use `var`, `axiom`, enum sorts (`sort X = {…}`), parametric sort declarations (`sort X[T]`), or the state-machine keywords (`spec`, `state`, `init`, `pre`, `post`, `import`, `extends`).
 
 ## Subcommand: `refine`
 
@@ -102,30 +107,30 @@ user steers; each round proposes a small, reviewable set of improvements.
    If it has syntax errors, propose fixes and stop until they are resolved.
 2. Build a model of the spec: sorts, operations split into constructors
    (operations that produce a sort) and observers (operations that inspect
-   one), variables, and which axioms mention each operation.
+   one), and which equations mention each operation.
 3. Analyze the spec across these dimensions (narrow to `[focus...]` if given):
 
 | Dimension | What to look for |
 |-----------|------------------|
-| Coverage | Operations appearing in no axiom; observers not defined over each constructor |
-| Error behavior | `\| Error` codomains whose error constructors never appear as an axiom result |
-| Consistency | Axioms with the same left-hand side but different right-hand sides |
-| Redundancy | Axioms derivable from others; unused sorts or variables |
-| Readability | Deeply nested terms that would read better as a `let ... in` chain; setup chains repeated across axioms that a top-level `let name = expr;` could share |
-| Signatures | Domains/codomains the axioms contradict or imply are missing |
+| Coverage | Operations appearing in no equation; observers not defined over each constructor |
+| Error behavior | `\| Error` codomains whose error constructors never appear as an equation result |
+| Consistency | Equations with the same left-hand side but different right-hand sides |
+| Redundancy | Equations derivable from others; unused sorts or parameters |
+| Readability | Deeply nested terms that would read better as a `let ... in` chain; setup chains repeated across equations that a top-level `let name = expr;` could share |
+| Signatures | Domains/codomains the equations contradict or imply are missing |
 
 4. Present numbered findings, each with a concrete before/after proposal.
-   Distinguish facts (e.g. "`pop` has no axiom for `empty()`") from
+   Distinguish facts (e.g. "`pop` has no equation for `empty()`") from
    assumptions about intended behavior, and flag the assumptions.
 5. Ask the user which findings to apply. Also accept free-form refinement
-   requests ("add an axiom for revoking roles") as the next round's input.
+   requests ("add an equation for revoking roles") as the next round's input.
 6. Apply the chosen edits, re-run `python algae.py check`, and show the diff.
 7. Repeat from step 3 until the user is satisfied or no findings remain.
 8. Finish with `python algae.py fmt --inplace <file.alg>` and a one-paragraph
    summary of what changed across the session.
 
 **Rules:**
-- Never invent domain behavior silently; every guessed axiom is presented as a
+- Never invent domain behavior silently; every guessed equation is presented as a
   question, not applied by default.
 - Keep rounds small: 3-6 findings at a time, highest impact first.
 - Follow the style rules from `/alg write`.
@@ -139,11 +144,12 @@ Generate an implementation from a specification.
 1. Read the `.alg` file.
 2. Detect the target language from `--lang`, or infer it from the project.
 3. Generate code:
-   - `sort Name` -> nominal type, class, interface, or type alias.
-   - `sort Error = {a, b}` -> enum or tagged error constructors.
-   - `op name : A × B -> C` -> public function/method signature.
+   - `sort Name : Sort` -> nominal type, class, interface, or type alias.
+   - `sort C : Sort → Sort` -> generic/parameterized type.
+   - nullary error constructors (`op missing : → Error;`) -> enum or tagged error constructors.
+   - `op name : A × B → C` -> public function/method signature.
    - `A | Error` -> result/union/exception-returning behavior appropriate for the language.
-   - `axiom` -> implementation laws and unit-test candidates.
+   - `eq` -> implementation laws and unit-test candidates.
 4. Place generated code alongside the `.alg` file unless the user specifies otherwise.
 5. Add a one-line generated-from comment.
 
@@ -151,11 +157,12 @@ Generate an implementation from a specification.
 
 | `.alg` construct | Python | Rust | TypeScript |
 |-----------------|--------|------|------------|
-| `sort User` | class/NewType/protocol | struct/trait marker | interface/type |
-| `sort Error = {missing}` | `Enum` | `enum` | string union/enum |
-| `op f : A × B -> C` | function/method | `fn` | function/method |
+| `sort User : Sort` | class/NewType/protocol | struct/trait marker | interface/type |
+| `sort List : Sort → Sort` | generic class | generic struct | generic type |
+| nullary error ctors | `Enum` | `enum` | string union/enum |
+| `op f : A × B → C` | function/method | `fn` | function/method |
 | `A | Error` | union/exception/result object | `Result<A, Error>` | union/result object |
-| `axiom inverse f(g(x)) = x` | unit test/property test | test/property | test/property |
+| `eq inverse f(g(x)) = x` | unit test/property test | test/property | test/property |
 
 ## Subcommand: `verify`
 
@@ -173,7 +180,7 @@ Check whether implementation code conforms to a specification.
 | `sort` | Corresponding type/class/enum/concept exists |
 | `op` | Corresponding callable exists with compatible arity/result behavior |
 | result `| Error` | Error/failure cases are represented |
-| `axiom` | Behavior is implemented or covered by tests |
+| `eq` | Behavior is implemented or covered by tests |
 
 5. Report findings in a table and summarize PASS/WARN/FAIL/SKIP counts.
 
@@ -190,14 +197,15 @@ Reverse-engineer an `.alg` specification from existing implementation code.
 
 | Language construct | `.alg` construct |
 |---|---|
-| Domain class/interface/type alias | `sort Name` |
-| Enum, string literal union, named error constants | `sort Error = {a, b, c}` |
-| Public method/function | `op name : Domain -> Codomain` |
-| Multi-argument function | `A × B -> C` |
+| Domain class/interface/type alias | `sort Name : Sort` |
+| Generic/parameterized type | `sort C : Sort → Sort` (+ `param`) |
+| Enum, string literal union, named error constants | nullary ops (`op a : → Error;`) |
+| Public method/function | `op name : Domain → Codomain` |
+| Multi-argument function | `A × B → C` |
 | Optional/result/error return | `C | Error` |
-| Tests and documented laws | `axiom ...` |
+| Tests and documented laws | `eq ...` |
 
-5. Infer axioms from:
+5. Infer equations from:
    - Tests and examples.
    - Round-trip operations, such as `decode(encode(x)) = x`.
    - Constructors followed by observers, such as `top(push(s, e)) = e`.
@@ -216,9 +224,8 @@ Reverse-engineer an `.alg` specification from existing implementation code.
 | Construct | Count | Details |
 |-----------|-------|---------|
 | sort      | 3     | Stack, Elem, Error |
-| op        | 4     | empty, push, pop, top |
-| var       | 2     | s, e |
-| axiom     | 4     | top/push, pop/push, empty errors |
+| op        | 5     | empty_error, empty, push, pop, top |
+| eq        | 4     | top/push, pop/push, empty errors |
 ```
 
 **Judgment calls:**

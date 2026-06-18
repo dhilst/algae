@@ -1,25 +1,31 @@
 ==================
-sort declarations
+sort and param declarations
 ==================
 
-sort Stack, Elem;
-sort Error = {empty_error, overflow};
-sort Empty = {};
+sort Nat : Sort;
+sort List : Sort → Sort;
+param T : Sort;
+param M : Sort -> Sort;
 
 ---
 
 (source_file
   (sort_declaration
     (sort_identifier)
-    (sort_identifier))
+    (builtin_type))
   (sort_declaration
     (sort_identifier)
-    (enum_values
-      (enum_value)
-      (enum_value)))
-  (sort_declaration
+    (function_type
+      (builtin_type)
+      (builtin_type)))
+  (param_declaration
     (sort_identifier)
-    (enum_values)))
+    (builtin_type))
+  (param_declaration
+    (sort_identifier)
+    (function_type
+      (builtin_type)
+      (builtin_type))))
 
 ==================
 op declarations
@@ -30,8 +36,8 @@ op push  : Stack × Elem → Stack;
 op pop   : Stack -> Stack | Error;
 op curry : Stack -> Elem -> 𝔹;
 op unitop : → ();
-op seqop : Seq[Stack × Elem] → Seq[Nat];
-op parens : (Stack -> Elem) product Int -> Real;
+op seqop : Seq[Stack × Elem] → List[Nat];
+op parens : (Stack -> Elem) product Bool -> Prop;
 
 ---
 
@@ -72,7 +78,7 @@ op parens : (Stack -> Elem) product Int -> Real;
           (type_identifier))))
     (type_application
       (type_identifier)
-      (builtin_type)))
+      (type_identifier)))
   (op_declaration
     (identifier)
     (domain
@@ -82,132 +88,6 @@ op parens : (Stack -> Elem) product Int -> Real;
           (type_identifier)))
       (builtin_type))
     (builtin_type)))
-
-==================
-var declarations
-==================
-
-var s : Stack;
-var f : Stack → Elem;
-
----
-
-(source_file
-  (var_declaration
-    (identifier)
-    (type_identifier))
-  (var_declaration
-    (identifier)
-    (function_type
-      (type_identifier)
-      (type_identifier))))
-
-==================
-top-level let declarations
-==================
-
-let with_user = add_user(empty_rbac(), u);
-let with_role = add_role(with_user, r);
-
-axiom no_roles authorized(with_role, u, p) = false;
-
----
-
-(source_file
-  (let_declaration
-    (identifier)
-    (call_expression
-      (identifier)
-      (arguments
-        (call_expression
-          (identifier)
-          (arguments))
-        (identifier))))
-  (let_declaration
-    (identifier)
-    (call_expression
-      (identifier)
-      (arguments
-        (identifier)
-        (identifier))))
-  (axiom_declaration
-    (axiom_name
-      (identifier))
-    (binary_expression
-      (call_expression
-        (identifier)
-        (arguments
-          (identifier)
-          (identifier)
-          (identifier)))
-      (boolean))))
-
-==================
-axioms with comments
-==================
-
-# leading comment
-axiom push_top top(push(s, e)) = e; # trailing comment
-
----
-
-(source_file
-  (comment)
-  (axiom_declaration
-    (axiom_name
-      (identifier))
-    (binary_expression
-      (call_expression
-        (identifier)
-        (arguments
-          (call_expression
-            (identifier)
-            (arguments
-              (identifier)
-              (identifier)))))
-      (identifier)))
-  (comment))
-
-==================
-multi-name var declarations
-==================
-
-var e, f : Elem;
-
----
-
-(source_file
-  (var_declaration
-    name: (identifier)
-    name: (identifier)
-    type: (type_identifier)))
-
-==================
-named axioms
-==================
-
-axiom empty_size q = q;
-axiom assoc' (q, q).fst = q;
-
----
-
-(source_file
-  (axiom_declaration
-    name: (axiom_name
-      (identifier))
-    body: (binary_expression
-      left: (identifier)
-      right: (identifier)))
-  (axiom_declaration
-    name: (axiom_name
-      (identifier))
-    body: (binary_expression
-      left: (binary_expression
-        left: (tuple
-          (identifier)
-          (identifier))
-        right: (identifier))
-      right: (identifier))))
 
 ==================
 partial op declarations
@@ -220,140 +100,251 @@ op assert : Stack × Elem | Error -/-> Stack × Elem;
 
 (source_file
   (op_declaration
-    name: (identifier)
-    domain: (domain
+    (identifier)
+    (domain
       (type_identifier))
     (partial_arrow)
-    codomain: (type_identifier))
+    (type_identifier))
   (op_declaration
-    name: (identifier)
-    domain: (domain
+    (identifier)
+    (domain
       (type_identifier)
       (type_identifier)
       (type_identifier))
     (partial_arrow)
-    codomain: (product_type
-      left: (type_identifier)
-      right: (type_identifier))))
+    (product_type
+      (type_identifier)
+      (type_identifier))))
 
 ==================
-lemma declarations
+eq and prop declarations
 ==================
 
-lemma pop_top
-  s.push(e).pop = (s, e);
-proof
-  s.push(e).pop;
-  = (s, e) by push_pop;
-qed;
-
-lemma unproved x = x;
+eq add_zero_left(n : Nat) add(z, n) = n;
+eq assoc' (q, q).fst = q;
+prop left_identity(x : T) mul(unit, x) = x;
 
 ---
 
 (source_file
-  (lemma_declaration
-    name: (lemma_name
-      (identifier))
-    body: (binary_expression
-      left: (binary_expression
-        left: (binary_expression
-          left: (identifier)
-          right: (call_expression
-            function: (identifier)
-            arguments: (arguments
-              (identifier))))
-        right: (identifier))
-      right: (tuple
-        (identifier)
-        (identifier)))
-    proof: (proof_block
-      (proof_step
-        term: (binary_expression
-          left: (binary_expression
-            left: (identifier)
-            right: (call_expression
-              function: (identifier)
-              arguments: (arguments
-                (identifier))))
-          right: (identifier)))
-      (proof_step
-        term: (tuple
-          (identifier)
-          (identifier))
-        rule: (rule_name
-          (identifier)))))
-  (lemma_declaration
-    name: (lemma_name
-      (identifier))
-    body: (binary_expression
-      left: (identifier)
-      right: (identifier))))
-
-==================
-parametric sorts
-==================
-
-sort List[T];
-sort Pair[K, V];
-
----
-
-(source_file
-  (sort_declaration
-    (sort_identifier)
-    (type_parameter))
-  (sort_declaration
-    (sort_identifier)
-    (type_parameter)
-    (type_parameter)))
-
-==================
-axiom parameters and = forall form
-==================
-
-axiom f (x x' : T) x = x;
-axiom g = forall (x : T) st x = x;
-
----
-
-(source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
     (binders
       (binder_entry
         (binder_name
           (identifier))
+        (type_identifier)))
+    (binary_expression
+      (call_expression
+        (identifier)
+        (arguments
+          (identifier)
+          (identifier)))
+      (identifier)))
+  (eq_declaration
+    (decl_name
+      (identifier))
+    (binary_expression
+      (binary_expression
+        (tuple
+          (identifier)
+          (identifier))
+        (identifier))
+      (identifier)))
+  (prop_declaration
+    (prop_name
+      (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
+    (binary_expression
+      (call_expression
+        (identifier)
+        (arguments
+          (identifier)
+          (identifier)))
+      (identifier))))
+
+==================
+lemma with structured proof
+==================
+
+lemma add_zero_right(n : Nat)
+  add(n, z) = n;
+proof
+  goal
+    ⊢ add(n, z) = n
+  by apply induction(λ (n : Nat) => add(n, z) = n)
+    case base
+      goal
+        ⊢ add(z, z) = z
+      by rewrite > add_zero_left(z) with (add(z, z) := z)
+      therefore
+        ⊢ z = z;
+    qed;
+    case step
+      goal
+        n : Nat, ih := add(n, z) = n ⊢ add(s(n), z) = s(n)
+      by rewrite > ih with (add(n, z) := n)
+      therefore done;
+    qed;
+  therefore done
+  qed;
+qed;
+
+lemma unproved(x : S) x = x;
+
+---
+
+(source_file
+  (lemma_declaration
+    (lemma_name
+      (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
+    (binary_expression
+      (call_expression
+        (identifier)
+        (arguments
+          (identifier)
+          (identifier)))
+      (identifier))
+    (proof_block
+      (proof_step
+        (sequent
+          (binary_expression
+            (call_expression
+              (identifier)
+              (arguments
+                (identifier)
+                (identifier)))
+            (identifier)))
+        (apply_tactic
+          (rule_name
+            (identifier))
+          (arguments
+            (lambda_expression
+              (binders
+                (binder_entry
+                  (binder_name
+                    (identifier))
+                  (type_identifier)))
+              (binary_expression
+                (call_expression
+                  (identifier)
+                  (arguments
+                    (identifier)
+                    (identifier)))
+                (identifier)))))
+        (case_block
+          (identifier)
+          (proof_step
+            (sequent
+              (binary_expression
+                (call_expression
+                  (identifier)
+                  (arguments
+                    (identifier)
+                    (identifier)))
+                (identifier)))
+            (rewrite_tactic
+              (theorem
+                (rule_name
+                  (identifier))
+                (arguments
+                  (identifier)))
+              (call_expression
+                (identifier)
+                (arguments
+                  (identifier)
+                  (identifier)))
+              (identifier))
+            (sequent
+              (binary_expression
+                (identifier)
+                (identifier))))
+          (terminator))
+        (case_block
+          (identifier)
+          (proof_step
+            (sequent
+              (context_var
+                (identifier)
+                (type_identifier))
+              (assumption
+                (identifier)
+                (binary_expression
+                  (call_expression
+                    (identifier)
+                    (arguments
+                      (identifier)
+                      (identifier)))
+                  (identifier)))
+              (binary_expression
+                (call_expression
+                  (identifier)
+                  (arguments
+                    (call_expression
+                      (identifier)
+                      (arguments
+                        (identifier)))
+                    (identifier)))
+                (call_expression
+                  (identifier)
+                  (arguments
+                    (identifier)))))
+            (rewrite_tactic
+              (theorem
+                (rule_name
+                  (identifier)))
+              (call_expression
+                (identifier)
+                (arguments
+                  (identifier)
+                  (identifier)))
+              (identifier))
+            (done))
+          (terminator))
+        (done)
+        (terminator))
+      (terminator)))
+  (lemma_declaration
+    (lemma_name
+      (identifier))
+    (binders
+      (binder_entry
         (binder_name
           (identifier))
         (type_identifier)))
     (binary_expression
       (identifier)
-      (identifier)))
-  (axiom_declaration
-    (axiom_name
-      (identifier))
-    (quantifier_expression
-      (binders
-        (binder_entry
-          (binder_name
-            (identifier))
-          (type_identifier)))
-      (binary_expression
-        (identifier)
-        (identifier)))))
+      (identifier))))
 
 ==================
 rule declarations
 ==================
 
-rule induction(x : Nat, P : Nat -> Prop)
-  |- P(0)
-  P(x) |- P(s(x))
+rule reflexivity(T : Sort, x : T)
+  ─────
+  ⊢ x = x
+end;
+
+rule induction(P : Nat -> Prop)
+  case base
+    ⊢ P(z)
+  end;
+  case step
+    n : Nat, P(n) |- P(s(n))
+  end;
   ─────
   |- forall (n : Nat) st P(n)
-end
+end;
 
 ---
 
@@ -368,27 +359,46 @@ end
       (binder_entry
         (binder_name
           (identifier))
-        (function_type
-          (builtin_type)
-          (builtin_type))))
+        (type_identifier)))
+    (rule_bar)
     (sequent
-      (call_expression
+      (binary_expression
         (identifier)
-        (arguments
-          (number))))
-    (sequent
-      (assumption
+        (identifier))))
+  (rule_declaration
+    (identifier)
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (function_type
+          (type_identifier)
+          (builtin_type))))
+    (rule_premise
+      (identifier)
+      (sequent
         (call_expression
           (identifier)
           (arguments
-            (identifier))))
-      (call_expression
-        (identifier)
-        (arguments
+            (identifier)))))
+    (rule_premise
+      (identifier)
+      (sequent
+        (context_var
+          (identifier)
+          (type_identifier))
+        (assumption
           (call_expression
             (identifier)
             (arguments
-              (identifier))))))
+              (identifier))))
+        (call_expression
+          (identifier)
+          (arguments
+            (call_expression
+              (identifier)
+              (arguments
+                (identifier)))))))
     (rule_bar)
     (sequent
       (quantifier_expression
@@ -396,33 +406,34 @@ end
           (binder_entry
             (binder_name
               (identifier))
-            (builtin_type)))
+            (type_identifier)))
         (call_expression
           (identifier)
           (arguments
             (identifier)))))))
 
 ==================
-module declarations
+module declarations with obligations
 ==================
 
-include foo::bar with (T := Elem, R := Int);
+include nat;
 alias b = foo::bar;
 open foo::bar (nil, cons);
+include monoid with (T := nat::Nat, unit := z, mul := add) props
+  case left_identity
+    goal
+      ⊢ add(z, x) = x
+    by rewrite > add_zero_left(x) with (add(z, x) := x)
+    therefore done;
+  qed;
+qed;
 
 ---
 
 (source_file
   (include_declaration
     (module_path
-      (identifier)
-      (identifier))
-    (with_binding
-      (identifier)
-      (type_identifier))
-    (with_binding
-      (identifier)
-      (builtin_type)))
+      (identifier)))
   (alias_declaration
     (identifier)
     (module_path
@@ -433,4 +444,181 @@ open foo::bar (nil, cons);
       (identifier)
       (identifier))
     (identifier)
-    (identifier)))
+    (identifier))
+  (include_declaration
+    (module_path
+      (identifier))
+    (with_binding
+      (identifier)
+      (qualified_type
+        (type_identifier)
+        (type_identifier)))
+    (with_binding
+      (identifier)
+      (type_identifier))
+    (with_binding
+      (identifier)
+      (type_identifier))
+    (obligation_block
+      (case_block
+        (identifier)
+        (proof_step
+          (sequent
+            (binary_expression
+              (call_expression
+                (identifier)
+                (arguments
+                  (identifier)
+                  (identifier)))
+              (identifier)))
+          (rewrite_tactic
+            (theorem
+              (rule_name
+                (identifier))
+              (arguments
+                (identifier)))
+            (call_expression
+              (identifier)
+              (arguments
+                (identifier)
+                (identifier)))
+            (identifier))
+          (done))
+        (terminator))
+      (terminator))))
+
+==================
+top-level let declarations
+==================
+
+let with_user = add_user(empty_rbac(), u);
+
+eq no_roles(u : User, p : Permission) authorized(with_user, u, p) = false;
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (call_expression
+      (identifier)
+      (arguments
+        (call_expression
+          (identifier)
+          (arguments))
+        (identifier))))
+  (eq_declaration
+    (decl_name
+      (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier))
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
+    (binary_expression
+      (call_expression
+        (identifier)
+        (arguments
+          (identifier)
+          (identifier)
+          (identifier)))
+      (boolean))))
+
+==================
+wip tactic and wip terminator
+==================
+
+sort Nat : Sort;
+op z : → Nat;
+
+rule reflexivity(T : Sort, x : T)
+  ─────
+  ⊢ x = x
+end;
+
+lemma todo z = z;
+proof
+  goal
+    ⊢ z = z
+  by wip
+  therefore
+    ⊢ z = z;
+wip;
+
+lemma direct z = z;
+proof
+  goal
+    ⊢ z = z
+  by apply reflexivity(Nat, z)
+  therefore done
+  qed;
+qed;
+
+---
+
+(source_file
+  (sort_declaration
+    (sort_identifier)
+    (builtin_type))
+  (op_declaration
+    (identifier)
+    (type_identifier))
+  (rule_declaration
+    (identifier)
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (builtin_type))
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
+    (rule_bar)
+    (sequent
+      (binary_expression
+        (identifier)
+        (identifier))))
+  (lemma_declaration
+    (lemma_name
+      (identifier))
+    (binary_expression
+      (identifier)
+      (identifier))
+    (proof_block
+      (proof_step
+        (sequent
+          (binary_expression
+            (identifier)
+            (identifier)))
+        (wip_tactic)
+        (sequent
+          (binary_expression
+            (identifier)
+            (identifier))))
+      (terminator)))
+  (lemma_declaration
+    (lemma_name
+      (identifier))
+    (binary_expression
+      (identifier)
+      (identifier))
+    (proof_block
+      (proof_step
+        (sequent
+          (binary_expression
+            (identifier)
+            (identifier)))
+        (apply_tactic
+          (rule_name
+            (identifier))
+          (arguments
+            (identifier)
+            (identifier)))
+        (done)
+        (terminator))
+      (terminator))))

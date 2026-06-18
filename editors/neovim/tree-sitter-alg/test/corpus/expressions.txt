@@ -2,76 +2,104 @@
 operator precedence
 ==================
 
-axiom imp_chain a implies b implies c;
-axiom prec_mix a or b and c = d + e * f;
+eq imp_chain(a b c : Prop) a implies b implies c = a;
+eq prec_mix(a b c d : Prop) a or b and c = d;
 
 ---
 
 (source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
-    (binary_expression
-      (identifier)
-      (binary_expression
-        (identifier)
-        (identifier))))
-  (axiom_declaration
-    (axiom_name
-      (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (binder_name
+          (identifier))
+        (binder_name
+          (identifier))
+        (builtin_type)))
     (binary_expression
       (identifier)
       (binary_expression
         (identifier)
         (binary_expression
           (identifier)
-          (binary_expression
-            (identifier)
-            (binary_expression
-              (identifier)
-              (identifier))))))))
+          (identifier)))))
+  (eq_declaration
+    (decl_name
+      (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (binder_name
+          (identifier))
+        (binder_name
+          (identifier))
+        (binder_name
+          (identifier))
+        (builtin_type)))
+    (binary_expression
+      (identifier)
+      (binary_expression
+        (identifier)
+        (binary_expression
+          (identifier)
+          (identifier))))))
 
 ==================
 unicode and ascii aliases agree
 ==================
 
-axiom sym ¬(a = b) ∧ ⊤ ∨ ⊥ ⟹ true ⟺ a ≠ b;
-axiom words not (a = b) and truth or falsehood implies true iff a neq b;
+eq sym(a b : T) ¬(a = b) ∧ ⊤ ∨ ⊥ ⟹ a ≠ b;
+eq words(a b : T) not (a = b) and truth or falsehood implies a neq b;
 
 ---
 
 (source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (binary_expression
       (binary_expression
         (binary_expression
-          (binary_expression
-            (unary_expression
-              (parenthesized_expression
-                (binary_expression
-                  (identifier)
-                  (identifier))))
-            (boolean))
+          (unary_expression
+            (parenthesized_expression
+              (binary_expression
+                (identifier)
+                (identifier))))
           (boolean))
         (boolean))
       (binary_expression
         (identifier)
         (identifier))))
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (binary_expression
       (binary_expression
         (binary_expression
-          (binary_expression
-            (unary_expression
-              (parenthesized_expression
-                (binary_expression
-                  (identifier)
-                  (identifier))))
-            (boolean))
+          (unary_expression
+            (parenthesized_expression
+              (binary_expression
+                (identifier)
+                (identifier))))
           (boolean))
         (boolean))
       (binary_expression
@@ -82,21 +110,28 @@ axiom words not (a = b) and truth or falsehood implies true iff a neq b;
 if then else
 ==================
 
-axiom cond if size(s) > 0 then top(s) else empty_error = e;
+eq cond(s : Stack, e : Elem) if has(s) then top(s) else empty_error = e;
 
 ---
 
 (source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier))
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (if_expression
-      (binary_expression
-        (call_expression
-          (identifier)
-          (arguments
-            (identifier)))
-        (number))
+      (call_expression
+        (identifier)
+        (arguments
+          (identifier)))
       (call_expression
         (identifier)
         (arguments
@@ -109,14 +144,23 @@ axiom cond if size(s) > 0 then top(s) else empty_error = e;
 let in chains
 ==================
 
-axiom lets let t = push(s, e) in let u = pop(t) in u = s;
+eq lets(s : Stack, e : Elem) let t = push(s, e) in let u = pop(t) in u = s;
 
 ---
 
 (source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier))
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (let_expression
       (identifier)
       (call_expression
@@ -135,19 +179,28 @@ axiom lets let t = push(s, e) in let u = pop(t) in u = s;
           (identifier))))))
 
 ==================
-application sugar: pipe-first dot and pipe-last triangle
+application sugar and concat
 ==================
 
-axiom dot_sugar s.push(e).pop = (s, e);
-axiom pipe_sugar s |> push(e) |> pop = (e, s);
-axiom loose_pipe a + 1 ▷ f = f(a + 1);
+eq dot_sugar(s : Stack, e : Elem) s.push(e).pop = (s, e);
+eq pipe_sugar(s : Stack, e : Elem) s |> push(e) |> pop = (e, s);
+eq seq_concat(xs : Seq[Elem]) xs ++ xs = xs;
 
 ---
 
 (source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier))
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (binary_expression
       (binary_expression
         (binary_expression
@@ -160,9 +213,18 @@ axiom loose_pipe a + 1 ▷ f = f(a + 1);
       (tuple
         (identifier)
         (identifier))))
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier))
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (binary_expression
       (binary_expression
         (binary_expression
@@ -175,34 +237,39 @@ axiom loose_pipe a + 1 ▷ f = f(a + 1);
       (tuple
         (identifier)
         (identifier))))
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_application
+          (type_identifier)
+          (type_identifier))))
     (binary_expression
       (binary_expression
-        (binary_expression
-          (identifier)
-          (number))
-        (identifier))
-      (call_expression
         (identifier)
-        (arguments
-          (binary_expression
-            (identifier)
-            (number)))))))
+        (identifier))
+      (identifier))))
 
 ==================
 destructuring let with wildcard
 ==================
 
-axiom pop_size let (rest, _) = pop(n) in size(rest) = size(n) - 1;
+eq pop_size(n : Stack) let (rest, _) = pop(n) in size(rest) = size(n);
 
 ---
 
 (source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (let_expression
       (tuple_pattern
         (identifier)
@@ -216,25 +283,32 @@ axiom pop_size let (rest, _) = pop(n) in size(rest) = size(n) - 1;
           (identifier)
           (arguments
             (identifier)))
-        (binary_expression
-          (call_expression
-            (identifier)
-            (arguments
-              (identifier)))
-          (number))))))
+        (call_expression
+          (identifier)
+          (arguments
+            (identifier)))))))
 
 ==================
 calls, primes, tuples, unit
 ==================
 
-axiom prime_call s' = f((a, b, c), (), 42);
+eq prime_call(a b c : T) s' = f((a, b, c), ());
 
 ---
 
 (source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (binder_name
+          (identifier))
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (binary_expression
       (prime_expression
         (identifier))
@@ -245,95 +319,107 @@ axiom prime_call s' = f((a, b, c), (), 42);
             (identifier)
             (identifier)
             (identifier))
-          (unit)
-          (number))))))
+          (unit))))))
 
 ==================
 quantifiers and lambda
 ==================
 
-axiom q forall (a : ℕ, b b' : ℤ) st a = b;
-axiom e exists (x : ℕ) st x = x;
-axiom l = (fun (n : ℕ) => n) ▷ f;
+eq q(x : T) forall (a : Nat, b b' : Int) st a = b;
+eq e(x : T) exists (y : Nat) st y = y;
+eq l(f : Nat -> Nat) (fun (n : Nat) => n) ▷ f = f;
 
 ---
 
 (source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (quantifier_expression
       (binders
         (binder_entry
           (binder_name
             (identifier))
-          (builtin_type))
+          (type_identifier))
         (binder_entry
           (binder_name
             (identifier))
           (binder_name
             (identifier))
-          (builtin_type)))
+          (type_identifier)))
       (binary_expression
         (identifier)
         (identifier))))
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_identifier)))
     (quantifier_expression
       (binders
         (binder_entry
           (binder_name
             (identifier))
-          (builtin_type)))
+          (type_identifier)))
       (binary_expression
         (identifier)
         (identifier))))
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
+        (function_type
+          (type_identifier)
+          (type_identifier))))
     (binary_expression
-      (parenthesized_expression
-        (lambda_expression
-          (binders
-            (binder_entry
-              (binder_name
-                (identifier))
-              (builtin_type)))
-          (identifier)))
+      (binary_expression
+        (parenthesized_expression
+          (lambda_expression
+            (binders
+              (binder_entry
+                (binder_name
+                  (identifier))
+                (type_identifier)))
+            (identifier)))
+        (identifier))
       (identifier))))
 
 ==================
 sequents and qualified names
 ==================
 
-axiom seq h := a, b ⊢ c;
-var xs : list::List[Elem];
-axiom q list::cons(e, xs) = xs;
+eq qual(e : Elem, xs : list::List[Elem]) list::cons(e, xs) = list::cons(e, xs);
 
 ---
 
 (source_file
-  (axiom_declaration
-    (axiom_name
+  (eq_declaration
+    (decl_name
       (identifier))
-    (sequent
-      (assumption
-        (identifier)
-        (identifier))
-      (assumption
-        (identifier))
-      (identifier)))
-  (var_declaration
-    (identifier)
-    (type_application
-      (qualified_type
-        (type_identifier)
+    (binders
+      (binder_entry
+        (binder_name
+          (identifier))
         (type_identifier))
-      (type_identifier)))
-  (axiom_declaration
-    (axiom_name
-      (identifier))
+      (binder_entry
+        (binder_name
+          (identifier))
+        (type_application
+          (qualified_type
+            (type_identifier)
+            (type_identifier))
+          (type_identifier))))
     (binary_expression
       (call_expression
         (qualified_identifier
@@ -342,88 +428,10 @@ axiom q list::cons(e, xs) = xs;
         (arguments
           (identifier)
           (identifier)))
-      (identifier))))
-
-==================
-proof with apply and cases
-==================
-
-lemma l x = x;
-proof
-  apply induction(n, fun (n : Nat) => n + 0 = n);
-  case [|- 0 + 0 = 0]
-    0 + 0;
-    = 0 by add_zero;
-  qed;
-  case [ih := n + 0 = n |- s(n) + 0 = s(n)]
-    s(n);
-  qed;
-qed;
-
----
-
-(source_file
-  (lemma_declaration
-    (lemma_name
-      (identifier))
-    (binary_expression
-      (identifier)
-      (identifier))
-    (proof_block
-      (proof_step
-        (apply_step
-          (rule_name
-            (identifier))
-          (arguments
-            (identifier)
-            (lambda_expression
-              (binders
-                (binder_entry
-                  (binder_name
-                    (identifier))
-                  (builtin_type)))
-              (binary_expression
-                (binary_expression
-                  (identifier)
-                  (number))
-                (identifier))))
-          (case_block
-            (sequent
-              (binary_expression
-                (binary_expression
-                  (number)
-                  (number))
-                (number)))
-            (proof_step
-              (binary_expression
-                (number)
-                (number)))
-            (proof_step
-              (number)
-              (rule_name
-                (identifier))))
-          (case_block
-            (sequent
-              (assumption
-                (identifier)
-                (binary_expression
-                  (binary_expression
-                    (identifier)
-                    (number))
-                  (identifier)))
-              (binary_expression
-                (binary_expression
-                  (call_expression
-                    (identifier)
-                    (arguments
-                      (identifier)))
-                  (number))
-                (call_expression
-                  (identifier)
-                  (arguments
-                    (identifier)))))
-            (proof_step
-              (call_expression
-                (identifier)
-                (arguments
-                  (identifier))))))))))
+      (call_expression
+        (qualified_identifier
+          (identifier)
+          (identifier))
+        (arguments
+          (identifier)
+          (identifier))))))

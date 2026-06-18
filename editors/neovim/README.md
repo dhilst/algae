@@ -58,23 +58,28 @@ and run `make -C /path/to/algae/editors/neovim` once.
 
 The grammar mirrors `algae/parser.py`. It covers:
 
-- **Declarations**: `sort` (including parametric `sort List[T]`), `op`, `var`,
-  `axiom`/`lemma` (with optional binder parameters and the `= prop` form),
-  `rule`, `include` / `open` / `alias`, and top-level `let`.
-- **Propositions**: sequents `assumptions ⊢ goal` with named assumptions
-  (`h := A`), used by axioms, lemmas, and rule premises/conclusions.
-- **Proofs**: `proof … qed`, rewrite steps (`= t by name;`), and `apply` with
-  `case [..]` branches.
+- **Declarations**: `sort`/`param` with kinds (`sort List : Sort → Sort;`),
+  `op`, `eq`/`prop`/`lemma` (with optional binder parameters), `rule`,
+  `include` / `open` / `alias`, and top-level `let`.
+- **Propositions**: sequents `context ⊢ goal` whose context may carry typed
+  variables (`n : Nat`) and named assumptions (`h := A`), used by rule premises,
+  rule conclusions, and proof states.
+- **Proofs**: `proof … qed`/`wip`, `goal … by <tactic> therefore <state |
+  done>;` steps, with the `rewrite >`/`rewrite <`, `apply … case … qed; …
+  therefore <state> qed;`, and `wip` tactics. A subproof that uses `wip` (work
+  in progress) closes with `wip` instead of `qed`. Module obligations are
+  discharged in an `include … props <case …>* qed;` block.
 - **Types**: `×`, `→`/`⇸`, `|`, type application (`List[T]`, `Seq[T]`,
-  `list::List[Elem]`), and qualified names.
+  `list::List[Elem]`), and qualified names. The only built-in types are `𝔹`,
+  `Prop`, and `Sort`.
 - **Terms**: Pratt-style operator precedence, `if`/`then`/`else`, `let`/`in`,
-  quantifiers (`∀ (n : ℕ) st …`, `∃`), and lambda (`λ (n : ℕ) => …` / `fun`).
+  quantifiers (`∀ (n : Nat) st …`, `∃`), and lambda (`λ (n : Nat) => …` / `fun`).
 
 Unicode symbols and their ASCII / keyword aliases (`->`/`arrow`, `/\`/`and`,
-`Nat`/`ℕ`, `|-`/`⊢`, `forall`/`∀`, `fun`/`λ`, ...) are interchangeable, as in
-the reference parser. The rule bar between premises and conclusion is a run of
-the box-drawing dash `─` (U+2500). Use `algae.py check` for real validation
-(type checking, module resolution); the grammar only describes shape.
+`|-`/`⊢`, `forall`/`∀`, `fun`/`λ`, ...) are interchangeable, as in the reference
+parser. The rule bar between premises and conclusion is a run of the box-drawing
+dash `─` (U+2500). Use `algae.py check` for real validation (type checking,
+module resolution); the grammar only describes shape.
 
 Corpus tests live in `tree-sitter-alg/test/corpus/`; run them with
 `tree-sitter test` from `tree-sitter-alg/`.

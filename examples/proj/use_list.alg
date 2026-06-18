@@ -3,10 +3,11 @@ include list with (T := Elem);
 alias l = list;
 open list (nil, cons);
 
-sort Elem;
-var e : Elem;
-var xs : list::List[Elem];
+sort Elem : Sort;
 
-axiom open_matches_qualified cons(e, xs) = list::cons(e, xs);
-axiom alias_matches_qualified l::cons(e, xs) = list::cons(e, xs);
-axiom head_def list::head(cons(e, xs)) = e;
+eq open_matches_qualified(e : Elem, xs : list::List[Elem])
+  cons(e, xs) = list::cons(e, xs);
+eq alias_matches_qualified(e : Elem, xs : list::List[Elem])
+  l::cons(e, xs) = list::cons(e, xs);
+eq head_def(e : Elem, xs : list::List[Elem])
+  list::head(cons(e, xs)) = e;

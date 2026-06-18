@@ -1,3 +1,3 @@
 state {
-  value: ℕ;
+  value : Nat;
 }

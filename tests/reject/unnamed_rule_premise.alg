@@ -1,6 +1,5 @@
 rule r(A : Prop)
-  case c
-    ⊢ A
-  end;
+  ⊢ A
+  ─────
   ⊢ A
 end;

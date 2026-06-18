@@ -1,6 +1,5 @@
-sort S;
-var x : S;
-axiom refl x = x;
+sort S : Sort;
+op a : → S;
+eq refl(x : S) x = x;
 proof
-  x;
 qed;

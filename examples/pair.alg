@@ -1,12 +1,12 @@
 # A parametric pair (product) of an A and a B, with projections.
-sort Pair[A, B];
+param A : Sort;
+param B : Sort;
+
+sort Pair : Sort → Sort → Sort;
 
 op pair : A × B → Pair[A, B];
 op fst : Pair[A, B] → A;
 op snd : Pair[A, B] → B;
 
-var a : A;
-var b : B;
-
-axiom fst_pair fst(pair(a, b)) = a;
-axiom snd_pair snd(pair(a, b)) = b;
+eq fst_pair(a : A, b : B) fst(pair(a, b)) = a;
+eq snd_pair(a : A, b : B) snd(pair(a, b)) = b;

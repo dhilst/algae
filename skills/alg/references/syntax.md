@@ -8,138 +8,165 @@
   along with all whitespace and layout.
 - Whitespace is insignificant.
 - A file contains top-level algebraic declarations; there is no `spec` wrapper.
-- Declarations end with `;`.
+- Declarations end with `;` (a `rule` ends with `end;`).
 
 ## Keywords
 
 ```
-sort  op  var  axiom  lemma  rule  proof  qed  by  apply  case  end  st
-include  open  with  alias
+sort  param  op  eq  prop  lemma  rule  proof  qed  wip  by  apply  case  end  st
+goal  rewrite  therefore  done
+include  open  with  alias  props
 true  false  if  then  else  let  in
 ```
 
-The previous state-machine syntax is not part of this grammar. Its keywords
-(`spec`, `state`, `init`, `pre`, `post`, ...) are ordinary identifiers now, but
-old-syntax files still fail to parse since declarations must start with `sort`,
-`op`, `var`, `axiom`, `lemma`, `rule`, `include`, `open`, `alias`, or `let`.
+A declaration must start with `sort`, `param`, `op`, `eq`, `prop`, `lemma`,
+`rule`, `include`, `open`, `alias`, or `let`. The older `var` and `axiom`
+keywords are gone (`var` declarations are replaced by binders; `axiom` is
+replaced by `eq`), as are the state-machine keywords (`spec`, `state`, `init`,
+…), which are ordinary identifiers now.
 
 ## Symbols And ASCII Aliases
 
 Unicode symbols and their ASCII aliases (keywords or symbolic spellings) are
 interchangeable. The formatter emits Unicode by default and emits the aliases
 below with `fmt --ascii`. Additional symbolic input spellings are accepted:
-`->` for `→`, `==>` for `⟹`, `<==>` for `⟺`, `!=` for `≠`, `<=` for `≤`,
-`>=` for `≥`, `&&` for `∧`, `||` for `∨`, `|-` for `⊢`.
+`->` for `→`, `-/->` for `⇸`, `==>` for `⟹`, `<==>` for `⟺`, `!=` for `≠`,
+`&&` for `∧`, `||` for `∨`, `|-` for `⊢`, `|>` for `▷`.
 
 | Symbol | Alias | Meaning |
 |--------|-------|---------|
 | `×` | `*` (or `product`) | product |
-| `→` | `arrow` | operation/function arrow |
+| `→` | `arrow` | operation/function/kind arrow |
 | `⇸` | `-/->` | partial operation arrow |
-| `ℕ` | `Nat` | natural numbers |
-| `ℤ` | `Int` | integers |
-| `ℝ` | `Real` | reals |
 | `𝔹` | `Bool` | booleans |
 | `Prop` | `Prop` | proposition type (rule predicates) |
+| `Sort` | `Sort` | the kind of sorts |
 | `¬` | `not` | negation |
 | `∧` | `/\` (or `and`) | conjunction |
 | `∨` | `\/` (or `or`) | disjunction |
 | `⟹` | `implies` | implication |
 | `⟺` | `iff` | biconditional |
 | `≠` | `neq` | not equal |
-| `≤` | `leq` | less or equal |
-| `≥` | `geq` | greater or equal |
 | `⊤` | `truth` | logical top |
 | `⊥` | `falsehood` | logical bottom |
 | `▷` | `\|>` | pipe-last application sugar |
-| `⊢` | `\|-` | sequent turnstile (assumptions ⊢ goal) |
-| `∀` | `forall` | universal quantifier (`∀ (n : ℕ) st …`) |
+| `⊢` | `\|-` | sequent turnstile (context ⊢ goal) |
+| `∀` | `forall` | universal quantifier (`∀ (n : Nat) st …`) |
 | `∃` | `exists` | existential quantifier |
-| `λ` | `fun` | abstraction (`λ (n : ℕ) => …`) |
+| `λ` | `fun` | abstraction (`λ (n : Nat) => …`) |
 | `=>` | `=>` | lambda body separator |
-| `:=` | `:=` | assumption naming / `with` binding (`h := A`, `T := Elem`) |
+| `:=` | `:=` | assumption naming / substitutions (`h := A`, `T := Elem`) |
 | `::` | `::` | namespace separator (`list::cons`) |
 
 `st` (a keyword) separates a quantifier's binders from its body. `::` separates
 the segments of a qualified name or module path.
 
+There are **no built-in numeric sorts**: `Nat`, `Int`, `Real` are ordinary
+identifiers, not aliases, and there are no number literals or built-in
+arithmetic. Numbers, if needed, are user-declared (a `Nat` sort with `z`/`s`),
+or live in a library module. The only built-in types are `𝔹` and `Prop`
+(and `Sort`, the kind of sorts).
+
 The box-drawing rule bar `─` (one or more, e.g. `─────`) separates a rule's
 premises from its conclusion. It is not a symbol alias — write it as `─`
 (U+2500); `fmt` preserves it verbatim.
 
-Set-theory notation (`∈`, `⊆`, `∪`, `∩`, `∅`, `℘`, set and mapping literals) is
-not part of the grammar. Specifications are equational: behavior is captured by
-axioms over constructor terms, with `var` declarations read as implicitly
-universally quantified. The `∀`/`∃` quantifiers and `λ` abstraction exist only
-inside propositions — rule premises, conclusions, and predicate arguments — not
-in ordinary equational terms.
-
-`empty` and `top` are ordinary identifiers so they can name operations.
+The `∀`/`∃` quantifiers and `λ` abstraction exist only inside propositions —
+rule premises, conclusions, and predicate arguments — not in ordinary
+equational terms.
 
 ## Grammar
 
 ```
 file        ::= decl*
-decl        ::= sort_decl | op_decl | var_decl | axiom_decl | lemma_decl
-              | rule_decl | include_decl | open_decl | alias_decl | let_decl
+decl        ::= sort_decl | param_decl | op_decl | eq_decl | prop_decl
+              | lemma_decl | rule_decl | include_decl | open_decl
+              | alias_decl | let_decl
 
-sort_decl   ::= 'sort' identifier (',' identifier)* ';'
-              | 'sort' identifier '[' identifier (',' identifier)* ']' ';'  # parametric
-              | 'sort' identifier '=' '{' identifier (',' identifier)* '}' ';'
+sort_decl   ::= 'sort' identifier ':' kind ';'      # sort Nat : Sort;  List : Sort → Sort;
+param_decl  ::= 'param' identifier ':' kind ';'     # param T : Sort;
+kind        ::= 'Sort' ('→' 'Sort')*                # Sort, Sort → Sort, Sort → Sort → Sort
 
 op_decl     ::= 'op' identifier ':' domain op_arrow type_expr ';'
 op_arrow    ::= '→' | '⇸'         # ⇸ declares a partial operation
-domain      ::=                    # empty domain for nullary operations
+domain      ::=                    # empty domain for nullary operations (constants)
               | type_product
               | type_product ('|' type_product)+   # one sum-typed argument
 
-var_decl    ::= 'var' identifier (',' identifier)* ':' type_expr ';'
-axiom_decl  ::= 'axiom' rule_name binders? prop ';'
-              | 'axiom' rule_name '=' prop ';'
-rule_name   ::= identifier "'"*
-lemma_decl  ::= 'lemma' rule_name binders? prop ';' proof_block?
-              | 'lemma' rule_name '=' prop ';' proof_block?
+eq_decl     ::= 'eq'   decl_name binders? equation ';'   # a trusted equation
+prop_decl   ::= 'prop' decl_name binders? equation ';'   # an instantiation obligation
+lemma_decl  ::= 'lemma' decl_name binders? equation ';' proof_block?
+decl_name   ::= identifier "'"*
+equation    ::= expr                  # an equation lhs = rhs (not a sequent, no forall)
 
 binders     ::= '(' binder_entry (',' binder_entry)* ')'   # ( a : A, b b' : B )
 binder_entry::= identifier+ ':' type_expr                  # co-typed names share a type
 
-prop        ::= expr | sequent              # a proposition
-sequent     ::= assumptions? '⊢' expr
-assumptions ::= assumption (',' assumption)*
-assumption  ::= expr | identifier ':=' expr  # an optionally-named hypothesis
+rule_decl   ::= 'rule' identifier binders rule_premise* RULE_BAR prop 'end' ';'
+rule_premise::= 'case' identifier prop 'end' ';'           # a named premise
 
-rule_decl   ::= 'rule' identifier binders
-                prop*                        # premises
-                RULE_BAR                     # one or more '─'
-                prop                         # conclusion
-                'end'
+prop        ::= expr | sequent
+sequent     ::= context? '⊢' expr
+context     ::= context_entry (',' context_entry)*
+context_entry ::= identifier ':' type_expr                 # a typed context variable
+              | identifier ':=' expr                       # a named assumption
+              | expr                                       # an unnamed assumption
 
-include_decl ::= 'include' module_path ('with' '(' with_binding (',' with_binding)* ')')? ';'
+include_decl ::= 'include' module_path with_clause? obligation_block? ';'
+with_clause  ::= 'with' '(' with_binding (',' with_binding)* ')'
+with_binding ::= identifier ':=' type_expr     # param := sort, or op := op-name
+obligation_block ::= 'props' case_block* terminator   # discharge each prop; a subproof
 open_decl    ::= 'open' module_path '(' identifier (',' identifier)* ')' ';'
 alias_decl   ::= 'alias' identifier '=' module_path ';'
 module_path  ::= identifier ('::' identifier)*
-with_binding ::= identifier ':=' type_expr
 
-proof_block ::= 'proof' proof_step* 'qed' ';'
-proof_step  ::= expr ';'
-              | '=' expr 'by' rule_name ';'
-              | apply_step
-apply_step  ::= 'apply' rule_name '(' args? ')' ';' case_block+
-case_block  ::= 'case' '[' case_sequent ']' proof_step* 'qed' ';'
-case_sequent::= (identifier ':=' expr (',' …)*)? '⊢' expr   # the branch's subgoal
+proof_block ::= 'proof' proof_step* terminator ';'
+proof_step  ::= 'goal' prop 'by' simple_tactic 'therefore' (prop | 'done') ';'
+              | 'goal' prop 'by' apply case_block* 'therefore' (prop | 'done') terminator ';'
+simple_tactic ::= 'rewrite' ('>' | '<') theorem 'with' '(' expr ':=' expr ')'
+              | 'wip'                          # leave the goal work-in-progress (viral)
+apply       ::= 'apply' identifier '(' args? ')'   # cases follow; terminator after `therefore`
+terminator  ::= 'qed' | 'wip'                  # `wip` closes work-in-progress subproofs
+theorem     ::= decl_name ('(' args? ')')?     # an eq/lemma instance or a local assumption
+case_block  ::= 'case' identifier proof_step* terminator ';'
 
 let_decl    ::= 'let' identifier '=' expr ';'
 ```
 
 `binders` is the one binder-list form used everywhere (quantifiers, `λ`, rule
-parameters, axiom/lemma parameters): a single parenthesised, comma-separated
-list of entries, where an entry may give several space-separated names one
-shared type — `(a : A, b b' : B, c : C)`.
+parameters, eq/prop/lemma parameters): a parenthesised, comma-separated list of
+entries, where an entry may give several space-separated names one shared
+type — `(a : A, b b' : B, c : C)`.
 
 A top-level `|` in an op domain folds the whole domain into a single
 sum-typed argument, grouping as in codomains (`×` binds tighter than `|`):
 `op assert : Stack × Elem | Error ⇸ Stack × Elem;` takes one argument of
 type `(Stack × Elem) | Error`. An arrow inside a domain branch needs parens.
+
+## Sorts, Kinds, And Parameters
+
+A **sort** is declared with an explicit kind. `Sort` is the kind of ordinary
+sorts; `Sort → Sort` is the kind of a unary sort constructor, and so on:
+
+```
+sort Nat  : Sort;
+sort List : Sort → Sort;
+sort Pair : Sort → Sort → Sort;
+```
+
+A sort constructor is applied with `[...]`: `List[Nat]`, `Pair[A, B]`,
+`list::List[Elem]`. A use must supply the right number of type arguments.
+
+A **parameter** is an abstract sort or sort constructor that a module exports
+for instantiation:
+
+```
+param T : Sort;
+param M : Sort → Sort;
+```
+
+`param` names are valid on the left of `include … with (…)` substitutions
+(`T := Nat`). Within the module they behave like opaque sorts.
 
 ## Type Expressions
 
@@ -148,110 +175,91 @@ type_expr    ::= type_sum
 type_sum     ::= type_arrow ('|' type_arrow)*       # algebraic sum/union type
 type_arrow   ::= type_product (('→' | '⇸') type_arrow)?
 type_product ::= type_primary ('×' type_primary)*
-type_primary ::= type_name | 'ℕ' | 'ℤ' | 'ℝ' | '𝔹' | 'Prop'
+type_primary ::= type_name | '𝔹' | 'Prop' | 'Sort'
                | 'Seq' '[' type_expr ']'
                | '(' type_expr ')'
                | '()'
 type_name    ::= module_path ('[' type_expr (',' type_expr)* ']')?   # List[T], list::List[Elem]
 ```
 
-`Prop` is the type of propositions. It is built in (not a sort) and exists only
-for rule parameters such as `P : ℕ → Prop`; it does not participate in
-algebraic specifications.
+`Prop` is the type of propositions, built in (not a sort), used for rule
+predicate parameters such as `P : Nat → Prop`. `𝔹` is the boolean type used by
+`=`, the connectives, and `if`/`then`/`else`. `Sort` is the kind written in
+`sort`/`param` declarations and in rule parameters such as `(T : Sort, x : T)`.
 
-A **parametric sort** `sort List[T];` introduces a type constructor of arity 1.
-Its parameters are module-wide type variables, in scope for every signature
-(`op cons : T → List[T] → List[T];`). A use must supply the right number of
-arguments: `List[Elem]`, `list::List[Elem]`. A name may be qualified with a
-module path (`list::List`) once the module is included.
+## Equations: `eq`, `prop`, And `lemma`
 
-## Terms And Axioms
-
-`check` type-checks declarations and axioms (see Type Checking below); axioms
-are not proved or model-checked. `var` declarations are read as implicitly
-universally quantified over all axioms. A multi-name declaration
-(`var e, f : Elem;`) declares every name at the same sort and is kept grouped
-by `fmt`.
-
-Every axiom carries a required name — an identifier with trailing primes
-allowed (`axiom empty_size q.empty ⟺ q.size = 0;`, `axiom assoc' …;`) —
-which `check` requires to be unique across the module (axiom, lemma, and rule
-names share one namespace).
-
-An axiom (and a lemma) is a quantified proposition. Three equivalent forms:
+`eq`, `prop`, and `lemma` share one shape — a name, optional binders, and an
+equation body `lhs = rhs`. The binder variables are the equation's schematic
+parameters. There are no top-level variables; every variable used in a body
+must be introduced by the binders.
 
 ```
-axiom f foo = foo;                        # foo's type comes from `var foo : T;`
-axiom f (foo : T) foo = foo;              # explicit binder
-axiom f = forall (foo : T) st foo = foo;  # the proposition written out
+eq   add_zero_left(n : Nat) add(z, n) = n;          # a trusted equation
+prop left_identity(x : T)   mul(unit, x) = x;       # an obligation (see Modules)
+lemma add_zero_right(n : Nat) add(n, z) = n;        # provable (see Proofs)
 ```
 
-The first identifier after `axiom` is always the name. The body then starts
-either at `=` (the proposition form), at a `( name … : type )` binder list, or
-directly (free variables resolve to declared `var`s). A body that begins with a
-parenthesised expression — `axiom refl' (q, q) = (q, q');` — is a term, not a
-binder list, because no `:` follows the names.
+The three differ in trust, not shape:
+
+- **`eq`** is a trusted equation, available as a rewrite justification.
+- **`prop`** is a proof obligation: not trusted, and discharged at the
+  `include` site that instantiates the module declaring it.
+- **`lemma`** is proved locally by an optional `proof … qed;` block; a proven
+  equational lemma may be used as a rewrite justification like an `eq`.
+
+A name is an identifier with trailing primes allowed (`eq assoc' …;`), and is
+required to be unique across the module (`eq`, `prop`, `lemma`, and `rule`
+names share one namespace). An eq/prop/lemma body is an equation — **not** a
+sequent and **not** written with `forall`.
+
+Instantiating an equation substitutes its binders; e.g. `add_zero_left(z)`
+produces `add(z, z) = z`.
+
+## Terms
 
 ```
 expr      ::= identifier | qualified_name
-            | literal                            # number, true/false, ⊤/⊥
+            | 'true' | 'false' | '⊤' | '⊥'
             | expr '(' args ')'
             | expr "'"                           # prime: a primed term (e.g. x', f(a)')
-            | '(' expr ')'
-            | expr comparison expr
-            | expr bool_op expr
-            | expr '.' expr
-            | expr '▷' expr
+            | '(' expr ')' | '(' ')' | '(' expr (',' expr)+ ')'   # unit / tuple
+            | expr ('=' | '≠') expr
+            | expr ('∧' | '∨' | '⟹' | '⟺') expr
+            | '¬' expr
+            | expr '++' expr                     # sequence concatenation
+            | expr '.' expr                      # pipe-first application sugar
+            | expr '▷' expr                      # pipe-last application sugar
             | 'if' expr 'then' expr 'else' expr
             | 'let' let_lhs '=' expr 'in' expr
             | 'λ' binders '=>' expr             # abstraction: λ (a : A, b : B) => …
             | ('∀' | '∃') binders 'st' expr     # quantifier:  ∀ (a : A, b : B) st …
 
 qualified_name ::= identifier ('::' identifier)*   # list::cons
-
 let_lhs    ::= identifier
              | '(' binder ',' binder (',' binder)* ')'   # destructuring
 binder     ::= identifier | '_'
-
-comparison ::= '=' | '≠' | '<' | '≤' | '>' | '≥'
-bool_op    ::= '∧' | '∨' | '⟹' | '⟺'
 ```
+
+A **nullary op is a constant**, used bare (`z`, `nil`, `empty_error`); it may
+also be written with empty parentheses (`empty()`). Non-nullary ops are
+applied (`s(n)`, `add(z, n)`).
 
 `λ`, `∀`, and `∃` extend greedily to the right (like `if`/`let`); in an operand
 position they are parenthesized. A `λ` body that is a proposition gives the
-abstraction codomain `Prop`, so `λ (n : ℕ) => n + 0 = n` has type `ℕ → Prop`; a
-multi-binder `λ (a : A, b : B) => …` takes a product domain `A × B`, applied as
-`f(a, b)`. Connectives (`∧ ∨ ⟹ ⟺ ¬`) accept both `𝔹` and `Prop` operands.
+abstraction codomain `Prop`, so `λ (n : Nat) => add(n, z) = n` has type
+`Nat → Prop`; a multi-binder `λ (a : A, b : B) => …` takes a product domain
+`A × B`, applied as `f(a, b)`. Connectives (`∧ ∨ ⟹ ⟺ ¬`) accept both `𝔹` and
+`Prop` operands.
 
-A trailing `'` (prime) is a postfix on any term, not just on declaration names:
-`x'`, `s.pop'`, `f(a)'`. A primed term has the same type as the term it follows
-(the prime is a naming convention, e.g. "the next state"); it carries no extra
-checking. Binder names may also carry primes (`(a b' : T)`).
+A trailing `'` (prime) is a postfix on any term: `x'`, `s.pop'`, `f(a)'`. A
+primed term has the same type as the term it follows (a naming convention, e.g.
+"the next state"); it carries no extra checking. Binder names may also carry
+primes (`(a b' : T)`).
 
-`let` names an intermediate term so deeply nested axioms stay readable. Lets
-nest, so a chain of bindings conventionally breaks the line after each `in`
-with the bindings aligned:
-
-```
-axiom authorized_happy let with_user = add_user(rbac, u) in
-      let with_role = add_role(with_user, r) in
-      authorized(with_role, u, p) = true;
-```
-
-A `let` may also appear at top level (no `in`), naming a term once for every
-axiom that follows. This avoids repeating a common setup chain:
-
-```
-let with_user = add_user(empty_rbac(), u);
-let with_role = add_role(with_user, r);
-
-axiom no_roles authorized(with_role, u, p) = false;
-axiom removed let revoked = remove_user(with_role, u) in authorized(revoked, u, p) = unknown_user;
-```
-
-Top-level lets are abbreviations: the parser records them but does not check
-that axioms reference them, and variables inside the named term are still read
-as universally quantified per axiom.
+`let … in` names an intermediate term so deeply nested equations stay readable;
+chains break the line after each `in`. A top-level `let name = expr;` (no `in`)
+names a term once for the declarations that follow.
 
 ### Destructuring Let
 
@@ -259,121 +267,153 @@ A `let ... in` pattern with two or more binders takes a product-typed value
 apart, naming its components:
 
 ```
-op pop : NEStack → Stack × Elem;
+op get : Queue × Elem → Queue × Elem;
 
-axiom pop_size let (rest, top) = pop(n) in size(rest) = size(n) - 1;
+eq head_get(q : Queue, d : Elem) q.head(d) = let (_, x) = q.get(d) in x;
 ```
 
-The semantics are equational: `let (a, b) = t in body` reads as
-`t = (a, b) ⟹ body` with `a` and `b` fresh universally quantified variables.
 `_` is a binder for components the body does not use; **each `_` is a distinct
-fresh variable** (two `_` in one pattern do not equate the components), and
-`_` is not valid anywhere else — not as a name, not in expressions.
+fresh variable**, and `_` is not valid anywhere else. Destructuring requires the
+value's type to be a product with exactly as many components as the pattern has
+binders; a sum cannot be destructured.
 
-Destructuring requires the value's type to be a product with exactly as many
-components as the pattern has binders. A sum cannot be destructured — for
-`pop : Stack → Stack × Elem | Error`, `let (rest, top) = pop(s)` is a type
-error, because the `Error` branch has no components to bind. Destructuring is
-only available in `let ... in` expressions, not in top-level `let`
-declarations.
-
-## Partial Operations And Lemmas
+## Partial Operations
 
 An op declared with `⇸` (ASCII `-/->`) is **partial**: applying it carries a
-proof obligation the spec does not discharge mechanically yet. The intended
-use is narrowing a sum to one of its branches:
+proof obligation the spec does not discharge mechanically. The intended use is
+narrowing a sum to one of its branches:
 
 ```
 op pop    : Stack → Stack × Elem | Error;
 op assert : Stack × Elem | Error ⇸ Stack × Elem;
 
-axiom assert_elim (s, e).assert = (s, e);
+eq assert_elim(s : Stack, e : Elem) (s, e).assert = (s, e);
 ```
 
 For now `⇸` is purely syntactic — `check` treats a partial op exactly like a
 total one and does not validate applicability.
 
-A `lemma` records a derived fact, optionally with a proof sketch — a start
-term followed by rewrite steps that each cite an axiom (or lemma) name:
-
-```
-lemma pop_top
-  s.push(e).pop.assert.snd = e;
-proof
-  s.push(e).pop.assert.snd;
-  = (s, e).assert.snd by push_pop;
-  = (s, e).snd by assert_elim;
-  = e by snd_pair;
-qed;
-```
-
-Lemma names are required, like axiom names. A lemma's proposition **is**
-type-checked (it must be a proposition — `𝔹` or `Prop`). The proof's rewrite
-steps are still parsed and preserved but not verified: rewrite terms are not
-checked and `by` references are not resolved. Full proof verification is a
-future phase.
-
-## Propositions, Rules, And Proof Branches
+## Propositions, Rules, And Proofs
 
 A **proposition** is either a plain boolean `expr` or a **sequent** of the form
-`assumptions ⊢ goal`. An assumption is a boolean expression. In a `case` subgoal
-it is named with `h := A` (the hypothesis a proof step may cite by name); in a
-rule premise it is left **unnamed** — names are introduced only at the `case`.
-Axioms, lemmas, and rules all state propositions:
-
-```
-axiom add_zero_left ⊢ 0 + m = m;
-axiom add_succ_left ⊢ s(n) + m = s(n + m);
-```
+`context ⊢ goal`. A context entry is a typed variable (`n : Nat`), a named
+assumption (`h := A`), or an unnamed assumption (`A`).
 
 A **rule** declares a named inference rule: typed parameters, zero or more
-premise propositions (with **unnamed** assumptions), a rule bar `─────`, a
-conclusion proposition, and `end`. A `T → Prop` parameter is a predicate over
-`T`:
+**named premise cases**, a rule bar `─────`, a conclusion proposition, and
+`end;`. A `T → Prop` parameter is a predicate over `T`. Premise contexts may
+carry typed variables, but premise assumptions are left **unnamed** — names are
+introduced only in the proof's `case`:
 
 ```
-rule induction(x : ℕ, P : ℕ → Prop)
-  ⊢ P(0)
-  P(x) ⊢ P(s(x))
-  ─────────────────────
-  ⊢ ∀ (n : ℕ) st P(n)
-end
+rule reflexivity(T : Sort, x : T)
+  ─────────────────────────
+  ⊢ x = x
+end;
+
+rule induction(P : Nat → Prop)
+  case base
+    ⊢ P(z)
+  end;
+  case step
+    n : Nat, P(n) ⊢ P(s(n))
+  end;
+  ─────────────────────────
+  ⊢ ∀ (n : Nat) st P(n)
+end;
 ```
 
-Inside a proof, `apply` invokes a rule and opens one `case` per premise. Each
-predicate argument is given **explicitly** as a `λ` abstraction (nothing is
-inferred). A `case` writes its branch's **full sequent** explicitly — the named
-hypotheses and the goal — so the proof state is visible in the source. A premise
-with no hypotheses is discharged with `case [⊢ goal]`:
+A **proof** is a sequence of proof steps, each transforming an input proof
+state into an output state:
 
 ```
-lemma add_zero_right ⊢ n + 0 = n;
+goal
+  <input proof state>
+by <tactic>
+therefore
+  <output proof state | done>;
+```
+
+`goal` opens a step; `therefore` closes it. `done` means the tactic discharged
+the goal with no remaining subgoals. There is no `goal` keyword after
+`therefore`.
+
+Three tactics:
+
+- **`rewrite > theorem(args) with ( lhs := rhs )`** rewrites left-to-right
+  (`<` for right-to-left). The `theorem` is an `eq`/`lemma` instance or a local
+  assumption (e.g. `ih`); the substitution `( lhs := rhs )` names the exact
+  subterm replacement, in **parentheses**.
+- **`apply rule(args) <cases> therefore <result> qed;`** applies an inference
+  rule. Each predicate argument is given explicitly as a `λ`. The cases follow
+  the application and are matched to the rule's premises **by name**; the `apply`
+  is itself a subproof, so its `qed`/`wip` terminator comes **after** the
+  step's `therefore <result>`. A zero-premise rule has no cases —
+  `by apply reflexivity(Nat, z) therefore done qed;`.
+- **`wip`** ("work in progress") discharges the goal provisionally, to be
+  finished later. It is **viral**: see *Work-in-progress proofs* below.
+
+A subproof — a `proof` block, a `case`, an `apply`, or an include `props` block —
+is closed by a **terminator**, either `qed` or `wip`.
+
+### Work-in-progress proofs
+
+`wip` closes any subproof that uses the `wip` tactic, directly or through a
+contained subproof that does. The marker is viral: a `case` discharged by `wip`
+is closed with `wip`; that marks the enclosing `apply` work-in-progress, which
+must also be `wip`; and so on up to the `proof` block. `qed` is only allowed to
+close a subproof with no `wip` content — closing a work-in-progress subproof
+with `qed` is an error. (Verification is left to a later phase; for now the
+checker only tracks the marker.)
+
+The full induction proof of `add_zero_right`:
+
+```
+lemma add_zero_right(n : Nat)
+  add(n, z) = n;
 proof
-  apply induction(n, λ (n : ℕ) => n + 0 = n);
-
-  case [⊢ 0 + 0 = 0]
-    0 + 0;
-    = 0 by add_zero_left;
-  qed;
-
-  case [ih := n + 0 = n ⊢ s(n) + 0 = s(n)]
-    s(n) + 0;
-    = s(n + 0) by add_succ_left;
-    = s(n) by ih;
+  goal
+    ⊢ add(n, z) = n
+  by apply induction(λ (n : Nat) => add(n, z) = n)
+    case base
+      goal
+        ⊢ add(z, z) = z
+      by rewrite > add_zero_left(z) with (add(z, z) := z)
+      therefore
+        ⊢ z = z;
+      goal
+        ⊢ z = z
+      by apply reflexivity(Nat, z)
+      therefore done
+      qed;
+    qed;
+    case step
+      goal
+        n : Nat, ih := add(n, z) = n ⊢ add(s(n), z) = s(n)
+      by rewrite > add_succ_left(n, z) with (add(s(n), z) := s(add(n, z)))
+      therefore
+        n : Nat, ih := add(n, z) = n ⊢ s(add(n, z)) = s(n);
+      goal
+        n : Nat, ih := add(n, z) = n ⊢ s(add(n, z)) = s(n)
+      by rewrite > ih with (add(n, z) := n)
+      therefore
+        n : Nat, ih := add(n, z) = n ⊢ s(n) = s(n);
+      goal
+        n : Nat, ih := add(n, z) = n ⊢ s(n) = s(n)
+      by apply reflexivity(Nat, s(n))
+      therefore done
+      qed;
+    qed;
+  therefore done
   qed;
 qed;
 ```
 
-Rule names share one namespace with axiom and lemma names and must be unique.
-Applying a rule **computes** each branch's subgoal by substituting the arguments
-into the premise and β-reducing the predicate applications, and **verifies** the
-written `case` sequent against it: the rule above computes `⊢ 0 + 0 = 0` and
-`n + 0 = n ⊢ s(n) + 0 = s(n)`, which the two cases must state (the author chooses
-the hypothesis names). The checker validates that the rule exists, the argument
-count and types match the parameters, the number of cases equals the number of
-premises, and each written subgoal — every hypothesis proposition and the goal —
-matches the computed one. The proof steps within a case are not otherwise
-verified.
+Proofs are **structure-checked, not discharged**: the checker validates that the
+rule exists, the argument count and types match, and the provided `case` names
+exactly cover the rule's premise names. It does **not** verify that a tactic
+actually transforms the input goal into the output goal — rewrite steps are
+recorded but never applied.
 
 ## Modules
 
@@ -386,12 +426,12 @@ ancestor directory containing `alg-project.json`:
 
 A module path `foo::bar` resolves to `foo/bar.alg`, searched across the
 `include_path` directories and then the `vendor/` directory (both relative to
-the project root). `std` is reserved for the future vendored standard library. A
-file that uses no `include`/`open` needs no project file.
+the project root). A file that uses no `include`/`open` needs no project file.
 
 - `include foo::bar with (T := Elem);` brings the module's declarations in under
   the qualified namespace `foo::bar` (`foo::bar::cons`). `with` instantiates the
-  module's type parameters; omitting it leaves them as abstract type variables.
+  module's parameters: a `param` LHS takes a sort, an op LHS takes an op name;
+  omitting a binding leaves a parameter abstract.
 - `alias bar = foo::bar;` shortens a namespace, so `bar::cons` means
   `foo::bar::cons`.
 - `open foo::bar (nil, cons);` additionally exposes the named declarations
@@ -399,25 +439,53 @@ file that uses no `include`/`open` needs no project file.
 
 ```
 # list.alg
-sort List[T];
+param T : Sort;
+sort List : Sort → Sort;
 op nil  : → List[T];
-op cons : T → List[T] → List[T];
+op cons : T × List[T] → List[T];
 
 # use_list.alg
 include list with (T := Elem);
 alias l = list;
 open list (nil, cons);
-sort Elem;
-var e : Elem;
-var xs : list::List[Elem];
-axiom built cons(e)(xs) = l::cons(e)(xs);
+sort Elem : Sort;
+eq built(e : Elem, xs : list::List[Elem]) cons(e, xs) = l::cons(e, xs);
+```
+
+### Obligations
+
+When an included module declares `prop`s, each becomes an **obligation** the
+include must discharge in a `props … <terminator>` block, with one matching
+`case <prop-name>` per `prop`:
+
+```
+# monoid.alg
+param T : Sort;
+op unit : → T;
+op mul  : T × T → T;
+prop left_identity(x : T)  mul(unit, x) = x;
+prop associativity(x y z : T)  mul(mul(x, y), z) = mul(x, mul(y, z));
+
+# nat_monoid.alg
+include nat;
+open nat (z, s, add);
+include monoid with (T := nat::Nat, unit := z, mul := add) props
+  case left_identity
+    goal
+      ⊢ add(z, x) = x
+    by rewrite > add_zero_left(x) with (add(z, x) := x)
+    therefore done;
+  qed;
+  case associativity
+    # the case shape is required; the proof body may be elided
+  qed;
+qed;
 ```
 
 `check` resolves includes (with `with`-substitution applied), validates each
-included module on its own, and type-checks qualified and opened references
-against the imported signatures. Includes are resolved transitively with
-cycle detection. `fmt` and `print` operate on a single file and do not load
-included modules.
+included module on its own, type-checks qualified and opened references, and
+requires one obligation `case` per included `prop`. Includes are resolved
+transitively with cycle detection. `fmt` and `print` operate on a single file.
 
 ## Application Sugar
 
@@ -434,103 +502,51 @@ which position it lands:
 Both are left-associative, so chains thread the running value step by step:
 
 ```
-axiom push_pop s.push(e).pop = (s, e);             # pop(push(s, e))
-axiom push_pop' s |> push(e) |> pop = (e, s);      # with data-last signatures
-let store = empty_rbac().add_user(u).add_role(r);  # builder-style setup
+eq push_pop(s : Stack, e : Elem) s.push(e).pop = (s, e);   # pop(push(s, e))
 ```
 
-`.` binds tightly (above `*`, below calls); `▷` binds loosely (above the
-comparisons, below `+`), so `a + 1 ▷ f` reads `f(a + 1)` and
-`s ▷ f = e` reads `(s ▷ f) = e`.
-
-### Data-First Style (`.`)
-
-Put the structure first in every domain, and chain with `.`. This mirrors
-object-oriented targets, where the structure is the receiver and each `op`
-becomes a method:
-
-```
-op push : Stack × Elem → Stack;          # stack.push(elem) in the target
-op pop  : Stack → Stack × Elem | Error;
-
-axiom push_pop s.push(e).pop = (s, e);   # pop(push(s, e))
-axiom empty_pop empty().pop = empty_error;
-```
-
-Prefer this style when the spec targets object-oriented code (Python classes,
-Java, methods on a struct): `s.push(e).pop` reads as the method chain the
-implementation will actually have.
-
-### Data-Last Style (`▷`)
-
-Put the structure last in every domain, and chain with `▷`. This mirrors
-functional targets, where structure-last signatures curry into pipelines
-(`push : elem -> stack -> stack` in OCaml, so `push e` partially applies and
-`s |> push e` pipes):
-
-```
-op push : Elem × Stack → Stack;          # push elem stack in the target
-op pop  : Stack → Elem × Stack | Error;
-
-axiom push_pop s ▷ push(e) ▷ pop = (e, s);  # pop(push(e, s))
-axiom empty_pop empty() ▷ pop = empty_error;
-```
-
-Prefer this style when the spec targets functional code (OCaml, Haskell, F#,
-Elm), where data-last is the standard library convention.
+`.` binds tightly (above `++`, below calls); `▷` binds loosely (above `++`,
+below the comparisons). The reading is defined only when the right operand is a
+call or a bare name; anything else is rejected by the type checker.
 
 Match the spec's style to its implementation target and keep one style per
-spec: the argument order of every `op`, the pair order of returned products,
-and the choice of `.` versus `▷` should all agree.
-
-Caveats:
-
-- The reading is defined when the right operand is a call or a bare name.
-  Anything else (e.g. `x ▷ a + b`, which parses as `x ▷ (a + b)`) is rejected
-  by the type checker.
-- Numbers are integers, so `1.5` parses as `.` applied to `1` and `5`, not as
-  a decimal literal (the type checker rejects it: `5` is not callable).
+spec: data-first (`.`) for object-oriented targets where the structure is the
+receiver, data-last (`▷`) for functional targets where structure-last
+signatures curry into pipelines.
 
 ## Type Checking
 
 `check` parses and then type-checks. The rules:
 
-- Every identifier in an axiom must resolve: a local let binding, a declared
-  `var`, an enum value, a top-level `let`, or an op. A type name used in *term*
-  position (e.g. `ℕ`, `Prop`, or a sort) is a type error: "`… is a sort, not a
-  term`".
+- Every identifier in a body must resolve: a binder, a local `let`, a top-level
+  `let`, or an op (a nullary op resolves to a constant of its codomain). A
+  built-in type used in *term* position (`𝔹`, `Prop`, `Sort`) is a type error
+  (`… is a sort, not a term`).
+- A `sort`/`param` kind must be `Sort` or `Sort → … → Sort`. A sort use must
+  supply as many type arguments as its kind's arity (`List[Elem]`).
 - Ops may be **overloaded**: the same name with different domains is resolved
   by argument types. Unresolvable or ambiguous calls are errors.
-- Number literals are `ℕ`. Numeric sorts are **strict**: `ℕ`, `ℤ`, and `ℝ`
-  are distinct types and do not widen into one another. Arithmetic over mixed
-  numeric operands synthesizes the widest operand type; unary `-` and `-` over
-  `ℕ` operands yield `ℤ` (negation and subtraction leave the naturals).
 - Sums **inject**: a term of type `T` is accepted where `T | Error` is
   expected. Sums do **not** implicitly narrow: a term of type `T | Error` is
-  rejected where `T` is expected. To assert the happy path, the spec declares
-  an explicit cast op — by convention `op cast : (T | Error) → T;` — and
-  wraps the fallible term, e.g. `assign_role(cast(with_perm), u, r)`. This is
-  what lets setup chains compose error-returning ops while keeping every
-  narrowing visible in the spec. A sum-typed value can never be destructured.
-- Comparisons yield `𝔹`; `< ≤ > ≥` and arithmetic require numerics; `++`
-  requires matching `Seq` operands; equations `=`/`≠` require compatible operand
-  types (either direction). Connectives (`∧ ∨ ⟹ ⟺ ¬`) accept `𝔹` or `Prop`
-  operands and yield `Prop` when either operand is a `Prop`, else `𝔹`.
-- A **parametric sort** `sort List[T];` has an arity; uses must supply that many
-  type arguments (`List[Elem]`), and its parameters are module-wide type
-  variables. A **qualified** name `mod::name` (and an `alias`) resolves against
-  an included module's namespaced declarations.
-- An axiom/lemma proposition must type to `𝔹` or `Prop`; in a sequent, every
-  assumption and the goal must. Explicit `(binders)` are checked in scope; the
-  three axiom/lemma forms are equivalent.
-- Axiom, lemma, and rule names share one namespace and must be unique.
-- A rule's parameters, premises, and conclusion are type-checked, and a premise
-  assumption may not be named. Applying a rule checks the argument count and
-  types, the case count against the number of premises, and each written `case`
-  sequent against the subgoal computed from the premise (every hypothesis
-  proposition and the goal must match; hypothesis names are the author's
-  choice). Rewrite steps and `by` references inside proofs are parsed only, not
-  verified.
+  rejected where `T` is expected. To assert the happy path, declare an explicit
+  cast op — by convention `op cast : (T | Error) → T;` — and wrap the fallible
+  term. A sum-typed value can never be destructured.
+- Equations `=`/`≠` require compatible operand types (either direction) and
+  yield `𝔹`; `++` requires matching `Seq` operands. Connectives (`∧ ∨ ⟹ ⟺ ¬`)
+  accept `𝔹` or `Prop` operands and yield `Prop` when either operand is a
+  `Prop`, else `𝔹`.
+- An eq/prop/lemma body must type to a proposition (`𝔹` or `Prop`); in a
+  sequent, every assumption and the goal must. Explicit `(binders)` are checked
+  in scope.
+- `eq`, `prop`, `lemma`, and `rule` names share one namespace and must be
+  unique. A rule's parameters, premises, and conclusion are type-checked, and a
+  premise assumption may not be named.
+- Proofs are structure-checked: `apply` checks the rule exists, the argument
+  count and types match, and the case names cover the premise names; rewrite
+  steps are recorded but not discharged. A subproof that uses the `wip` tactic
+  (directly or virally) must be closed with `wip`, not `qed`. An `include` of a
+  module with `prop`s discharges them in a `props … <terminator>` block with one
+  `case` per `prop`.
 
 Errors are reported as `<file>: type error at line <N>, <message>` with the
 declaration's line. `check --syntax-only` skips type checking.
@@ -555,19 +571,19 @@ algae.py print file.alg [file2.alg ...]
 ## Example
 
 ```
-sort Stack, Elem;
-sort Error = {empty_error};
+sort Stack : Sort;
+sort Elem : Sort;
+sort Error : Sort;
+
+op empty_error : → Error;
 
 op empty : → Stack;
 op push  : Stack × Elem → Stack;
 op pop   : Stack → Stack × Elem | Error;
 op top   : Stack → Elem | Error;
 
-var s : Stack;
-var e : Elem;
-
-axiom push_pop s.push(e).pop = (s, e);
-axiom push_top s.push(e).top = e;
-axiom empty_pop empty().pop = empty_error;
-axiom empty_top empty().top = empty_error;
+eq push_pop(s : Stack, e : Elem) s.push(e).pop = (s, e);
+eq push_top(s : Stack, e : Elem) s.push(e).top = e;
+eq empty_pop empty().pop = empty_error;
+eq empty_top empty().top = empty_error;
 ```

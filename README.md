@@ -2,26 +2,26 @@
 
 A Claude Code plugin and Codex CLI skill for writing lightweight algebraic specifications using equational notation.
 
-`.alg` files describe sorts, operation signatures, variables, axioms, lemmas, inference rules, and modules. `check` parses **and type-checks** them (sorts, operations, variables, axioms, lemma/rule propositions, and rule application). It does not perform model checking or equational/proof verification — proofs are parsed and their structure checked, but rewrite steps are not discharged.
+`.alg` files describe sorts, module parameters, operation signatures, equations, proof obligations, lemmas, inference rules, and modules. `check` parses **and type-checks** them (kinds, operations, equations, lemma/prop/rule propositions, rule application, and module obligations). It does not perform model checking or equational/proof verification — proofs are parsed and their structure checked, but rewrite steps are not discharged.
 
 ## Quick Example
 
 ```
-sort Stack, Elem;
-sort Error = {empty_error};
+sort Stack : Sort;
+sort Elem : Sort;
+sort Error : Sort;
 
-op empty : -> Stack;
-op push : Stack × Elem -> Stack;
-op pop : Stack -> Stack | Error;
-op top : Stack -> Elem | Error;
+op empty_error : → Error;
 
-var s : Stack;
-var e : Elem;
+op empty : → Stack;
+op push : Stack × Elem → Stack;
+op pop : Stack → Stack × Elem | Error;
+op top : Stack → Elem | Error;
 
-axiom push_top top(push(s, e)) = e;
-axiom push_pop pop(push(s, e)) = s;
-axiom empty_top top(empty()) = empty_error;
-axiom empty_pop pop(empty()) = empty_error;
+eq push_top(s : Stack, e : Elem) top(push(s, e)) = e;
+eq push_pop(s : Stack, e : Elem) pop(push(s, e)) = (s, e);
+eq empty_top empty().top = empty_error;
+eq empty_pop empty().pop = empty_error;
 ```
 
 ## Install
@@ -47,23 +47,25 @@ claude plugin add /path/to/algae
 | `/alg impl <file.alg>` | Generate implementation code from a spec |
 | `/alg verify <file.alg>` | Check code conformance against a spec |
 | `/alg extract <source-files...>` | Reverse-engineer a spec from existing code |
-| `python algae.py check <file.alg>` | Check `.alg` syntax |
+| `python algae.py check <file.alg>` | Check `.alg` syntax and types |
 | `python algae.py fmt <file.alg>` | Respell symbol aliases (Unicode ⇄ ASCII), preserving layout |
 | `python algae.py print <file.alg>` | Print the parsed AST as JSON |
 
 ## Language Overview
 
-- **Declarations**: `sort`, `op`, `var`, `axiom`, `lemma`, `rule`, `include`, `open`, `alias`, `let`
-- **Operation signatures**: `op push : Stack × Elem -> Stack;` (nullary `→ T`, sum-typed `… | Error`, partial `⇸`)
-- **Axioms/lemmas as quantified propositions**: `axiom f a = a;` (free vars from `var`), `axiom f (a : T) a = a;` (explicit binders), or `axiom f = forall (a : T) st a = a;` — all equivalent
-- **Sum/error result types**: `Stack | Error`
-- **Explicit narrowing**: `T | Error` never narrows to `T` implicitly; declare `op cast : (T | Error) -> T;` and wrap happy-path uses with `cast(...)` (convention)
-- **Partial operations**: `op assert : T | Error -/-> T;` (`-/->` is ASCII for `⇸`) marks an op whose application carries a proof obligation; purely syntactic for now
-- **Lemmas with proof sketches**: `lemma name expr; proof ... qed;` — parsed and formatted, not yet verified
-- **Inference rules and proofs**: `rule`, `apply`/`case`, propositions (`⊢`), and quantifiers (`∀ (n : ℕ) st …`)
-- **Parametric sorts**: `sort List[T];`, used as `List[Elem]`
-- **Modules**: `include foo::bar with (T := Elem);`, `open`, and `alias`, resolved through an `alg-project.json` project root
-- **ASCII aliases** available for Unicode symbols, such as `*`, `arrow`, `/\`, `\/`, `Nat`, `Bool`, `neq`, and `implies`
+- **Declarations**: `sort`, `param`, `op`, `eq`, `prop`, `lemma`, `rule`, `include`, `open`, `alias`, `let`
+- **Typed sorts (kinds)**: `sort Nat : Sort;`, sort constructors `sort List : Sort → Sort;`, used as `List[Elem]`
+- **Module parameters**: `param T : Sort;` — abstract sorts/constructors bound by `include … with (…)`
+- **Operation signatures**: `op push : Stack × Elem → Stack;` (nullary `→ T`, sum-typed `… | Error`, partial `⇸`). Nullary ops are constants, used bare (`z`, `empty_error`)
+- **Equations**: `eq f(a : T) g(a) = a;` — a trusted equation; binder variables are its schematic parameters. There are no top-level `var`s and no built-in numeric sorts; sorts and their elements are user-declared
+- **Proof obligations**: `prop name(x : T) lhs = rhs;` — required of any instantiation; discharged at the `include` site
+- **Lemmas with proofs**: `lemma name(x : T) lhs = rhs; proof … qed;` — provable equations, parsed/structure-checked, not discharged
+- **Sum/error result types**: `Stack × Elem | Error`
+- **Explicit narrowing**: `T | Error` never narrows to `T` implicitly; declare `op cast : (T | Error) → T;` and wrap happy-path uses with `cast(...)` (convention)
+- **Inference rules**: `rule` with named premise `case … end;` blocks; sequent contexts (`⊢`) may carry typed variables and assumptions
+- **Structured proofs**: `goal <state> by <tactic> therefore <state | done>;`, with the `rewrite >`/`rewrite <`, `apply`, and `wip` tactics. Subproofs close with `qed`, or `wip` ("work in progress") when they use (virally) the `wip` tactic
+- **Modules**: `include foo::bar with (T := Elem);`, `open`, and `alias`, resolved through an `alg-project.json` project root; included `prop`s become obligations discharged in an `include … props <case …>* qed;` block
+- **ASCII aliases** available for Unicode symbols, such as `*`, `arrow`, `/\`, `\/`, `Bool`, `neq`, and `implies`
 
 See [skills/alg/references/syntax.md](skills/alg/references/syntax.md) for the full language reference.
 

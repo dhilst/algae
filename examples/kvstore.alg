@@ -1,5 +1,10 @@
-sort Store, Key, Value;
-sort Error = {missing_key};
+# A key-value store with a fallible get and a boolean membership test.
+sort Store : Sort;
+sort Key : Sort;
+sort Value : Sort;
+sort Error : Sort;
+
+op missing_key : → Error;
 
 op empty_store : → Store;
 op put : Store × Key × Value → Store;
@@ -7,10 +12,6 @@ op get : Store × Key → Value | Error;
 op delete : Store × Key → Store;
 op has : Store × Key → 𝔹;
 
-var s : Store;
-var k : Key;
-var v : Value;
-
-axiom get_put get(put(s, k, v), k) = v;
-axiom has_put has(put(s, k, v), k) = true;
-axiom get_empty get(empty_store(), k) = missing_key;
+eq get_put(s : Store, k : Key, v : Value) get(put(s, k, v), k) = v;
+eq has_put(s : Store, k : Key, v : Value) has(put(s, k, v), k) = true;
+eq get_empty(k : Key) get(empty_store(), k) = missing_key;

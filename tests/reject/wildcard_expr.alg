@@ -1,4 +1,3 @@
-sort S;
-var x : S;
-
-axiom _ = x;
+sort S : Sort;
+op x : → S;
+eq bad _ = x;

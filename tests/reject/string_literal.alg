@@ -1,2 +1,3 @@
-var s : Str;
-axiom a s = "hello";
+sort S : Sort;
+op s : → S;
+eq a s = "hello";

@@ -5,10 +5,10 @@ include lib::map with (K := Key, V := Val);
 alias m = lib::map;
 open lib::map (empty, put);
 
-sort Key, Val;
+sort Key : Sort;
+sort Val : Sort;
 
-var key : Key;
-var val, dflt : Val;
-
-axiom lookup_after_put m::get(put(empty(), key, val), key, dflt) = val;
-axiom lookup_missing lib::map::get(empty(), key, dflt) = dflt;
+eq lookup_after_put(key : Key, val dflt : Val)
+  m::get(put(empty(), key, val), key, dflt) = val;
+eq lookup_missing(key : Key, dflt : Val)
+  lib::map::get(empty(), key, dflt) = dflt;

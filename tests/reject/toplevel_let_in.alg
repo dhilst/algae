@@ -1,5 +1,4 @@
-sort S;
+sort S : Sort;
 op f : S → S;
-var x : S;
-
+op x : → S;
 let y = f(x) in f(y);
