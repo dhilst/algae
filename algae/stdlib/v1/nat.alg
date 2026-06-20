@@ -49,8 +49,8 @@ lemma add_zero_right
   ⊢ ∀ (n : Nat) st n + 0 = n;
 proof
   by induction(
-    λ (k : Nat) st k + 0 = k
-  ) {
+    _ + 0 = _
+  ) cases
     case
       ⊢ 0 + 0 = 0;
     proof
@@ -67,7 +67,7 @@ proof
         k + 0,
         k,
         ih,
-        λ (x : Nat) st s(k) + 0 = s(x)
+        s(k) + 0 = s(_)
       )
       case
         k : Nat;
@@ -77,5 +77,5 @@ proof
         by add_succ_left(k, 0);
       qed;
     qed;
-  };
+  qed;
 qed;

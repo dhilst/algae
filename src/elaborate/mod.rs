@@ -271,6 +271,13 @@ impl Elab {
             )),
             ast::ExprNode::Not(a) => Ok(Expr::Not(Box::new(self.lower_expr(scope, a)?))),
             ast::ExprNode::False => Ok(Expr::False),
+            ast::ExprNode::Hole => {
+                self.err(
+                    "`_` is only allowed as a predicate argument to a tactic",
+                    e.span,
+                );
+                Err(())
+            }
         }
     }
 

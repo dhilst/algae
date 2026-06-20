@@ -22,20 +22,46 @@ end;
     name: (identifier)
     params: (formal_params
       (formal_param
-        (term_binding names: (ident_list (identifier)) type: (type_expr (identifier))))
+        (term_binding
+          names: (ident_list
+            (identifier))
+          type: (type_expr
+            (identifier))))
       (formal_param
         (term_binding
-          names: (ident_list (identifier) (identifier) (identifier))
-          type: (type_expr (identifier)))))
+          names: (ident_list
+            (identifier)
+            (identifier)
+            (identifier))
+          type: (type_expr
+            (identifier)))))
     (rule_body
       premises: (premise_list
-        (sequent (turnstile)
-          goal: (prop (equality_prop left: (term (identifier)) right: (term (identifier)))))
-        (sequent (turnstile)
-          goal: (prop (equality_prop left: (term (identifier)) right: (term (identifier))))))
+        (sequent
+          (turnstile)
+          goal: (prop
+            (equality_prop
+              left: (term
+                (identifier))
+              right: (term
+                (identifier)))))
+        (sequent
+          (turnstile)
+          goal: (prop
+            (equality_prop
+              left: (term
+                (identifier))
+              right: (term
+                (identifier))))))
       (separator)
-      conclusion: (sequent (turnstile)
-        goal: (prop (equality_prop left: (term (identifier)) right: (term (identifier))))))))
+      conclusion: (sequent
+        (turnstile)
+        goal: (prop
+          (equality_prop
+            left: (term
+              (identifier))
+            right: (term
+              (identifier))))))))
 
 ================================================================================
 Lemma with proof and cases
@@ -56,17 +82,31 @@ qed;
     name: (identifier)
     params: (formal_params
       (formal_param
-        (term_binding names: (ident_list (identifier)) type: (type_expr (identifier)))))
-    statement: (sequent (turnstile)
-      goal: (prop (equality_prop
-        left: (term (identifier) (infix_op) (numeric_symbol))
-        right: (term (identifier)))))
+        (term_binding
+          names: (ident_list
+            (identifier))
+          type: (type_expr
+            (identifier)))))
+    statement: (sequent
+      (turnstile)
+      goal: (prop
+        (equality_prop
+          left: (term
+            (identifier)
+            (infix_op)
+            (numeric_symbol))
+          right: (term
+            (identifier)))))
     proof: (proof_block
       (by_stmt_zero
         ref: (proof_ref
           name: (identifier)
           args: (actual_args
-            (term_list (term (identifier)) (term (identifier)))))))))
+            (arg_list
+              (term
+                (identifier))
+              (term
+                (identifier)))))))))
 
 ================================================================================
 Quantified prop with logical operators
@@ -84,10 +124,18 @@ axiom demo(
     name: (identifier)
     params: (formal_params
       (formal_param
-        (term_binding names: (ident_list (identifier) (identifier)) type: (type_expr (prop_type)))))
-    statement: (sequent (turnstile)
+        (term_binding
+          names: (ident_list
+            (identifier)
+            (identifier))
+          type: (type_expr
+            (prop_type)))))
+    statement: (sequent
+      (turnstile)
       goal: (prop
-        (negation (negation_op) (identifier))
+        (negation
+          (negation_op)
+          (identifier))
         (conjunction_op)
         (identifier)
         (disjunction_op)

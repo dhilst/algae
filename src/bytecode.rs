@@ -373,6 +373,7 @@ fn w_step(w: &mut Writer, s: &Step) {
     for c in &s.children {
         w_step(w, c);
     }
+    w.u8(s.admitted as u8);
 }
 fn r_step(r: &mut Reader) -> Result<Step, String> {
     let context = r_entries(r)?;
@@ -385,6 +386,7 @@ fn r_step(r: &mut Reader) -> Result<Step, String> {
     let next_goals = (0..ng).map(|_| r_sequent(r)).collect::<Result<_, _>>()?;
     let nc = r.u32()? as usize;
     let children = (0..nc).map(|_| r_step(r)).collect::<Result<_, _>>()?;
+    let admitted = r.u8()? != 0;
     Ok(Step {
         context,
         current_goal,
@@ -393,6 +395,7 @@ fn r_step(r: &mut Reader) -> Result<Step, String> {
         args,
         next_goals,
         children,
+        admitted,
     })
 }
 
@@ -453,6 +456,7 @@ pub fn encode(
     w.u32(unit.obligations.len() as u32);
     for ob in &unit.obligations {
         w.str(&ob.label);
+        w.u8(ob.wip as u8);
         w_step(&mut w, &ob.root);
     }
     w.buf
@@ -495,8 +499,9 @@ pub fn decode(bytes: &[u8]) -> Result<AlgoFile, String> {
     let mut obligations = Vec::with_capacity(no);
     for _ in 0..no {
         let label = r.str()?;
+        let wip = r.u8()? != 0;
         let root = r_step(&mut r)?;
-        obligations.push(Obligation { label, root });
+        obligations.push(Obligation { label, root, wip });
     }
     Ok(AlgoFile {
         source_hash,

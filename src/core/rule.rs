@@ -77,4 +77,6 @@ pub struct Step {
     pub next_goals: Vec<Sequent>,
     /// Sub-proofs: `children[i]` proves `next_goals[i]`.
     pub children: Vec<Step>,
+    /// True for an admitted (`by wip`) leaf: the goal is assumed, not checked.
+    pub admitted: bool,
 }

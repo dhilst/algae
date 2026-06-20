@@ -57,7 +57,7 @@ model OptionMonad satisfies Monad(
   Option,
   return,
   bind
-) iff {
+) iff props
   law left_identity;
   proof
     by rewrite_r(
@@ -83,7 +83,7 @@ model OptionMonad satisfies Monad(
       A,
       m,
       λ (o : Option(A)) st bind(o, return) = o
-    ) {
+    ) cases
       case
         A : Sort;
         ⊢ bind(none, return) = none;
@@ -111,7 +111,7 @@ model OptionMonad satisfies Monad(
           by return_def(A, x);
         qed;
       qed;
-    };
+    qed;
   qed;
 
   law associativity;
@@ -126,7 +126,7 @@ model OptionMonad satisfies Monad(
           o,
           λ (x : A) st bind(f(x), g)
         )
-    ) {
+    ) cases
       case
         A B C : Sort;
         f : A → Option(B);
@@ -215,6 +215,6 @@ model OptionMonad satisfies Monad(
           );
         qed;
       qed;
-    };
+    qed;
   qed;
-};
+qed;

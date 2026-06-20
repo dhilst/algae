@@ -11,6 +11,8 @@ pub enum TokenKind {
     // Names and literals
     Ident(String),
     Number(String),
+    /// A standalone `_` hole (sugar for a unary lambda).
+    Hole,
 
     // Keywords
     KwImport,
@@ -22,7 +24,11 @@ pub enum TokenKind {
     KwTheorem,
     KwProof,
     KwQed,
+    KwWip,
     KwCase,
+    KwCases,
+    KwProps,
+    KwLaws,
     KwTheory,
     KwLaw,
     KwModel,
@@ -264,7 +270,11 @@ pub fn lex(src: &str) -> Result<Vec<Token>, Vec<Diagnostic>> {
                     }
                 }
                 let text: String = chars[start..i].iter().map(|x| x.1).collect();
-                let kind = keyword(&text).unwrap_or(TokenKind::Ident(text));
+                let kind = if text == "_" {
+                    TokenKind::Hole
+                } else {
+                    keyword(&text).unwrap_or(TokenKind::Ident(text))
+                };
                 push(kind, start, i - start);
             }
             _ if c.is_ascii_digit() => {
@@ -313,7 +323,11 @@ fn keyword(s: &str) -> Option<TokenKind> {
         "theorem" => TokenKind::KwTheorem,
         "proof" => TokenKind::KwProof,
         "qed" => TokenKind::KwQed,
+        "wip" => TokenKind::KwWip,
         "case" => TokenKind::KwCase,
+        "cases" => TokenKind::KwCases,
+        "props" => TokenKind::KwProps,
+        "laws" => TokenKind::KwLaws,
         "theory" => TokenKind::KwTheory,
         "law" => TokenKind::KwLaw,
         "model" => TokenKind::KwModel,

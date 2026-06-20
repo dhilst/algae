@@ -468,6 +468,13 @@ fn e_app(input: &mut In) -> ModalResult<Expr> {
 }
 
 fn e_atom(input: &mut In) -> ModalResult<Expr> {
+    if at(*input, &T::Hole) {
+        let s = expect(input, T::Hole)?;
+        return Ok(Expr {
+            node: ExprNode::Hole,
+            span: s,
+        });
+    }
     if at(*input, &T::LParen) {
         expect(input, T::LParen)?;
         let e = expr(input)?;
@@ -635,13 +642,31 @@ fn case_block(input: &mut In) -> ModalResult<CaseBlock> {
 
 fn proof_stmt(input: &mut In) -> ModalResult<ProofStmt> {
     let start = kw_by(input)?;
+    // by wip ;  — admit the goal (no proof required).
+    if at(*input, &T::KwWip) {
+        expect(input, T::KwWip)?;
+        let end = semi(input)?;
+        return Ok(ProofStmt {
+            reference: None,
+            admit: true,
+            cases: Vec::new(),
+            cases_wip: false,
+            span: start.merge(end),
+        });
+    }
     let reference = proof_ref(input)?;
     let mut cases = Vec::new();
-    if at(*input, &T::LBrace) {
-        // by_stmt_many: "{" case_block+ "}" ";"
-        expect(input, T::LBrace)?;
+    let mut cases_wip = false;
+    if at(*input, &T::KwCases) {
+        // by_stmt_many: "cases" case_block+ ("qed" | "wip") ";"
+        expect(input, T::KwCases)?;
         cases = repeat_min1(input, case_block)?;
-        expect(input, T::RBrace)?;
+        cases_wip = at(*input, &T::KwWip);
+        if cases_wip {
+            expect(input, T::KwWip)?;
+        } else {
+            expect(input, T::KwQed)?;
+        }
         semi(input)?;
     } else if at(*input, &T::KwCase) {
         // by_stmt_one: single case_block, no trailing ";"
@@ -652,8 +677,10 @@ fn proof_stmt(input: &mut In) -> ModalResult<ProofStmt> {
     }
     let span = start.merge(cur_span(*input));
     Ok(ProofStmt {
-        reference,
+        reference: Some(reference),
+        admit: false,
         cases,
+        cases_wip,
         span,
     })
 }
@@ -661,13 +688,19 @@ fn proof_stmt(input: &mut In) -> ModalResult<ProofStmt> {
 fn proof_block(input: &mut In) -> ModalResult<ProofBlock> {
     let start = expect(input, T::KwProof)?;
     let mut stmts = Vec::new();
-    while !at(*input, &T::KwQed) {
+    while !at(*input, &T::KwQed) && !at(*input, &T::KwWip) {
         stmts.push(proof_stmt(input)?);
     }
-    let end = expect(input, T::KwQed)?;
+    let wip = at(*input, &T::KwWip);
+    let end = if wip {
+        expect(input, T::KwWip)?
+    } else {
+        expect(input, T::KwQed)?
+    };
     semi(input)?;
     Ok(ProofBlock {
         stmts,
+        wip,
         span: start.merge(end),
     })
 }
@@ -818,12 +851,12 @@ fn theory_decl(input: &mut In) -> ModalResult<TheoryDecl> {
     let start = expect(input, T::KwTheory)?;
     let name = ident(input)?;
     let params = formal_params(input)?;
-    expect(input, T::LBrace)?;
+    expect(input, T::KwLaws)?;
     let mut items = Vec::new();
-    while !at(*input, &T::RBrace) {
+    while !at(*input, &T::KwQed) {
         items.push(theory_item(input)?);
     }
-    expect(input, T::RBrace)?;
+    expect(input, T::KwQed)?;
     let end = semi(input)?;
     Ok(TheoryDecl {
         name,
@@ -868,18 +901,24 @@ fn model_decl(input: &mut In) -> ModalResult<ModelDecl> {
     let theory = ident(input)?;
     let args = actual_args(input)?;
     expect(input, T::KwIff)?;
-    expect(input, T::LBrace)?;
+    expect(input, T::KwProps)?;
     let mut laws = Vec::new();
-    while !at(*input, &T::RBrace) {
+    while !at(*input, &T::KwQed) && !at(*input, &T::KwWip) {
         laws.push(model_law(input)?);
     }
-    expect(input, T::RBrace)?;
+    let wip = at(*input, &T::KwWip);
+    if wip {
+        expect(input, T::KwWip)?;
+    } else {
+        expect(input, T::KwQed)?;
+    }
     let end = semi(input)?;
     Ok(ModelDecl {
         name,
         theory,
         args,
         laws,
+        wip,
         span: start.merge(end),
     })
 }
@@ -966,14 +1005,14 @@ mod tests {
 
     #[test]
     fn parses_lemma_with_proof() {
-        let src = "lemma add_zero_right\n  |- forall (n : Nat) st n + 0 = n;\nproof\n  by induction(lambda (k : Nat) st k + 0 = k) {\n    case\n      |- 0 + 0 = 0;\n    proof\n      by add_zero_left(0);\n    qed;\n  };\nqed;";
+        let src = "lemma add_zero_right\n  |- forall (n : Nat) st n + 0 = n;\nproof\n  by induction(lambda (k : Nat) st k + 0 = k) cases\n    case\n      |- 0 + 0 = 0;\n    proof\n      by add_zero_left(0);\n    qed;\n  qed;\nqed;";
         let m = parse(src);
         assert_eq!(m.decls.len(), 1);
     }
 
     #[test]
     fn parses_theory_and_model() {
-        let src = "theory Semigroup(S : Sort, * : S * S -> S) {\n  law associativity(x y z : S)\n    |- *( *(x, y), z ) = *( x, *(y, z) );\n};";
+        let src = "theory Semigroup(S : Sort, * : S * S -> S) laws\n  law associativity(x y z : S)\n    |- *( *(x, y), z ) = *( x, *(y, z) );\nqed;";
         let m = parse(src);
         assert_eq!(m.decls.len(), 1);
     }

@@ -8,7 +8,7 @@
       "required": false,
       "types": [
         {
-          "type": "term_list",
+          "type": "arg_list",
           "named": true
         }
       ]
@@ -29,6 +29,10 @@
           {
             "type": ")",
             "named": false
+          },
+          {
+            "type": "hole",
+            "named": true
           },
           {
             "type": "identifier",
@@ -59,6 +63,25 @@
       "types": [
         {
           "type": "term_list",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "arg_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "prop",
+          "named": true
+        },
+        {
+          "type": "term",
           "named": true
         }
       ]
@@ -171,6 +194,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "by_stmt_wip",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "by_stmt_zero",
@@ -852,6 +880,10 @@
           "named": true
         },
         {
+          "type": "by_stmt_wip",
+          "named": true
+        },
+        {
           "type": "by_stmt_zero",
           "named": true
         }
@@ -1289,6 +1321,10 @@
           "named": true
         },
         {
+          "type": "hole",
+          "named": true
+        },
+        {
           "type": "identifier",
           "named": true
         },
@@ -1621,6 +1657,10 @@
     "named": false
   },
   {
+    "type": "cases",
+    "named": false
+  },
+  {
     "type": "comment",
     "named": true,
     "extra": true
@@ -1640,6 +1680,10 @@
   {
     "type": "forall",
     "named": false
+  },
+  {
+    "type": "hole",
+    "named": true
   },
   {
     "type": "identifier",
@@ -1666,6 +1710,10 @@
     "named": false
   },
   {
+    "type": "laws",
+    "named": false
+  },
+  {
     "type": "lemma",
     "named": false
   },
@@ -1688,6 +1736,10 @@
   {
     "type": "prop_type",
     "named": true
+  },
+  {
+    "type": "props",
+    "named": false
   },
   {
     "type": "qed",
@@ -1730,15 +1782,11 @@
     "named": false
   },
   {
-    "type": "{",
+    "type": "wip",
     "named": false
   },
   {
     "type": "|-",
-    "named": false
-  },
-  {
-    "type": "}",
     "named": false
   },
   {

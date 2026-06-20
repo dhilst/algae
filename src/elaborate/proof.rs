@@ -33,6 +33,8 @@ pub struct CompiledUnit {
 pub struct Obligation {
     pub label: String,
     pub root: Step,
+    /// True if this obligation is in progress (contains an admitted `by wip`).
+    pub wip: bool,
 }
 
 /// Elaborate a unit from its source. When `check_proofs` is false, only
@@ -398,10 +400,11 @@ fn elaborate_lemma_proof(
     };
     let mut ctx = params;
     ctx.extend(ctx_entries);
-    if let Some(root) = elaborate_proof(elab, &ctx, &goal, &ld.proof, ld.span, rs) {
+    if let Some((root, wip)) = elaborate_proof(elab, &ctx, &goal, &ld.proof, ld.span, rs) {
         obligations.push(Obligation {
             label: format!("lemma {}", ld.name.text),
             root,
+            wip,
         });
     }
 }
@@ -466,6 +469,7 @@ fn elaborate_model(
 
     // Match provided model laws against obligations.
     let mut proven: HashSet<Sym> = HashSet::new();
+    let mut any_wip = false;
     for ml in &md.laws {
         let law_local = elab.interner.intern(&ml.law.name.text);
         let found = obligations_by_name
@@ -477,10 +481,12 @@ fn elaborate_model(
                 if !proven.insert(law_local) {
                     elab.err(format!("law `{}` proven more than once", ml.law.name.text), ml.span);
                 }
-                if let Some(root) = elaborate_proof(elab, &ctx, &goal, &ml.proof, ml.span, rs) {
+                if let Some((root, wip)) = elaborate_proof(elab, &ctx, &goal, &ml.proof, ml.span, rs) {
+                    any_wip |= wip;
                     obligations.push(Obligation {
                         label: format!("model {} law {}", md.name.text, ml.law.name.text),
                         root,
+                        wip,
                     });
                 }
             }
@@ -491,6 +497,10 @@ fn elaborate_model(
                 );
             }
         }
+    }
+    // The model's `props` terminator must match whether any law is `wip`.
+    if md.wip != any_wip {
+        elab.err(terminator_msg(any_wip, "model"), md.span);
     }
     let unproven: Vec<String> = obligations_by_name
         .iter()
@@ -562,7 +572,9 @@ fn scope_from_ctx(ctx: &[CtxEntry]) -> Scope {
     scope
 }
 
-/// Elaborate a proof block (exactly one `by`) into a step tree.
+/// Elaborate a proof block (exactly one `by`) into a step tree, returning the
+/// step and whether it is `wip`-tainted (transitively contains a `by wip`).
+/// Validates that the block's terminator (`qed`/`wip`) matches its taint.
 fn elaborate_proof(
     elab: &mut Elab,
     ctx: &[CtxEntry],
@@ -570,13 +582,27 @@ fn elaborate_proof(
     block: &ast::ProofBlock,
     span: Span,
     rs: &RewriteSystem,
-) -> Option<Step> {
+) -> Option<(Step, bool)> {
     if block.stmts.len() != 1 {
         elab.err("a proof block must contain exactly one `by` statement", block.span);
         return None;
     }
     let stmt = &block.stmts[0];
-    elaborate_step(elab, ctx, goal, stmt, span, rs)
+    let (step, tainted) = elaborate_step(elab, ctx, goal, stmt, span, rs)?;
+    if tainted != block.wip {
+        elab.err(terminator_msg(tainted, "proof"), block.span);
+        return None;
+    }
+    Some((step, tainted))
+}
+
+/// The error for a block whose terminator does not match its taint.
+fn terminator_msg(tainted: bool, what: &str) -> String {
+    if tainted {
+        format!("this {what} admits a goal (`by wip`) but is closed with `qed`; use `wip`")
+    } else {
+        format!("`wip` terminator on a complete {what}; use `qed`")
+    }
 }
 
 fn elaborate_step(
@@ -586,17 +612,24 @@ fn elaborate_step(
     stmt: &ast::ProofStmt,
     _span: Span,
     rs: &RewriteSystem,
-) -> Option<Step> {
-    // Resolve the tactic.
-    let (tactic_name, base_rule) = resolve_tactic(elab, ctx, &stmt.reference)?;
+) -> Option<(Step, bool)> {
+    // Admit: `by wip` closes the goal without a proof (tainted).
+    if stmt.admit {
+        return Some((admit_step(elab, ctx, goal), true));
+    }
+    let reference = stmt.reference.as_ref().expect("non-admit statement has a reference");
 
-    // Build arguments aligned with the rule parameters.
-    let surface_args = stmt.reference.args.clone().unwrap_or_default();
+    // Resolve the tactic.
+    let (tactic_name, base_rule) = resolve_tactic(elab, ctx, reference)?;
+
+    // Build arguments aligned with the rule parameters, expanding `_` holes
+    // against the (instantiated) parameter type.
+    let surface_args = reference.args.clone().unwrap_or_default();
     if surface_args.len() != base_rule.params.len() {
         elab.err(
             format!(
                 "tactic `{}` expects {} argument(s), got {}",
-                stmt.reference.name.name.text,
+                reference.name.name.text,
                 base_rule.params.len(),
                 surface_args.len()
             ),
@@ -606,10 +639,16 @@ fn elaborate_step(
     }
     let mut scope = scope_from_ctx(ctx);
     let mut args = Vec::new();
+    let mut term_subst: Vec<(Sym, Expr)> = Vec::new();
     for (p, sa) in base_rule.params.iter().zip(&surface_args) {
         match p {
-            Param::Term { .. } => {
-                let e = elab.lower_expr(&mut scope, sa).ok()?;
+            Param::Term { name, ty } => {
+                let e = if expr_has_hole(sa) {
+                    lower_hole_lambda(elab, &mut scope, sa, ty, &term_subst)?
+                } else {
+                    elab.lower_expr(&mut scope, sa).ok()?
+                };
+                term_subst.push((*name, e.clone()));
                 args.push(Arg::Term(e));
             }
             Param::Proof { .. } => {
@@ -626,7 +665,7 @@ fn elaborate_step(
         elab.err(
             format!(
                 "tactic `{}` generates {n_prem} subgoal(s) but {} case(s) were given",
-                stmt.reference.name.name.text,
+                reference.name.name.text,
                 stmt.cases.len()
             ),
             stmt.span,
@@ -692,13 +731,14 @@ fn elaborate_step(
     let next_goals = match crate::core::tactic::apply(&rule, &args, goal, ctx, rs) {
         Ok(g) => g,
         Err(e) => {
-            elab.err(format!("tactic `{}`: {e}", stmt.reference.name.name.text), stmt.span);
+            elab.err(format!("tactic `{}`: {e}", reference.name.name.text), stmt.span);
             return None;
         }
     };
 
-    // Recurse into cases.
+    // Recurse into cases, tracking whether any sub-proof is `wip`-tainted.
     let mut children = Vec::new();
+    let mut child_tainted = false;
     for (ng, case) in next_goals.iter().zip(&stmt.cases) {
         // Validate the user-declared goal matches the generated subgoal.
         let mut cscope = scope_from_ctx(&ng.ctx);
@@ -708,11 +748,18 @@ fn elaborate_step(
                 return None;
             }
         }
-        let child = elaborate_proof(elab, &ng.ctx, &ng.goal, &case.proof, case.span, rs)?;
+        let (child, tainted) = elaborate_proof(elab, &ng.ctx, &ng.goal, &case.proof, case.span, rs)?;
+        child_tainted |= tainted;
         children.push(child);
     }
 
-    Some(Step {
+    // For a multi-case (`cases … qed/wip`) statement, validate its terminator.
+    if !stmt.cases.is_empty() && stmt.cases_wip != child_tainted {
+        elab.err(terminator_msg(child_tainted, "`cases` block"), stmt.span);
+        return None;
+    }
+
+    let step = Step {
         context: ctx.to_vec(),
         current_goal: goal.clone(),
         tactic_name,
@@ -720,7 +767,110 @@ fn elaborate_step(
         args,
         next_goals,
         children,
-    })
+        admitted: false,
+    };
+    Some((step, child_tainted))
+}
+
+/// An admitted (`by wip`) leaf step: the goal is assumed, not checked.
+fn admit_step(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr) -> Step {
+    let name = elab.interner.intern("wip");
+    Step {
+        context: ctx.to_vec(),
+        current_goal: goal.clone(),
+        tactic_name: name,
+        tactic: InlinedRule {
+            params: Vec::new(),
+            premises: Vec::new(),
+            conclusion: goal.clone(),
+            is_generalization: false,
+            bidirectional: false,
+        },
+        args: Vec::new(),
+        next_goals: Vec::new(),
+        children: Vec::new(),
+        admitted: true,
+    }
+}
+
+/// Whether a surface expression contains a `_` hole.
+fn expr_has_hole(e: &ast::Expr) -> bool {
+    match &e.node {
+        ast::ExprNode::Hole => true,
+        ast::ExprNode::Var(_) | ast::ExprNode::Num(_) | ast::ExprNode::Op(_) | ast::ExprNode::False => false,
+        ast::ExprNode::App(h, args) => expr_has_hole(h) || args.iter().any(expr_has_hole),
+        ast::ExprNode::Infix(a, _, b)
+        | ast::ExprNode::Eq(a, b)
+        | ast::ExprNode::And(a, b)
+        | ast::ExprNode::Or(a, b)
+        | ast::ExprNode::Implies(a, b)
+        | ast::ExprNode::Iff(a, b) => expr_has_hole(a) || expr_has_hole(b),
+        ast::ExprNode::Not(a) => expr_has_hole(a),
+        ast::ExprNode::Lambda(_, body)
+        | ast::ExprNode::Forall(_, body)
+        | ast::ExprNode::Exists(_, body) => expr_has_hole(body),
+    }
+}
+
+/// Replace every `_` hole in a surface expression with a variable `name`.
+fn replace_holes(e: &ast::Expr, name: &ast::Name) -> ast::Expr {
+    let node = match &e.node {
+        ast::ExprNode::Hole => ast::ExprNode::Var(ast::QName {
+            module: None,
+            name: name.clone(),
+            span: e.span,
+        }),
+        ast::ExprNode::Var(_) | ast::ExprNode::Num(_) | ast::ExprNode::Op(_) | ast::ExprNode::False => {
+            e.node.clone()
+        }
+        ast::ExprNode::App(h, args) => ast::ExprNode::App(
+            Box::new(replace_holes(h, name)),
+            args.iter().map(|a| replace_holes(a, name)).collect(),
+        ),
+        ast::ExprNode::Infix(a, op, b) => ast::ExprNode::Infix(
+            Box::new(replace_holes(a, name)),
+            *op,
+            Box::new(replace_holes(b, name)),
+        ),
+        ast::ExprNode::Eq(a, b) => ast::ExprNode::Eq(Box::new(replace_holes(a, name)), Box::new(replace_holes(b, name))),
+        ast::ExprNode::And(a, b) => ast::ExprNode::And(Box::new(replace_holes(a, name)), Box::new(replace_holes(b, name))),
+        ast::ExprNode::Or(a, b) => ast::ExprNode::Or(Box::new(replace_holes(a, name)), Box::new(replace_holes(b, name))),
+        ast::ExprNode::Implies(a, b) => ast::ExprNode::Implies(Box::new(replace_holes(a, name)), Box::new(replace_holes(b, name))),
+        ast::ExprNode::Iff(a, b) => ast::ExprNode::Iff(Box::new(replace_holes(a, name)), Box::new(replace_holes(b, name))),
+        ast::ExprNode::Not(a) => ast::ExprNode::Not(Box::new(replace_holes(a, name))),
+        ast::ExprNode::Lambda(b, body) => ast::ExprNode::Lambda(b.clone(), Box::new(replace_holes(body, name))),
+        ast::ExprNode::Forall(b, body) => ast::ExprNode::Forall(b.clone(), Box::new(replace_holes(body, name))),
+        ast::ExprNode::Exists(b, body) => ast::ExprNode::Exists(b.clone(), Box::new(replace_holes(body, name))),
+    };
+    ast::Expr { node, span: e.span }
+}
+
+/// Expand a hole-containing argument `sa` into a unary lambda whose binder type
+/// is the domain of the (instantiated) parameter type `param_ty`.
+fn lower_hole_lambda(
+    elab: &mut Elab,
+    scope: &mut Scope,
+    sa: &ast::Expr,
+    param_ty: &Expr,
+    term_subst: &[(Sym, Expr)],
+) -> Option<Expr> {
+    let ty_inst = crate::core::normalize::nf(&crate::core::tactic::subst_all(param_ty, term_subst));
+    let dom = match ty_inst {
+        Expr::Arrow(d, _) => *d,
+        _ => {
+            elab.err("`_` requires a parameter of function type", sa.span);
+            return None;
+        }
+    };
+    let v = elab.interner.fresh("x");
+    let vname = ast::Name {
+        text: elab.interner.resolve(v).to_string(),
+        span: sa.span,
+    };
+    let body_surface = replace_holes(sa, &vname);
+    scope.add_free_pub(v, dom.clone());
+    let body = elab.lower_expr(scope, &body_surface).ok()?;
+    Some(Expr::Lam(Box::new(dom), Box::new(crate::core::term::close(&body, v))))
 }
 
 fn user_entry(elab: &mut Elab, fp: &ast::FormalParam) -> Option<(Sym, bool)> {
@@ -876,6 +1026,6 @@ fn collect_expr_frees(elab: &Elab, e: &ast::Expr, out: &mut Vec<String>) {
                 }
             }
         }
-        ast::ExprNode::Op(_) | ast::ExprNode::Num(_) | ast::ExprNode::False => {}
+        ast::ExprNode::Op(_) | ast::ExprNode::Num(_) | ast::ExprNode::False | ast::ExprNode::Hole => {}
     }
 }

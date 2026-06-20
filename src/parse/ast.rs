@@ -160,6 +160,8 @@ pub struct ModelDecl {
     pub theory: Name,
     pub args: Vec<Expr>,
     pub laws: Vec<ModelLaw>,
+    /// True if the `props` block is closed by `wip` instead of `qed`.
+    pub wip: bool,
     pub span: Span,
 }
 
@@ -200,13 +202,20 @@ pub type ContextEntry = FormalParam;
 #[derive(Clone, Debug)]
 pub struct ProofBlock {
     pub stmts: Vec<ProofStmt>,
+    /// True if this block is closed by `wip` instead of `qed`.
+    pub wip: bool,
     pub span: Span,
 }
 
 #[derive(Clone, Debug)]
 pub struct ProofStmt {
-    pub reference: ProofRef,
+    /// `None` for an admit (`by wip`).
+    pub reference: Option<ProofRef>,
+    /// True for `by wip` (admits the goal).
+    pub admit: bool,
     pub cases: Vec<CaseBlock>,
+    /// For a multi-case (`cases … qed/wip`) statement: true if closed by `wip`.
+    pub cases_wip: bool,
     pub span: Span,
 }
 
@@ -294,6 +303,8 @@ pub enum ExprNode {
     Implies(Box<Expr>, Box<Expr>),
     Iff(Box<Expr>, Box<Expr>),
     False,
+    /// `_` hole: sugar for a unary lambda (expanded during elaboration).
+    Hole,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -219,9 +219,9 @@ module.exports = grammar({
       'theory',
       field('name', $.identifier),
       field('params', $.formal_params),
-      '{',
+      'laws',
       repeat($._theory_item),
-      '}',
+      'qed',
       ';',
     ),
 
@@ -255,9 +255,9 @@ module.exports = grammar({
       field('theory', $.identifier),
       field('args', $.actual_args),
       'iff',
-      '{',
+      'props',
       repeat($.model_law),
-      '}',
+      choice('qed', 'wip'),
       ';',
     ),
 
@@ -268,19 +268,23 @@ module.exports = grammar({
       field('proof', $.proof_block),
     ),
 
-    // 3.13 Proof Blocks
+    // 3.13 Proof Blocks (closed by `qed`, or `wip` if in progress)
     proof_block: $ => seq(
       'proof',
       repeat($._proof_stmt),
-      'qed',
+      choice('qed', 'wip'),
       ';',
     ),
 
     _proof_stmt: $ => choice(
+      $.by_stmt_wip,
       $.by_stmt_zero,
       $.by_stmt_one,
       $.by_stmt_many,
     ),
+
+    // by wip ;  — admit the goal (no proof required)
+    by_stmt_wip: $ => seq('by', 'wip', ';'),
 
     // by_stmt_zero = "by" proof_ref ;  (followed by ';')
     by_stmt_zero: $ => seq(
@@ -296,13 +300,13 @@ module.exports = grammar({
       $.case_block,
     ),
 
-    // by_stmt_many = "by" proof_ref "{" case_block { case_block } "}" ;
+    // by_stmt_many = "by" proof_ref "cases" case_block { case_block } ("qed"|"wip") ;
     by_stmt_many: $ => seq(
       'by',
       field('ref', $.proof_ref),
-      '{',
+      'cases',
       repeat1($.case_block),
-      '}',
+      choice('qed', 'wip'),
       ';',
     ),
 
@@ -312,11 +316,21 @@ module.exports = grammar({
       optional(field('args', $.actual_args)),
     ),
 
+    // Tactic / theory / model arguments may be terms (e.g. lambdas) or props
+    // (e.g. an equality written with `_` holes), mirroring the unified
+    // expression language.
     actual_args: $ => seq(
       '(',
-      optional($.term_list),
+      optional($.arg_list),
       ')',
     ),
+
+    arg_list: $ => seq(
+      $._arg,
+      repeat(seq(',', $._arg)),
+    ),
+
+    _arg: $ => choice($.prop, $.term),
 
     term_list: $ => seq(
       $.term,
@@ -578,10 +592,14 @@ module.exports = grammar({
     )),
 
     _term_atom: $ => choice(
+      $.hole,
       $._ident_or_qualified,
       $.numeric_symbol,
       $.symbolic_operator,
       seq('(', $.term, ')'),
     ),
+
+    // `_` hole: sugar for a unary lambda.
+    hole: _ => '_',
   },
 });

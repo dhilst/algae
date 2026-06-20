@@ -105,7 +105,7 @@ model ListMonad satisfies Monad(
   List,
   return,
   bind
-) iff {
+) iff props
   law left_identity;
   proof
     by rewrite_r(
@@ -131,7 +131,7 @@ model ListMonad satisfies Monad(
       A,
       m,
       λ (xs : List(A)) st bind(xs, return) = xs
-    ) {
+    ) cases
       case
         A : Sort;
         ⊢ bind(nil, return) = nil;
@@ -192,7 +192,7 @@ model ListMonad satisfies Monad(
           qed;
         qed;
       qed;
-    };
+    qed;
   qed;
 
   law associativity;
@@ -207,7 +207,7 @@ model ListMonad satisfies Monad(
           xs,
           λ (x : A) st bind(f(x), g)
         )
-    ) {
+    ) cases
       case
         A B C : Sort;
         f : A → List(B);
@@ -359,6 +359,6 @@ model ListMonad satisfies Monad(
           qed;
         qed;
       qed;
-    };
+    qed;
   qed;
-};
+qed;

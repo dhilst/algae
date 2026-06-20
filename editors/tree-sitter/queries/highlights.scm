@@ -39,7 +39,16 @@
   "qed"
   "by"
   "case"
+  "cases"
+  "props"
+  "laws"
 ] @keyword
+
+; `wip` (admit / in-progress terminator) stands out as an error class.
+"wip" @error
+
+; `_` holes read as a built-in placeholder.
+(hole) @variable.builtin
 
 ; Modifier-ish / relational keywords.
 [
@@ -164,6 +173,4 @@
 [
   "("
   ")"
-  "{"
-  "}"
 ] @punctuation.bracket

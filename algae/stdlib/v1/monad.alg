@@ -9,7 +9,7 @@ theory Functor(
   A B C : Sort,
   F : Sort → Sort,
   map : (A → B) × F(A) → F(B)
-) {
+) laws
   law identity(
     x : F(A)
   )
@@ -29,14 +29,14 @@ theory Functor(
          g,
          map(f, x)
        );
-};
+qed;
 
 theory Applicative(
   A B C : Sort,
   F : Sort → Sort,
   pure : A → F(A),
   ap : F(A → B) × F(A) → F(B)
-) {
+) laws
   law identity(
     v : F(A)
   )
@@ -76,14 +76,14 @@ theory Applicative(
        )
        =
        ap(u, ap(v, w));
-};
+qed;
 
 theory Monad(
   A B C : Sort,
   M : Sort → Sort,
   return : A → M(A),
   bind : M(A) × (A → M(B)) → M(B)
-) {
+) laws
   law left_identity(
     x : A,
     f : A → M(B)
@@ -106,4 +106,4 @@ theory Monad(
          m,
          λ (x : A) st bind(f(x), g)
        );
-};
+qed;

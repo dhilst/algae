@@ -55,7 +55,7 @@ model ResultMonad satisfies Monad(
   λ (X : Sort) st Result(X, E),
   return,
   bind
-) iff {
+) iff props
   law left_identity;
   proof
     by rewrite_r(
@@ -82,7 +82,7 @@ model ResultMonad satisfies Monad(
       E,
       m,
       λ (r : Result(A, E)) st bind(r, return) = r
-    ) {
+    ) cases
       case
         A E : Sort;
         x : A;
@@ -111,7 +111,7 @@ model ResultMonad satisfies Monad(
       proof
         by bind_err(A, A, E, e, return);
       qed;
-    };
+    qed;
   qed;
 
   law associativity;
@@ -127,7 +127,7 @@ model ResultMonad satisfies Monad(
           r,
           λ (x : A) st bind(f(x), g)
         )
-    ) {
+    ) cases
       case
         A B C E : Sort;
         x : A;
@@ -221,6 +221,6 @@ model ResultMonad satisfies Monad(
           );
         qed;
       qed;
-    };
+    qed;
   qed;
-};
+qed;

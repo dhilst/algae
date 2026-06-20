@@ -27,6 +27,10 @@ struct StepData {
 }
 
 fn collect(step: &Step, label_of: &dyn Fn(&Step) -> String, out: &mut Vec<StepData>) {
+    // Admitted (`by wip`) steps are assumed, not checked.
+    if step.admitted {
+        return;
+    }
     out.push(StepData {
         context: step.context.clone(),
         current_goal: step.current_goal.clone(),
@@ -87,6 +91,10 @@ fn check_step_local(d: &StepData, rs: &RewriteSystem) -> Option<String> {
 
 /// Phase 3: structural linkage between a step and its children.
 fn check_linkage(step: &Step, label: &str, rs: &RewriteSystem, errors: &mut Vec<String>) {
+    // Admitted (`by wip`) steps close their goal by assumption.
+    if step.admitted {
+        return;
+    }
     if step.children.len() != step.next_goals.len() {
         errors.push(format!(
             "{label}: {} subgoal(s) but {} case(s) provided",

@@ -81,7 +81,11 @@ lemma
 theorem
 proof
 qed
+wip
 case
+cases
+props
+laws
 theory
 law
 model
@@ -321,7 +325,7 @@ qed;
 
 ```ebnf
 theory_decl =
-  "theory" ident formal_params "{" theory_item_list "}" ";" ;
+  "theory" ident formal_params "laws" theory_item_list "qed" ";" ;
 
 theory_item_list =
   { theory_item } ;
@@ -337,12 +341,12 @@ Example:
 theory Semigroup(
   S : Sort,
   * : S * S -> S
-) {
+) laws
   law associativity(
     x y z : S
   )
     |- *( *(x, y), z ) = *( x, *(y, z) );
-};
+qed;
 ```
 
 ---
@@ -387,9 +391,9 @@ law left_identity(
 ```ebnf
 model_decl =
   "model" ident "satisfies" ident actual_args "iff"
-  "{"
+  "props"
     model_law_list
-  "}"
+  terminator
   ";" ;
 
 model_law_list =
@@ -406,7 +410,7 @@ model NatAddMonoid satisfies Monoid(
   Nat,
   0,
   +
-) iff {
+) iff props
   law Semigroup.associativity;
   proof
     by add_associativity;
@@ -421,7 +425,7 @@ model NatAddMonoid satisfies Monoid(
   proof
     by add_zero_right;
   qed;
-};
+qed;
 ```
 
 ---
@@ -430,15 +434,23 @@ model NatAddMonoid satisfies Monoid(
 
 ```ebnf
 proof_block =
-  "proof" proof_stmt_list "qed" ";" ;
+  "proof" proof_stmt_list terminator ";" ;
+
+terminator =
+    "qed"            (* a complete, sound proof *)
+  | "wip" ;          (* an in-progress proof (contains an admit) *)
 
 proof_stmt_list =
   { proof_stmt } ;
 
 proof_stmt =
-    by_stmt_zero ";"
+    by_stmt_wip ";"
+  | by_stmt_zero ";"
   | by_stmt_one
   | by_stmt_many ";" ;
+
+by_stmt_wip =
+  "by" "wip" ;        (* admit the current goal without a proof *)
 
 by_stmt_zero =
   "by" proof_ref ;
@@ -447,7 +459,7 @@ by_stmt_one =
   "by" proof_ref case_block ;
 
 by_stmt_many =
-  "by" proof_ref "{" case_block { case_block } "}" ;
+  "by" proof_ref "cases" case_block { case_block } terminator ;
 ```
 
 ---
@@ -780,7 +792,11 @@ term_atom =
     qualified_or_unqualified_ident
   | numeric_symbol
   | symbolic_operator
+  | hole
   | "(" term ")" ;
+
+hole =
+  "_" ;   (* sugar: an expression with holes is a unary lambda; see §4.16 *)
 
 infix_op =
     "+"
@@ -1019,12 +1035,12 @@ This is theory inheritance.
 A model declaration:
 
 ```alg
-model M satisfies T(args) iff {
+model M satisfies T(args) iff props
   law L1;
   proof
     ...
   qed;
-};
+qed;
 ```
 
 is valid iff:
@@ -1054,9 +1070,41 @@ It may be used as a proof reference.
 
 ## 4.15 Generalization Rule Side Condition
 
-The rule `generalization` may only be applied if the generalized variable is not free in any undischarged proof assumption.
+The rule `generalization` may only be applied if the generalized variable is not free in any undischarged proof assumption. This is enforced as eigenvariable freshness: the variable is introduced in the rule's premise context, and a case's freshly introduced variable must not already occur in the surrounding context.
 
 This is a proof-checking side condition, not a grammar condition.
+
+## 4.16 Holes
+
+An expression containing one or more `_` holes is sugar for a unary lambda. All
+`_` in a single expression expand to the **same** fresh variable, and the
+binder's type is inferred from the function domain of the tactic parameter the
+expression is passed to. For example, where a tactic expects `P : Nat -> Prop`:
+
+```alg
+by induction(_ + 0 = _)
+```
+
+is sugar for:
+
+```alg
+by induction(lambda (k : Nat) st k + 0 = k)
+```
+
+A hole is only valid as a tactic argument whose parameter has a function type;
+elsewhere it is a static error.
+
+## 4.17 Work in progress (`wip`)
+
+`by wip` admits the current goal without a proof (like an axiom assumption). A
+proof that admits any goal must be closed by `wip` instead of `qed`; `qed` is
+accepted only on complete, sound proofs. The `wip` terminator is **viral**:
+every enclosing block (`proof`, `cases`, `props`) that transitively contains an
+admit must also be closed by `wip` rather than `qed`.
+
+The checker skips admitted goals and verifies the remaining (sound) parts, but a
+unit containing any `wip` is reported as in progress and fails verification
+overall.
 
 ---
 
@@ -1411,7 +1459,7 @@ theory Functor(
   A B C : Sort,
   F : Sort -> Sort,
   map : (A -> B) * F(A) -> F(B)
-) {
+) laws
   law identity(
     x : F(A)
   )
@@ -1431,14 +1479,14 @@ theory Functor(
          g,
          map(f, x)
        );
-};
+qed;
 
 theory Applicative(
   A B C : Sort,
   F : Sort -> Sort,
   pure : A -> F(A),
   ap : F(A -> B) * F(A) -> F(B)
-) {
+) laws
   law identity(
     v : F(A)
   )
@@ -1478,14 +1526,14 @@ theory Applicative(
        )
        =
        ap(u, ap(v, w));
-};
+qed;
 
 theory Monad(
   A B C : Sort,
   M : Sort -> Sort,
   return : A -> M(A),
   bind : M(A) * (A -> M(B)) -> M(B)
-) {
+) laws
   law left_identity(
     x : A,
     f : A -> M(B)
@@ -1508,7 +1556,7 @@ theory Monad(
          m,
          lambda (x : A) st bind(f(x), g)
        );
-};
+qed;
 ```
 
 ---
@@ -1575,7 +1623,7 @@ model OptionMonad satisfies Monad(
   Option,
   return,
   bind
-) iff {
+) iff props
   law left_identity;
   proof
     by rewrite_r(
@@ -1601,7 +1649,7 @@ model OptionMonad satisfies Monad(
       A,
       m,
       lambda (o : Option(A)) st bind(o, return) = o
-    ) {
+    ) cases
       case
         A : Sort;
         |- bind(none, return) = none;
@@ -1629,7 +1677,7 @@ model OptionMonad satisfies Monad(
           by return_def(A, x);
         qed;
       qed;
-    };
+    qed;
   qed;
 
   law associativity;
@@ -1644,7 +1692,7 @@ model OptionMonad satisfies Monad(
           o,
           lambda (x : A) st bind(f(x), g)
         )
-    ) {
+    ) cases
       case
         A B C : Sort;
         f : A -> Option(B);
@@ -1733,9 +1781,9 @@ model OptionMonad satisfies Monad(
           );
         qed;
       qed;
-    };
+    qed;
   qed;
-};
+qed;
 ```
 
 ---
@@ -1800,7 +1848,7 @@ model ResultMonad satisfies Monad(
   lambda (X : Sort) st Result(X, E),
   return,
   bind
-) iff {
+) iff props
   law left_identity;
   proof
     by rewrite_r(
@@ -1827,7 +1875,7 @@ model ResultMonad satisfies Monad(
       E,
       m,
       lambda (r : Result(A, E)) st bind(r, return) = r
-    ) {
+    ) cases
       case
         A E : Sort;
         x : A;
@@ -1856,7 +1904,7 @@ model ResultMonad satisfies Monad(
       proof
         by bind_err(A, A, E, e, return);
       qed;
-    };
+    qed;
   qed;
 
   law associativity;
@@ -1872,7 +1920,7 @@ model ResultMonad satisfies Monad(
           r,
           lambda (x : A) st bind(f(x), g)
         )
-    ) {
+    ) cases
       case
         A B C E : Sort;
         x : A;
@@ -1966,9 +2014,9 @@ model ResultMonad satisfies Monad(
           );
         qed;
       qed;
-    };
+    qed;
   qed;
-};
+qed;
 ```
 
 ---
@@ -2083,7 +2131,7 @@ model ListMonad satisfies Monad(
   List,
   return,
   bind
-) iff {
+) iff props
   law left_identity;
   proof
     by rewrite_r(
@@ -2109,7 +2157,7 @@ model ListMonad satisfies Monad(
       A,
       m,
       lambda (xs : List(A)) st bind(xs, return) = xs
-    ) {
+    ) cases
       case
         A : Sort;
         |- bind(nil, return) = nil;
@@ -2170,7 +2218,7 @@ model ListMonad satisfies Monad(
           qed;
         qed;
       qed;
-    };
+    qed;
   qed;
 
   law associativity;
@@ -2185,7 +2233,7 @@ model ListMonad satisfies Monad(
           xs,
           lambda (x : A) st bind(f(x), g)
         )
-    ) {
+    ) cases
       case
         A B C : Sort;
         f : A -> List(B);
@@ -2337,9 +2385,9 @@ model ListMonad satisfies Monad(
           qed;
         qed;
       qed;
-    };
+    qed;
   qed;
-};
+qed;
 ```
 
 ---
@@ -2399,7 +2447,7 @@ lemma add_zero_right
 proof
   by induction(
     lambda (k : Nat) st k + 0 = k
-  ) {
+  ) cases
     case
       |- 0 + 0 = 0;
     proof
@@ -2426,7 +2474,7 @@ proof
         by add_succ_left(k, 0);
       qed;
     qed;
-  };
+  qed;
 qed;
 ```
 
@@ -2445,30 +2493,30 @@ import core(
 theory Magma(
   S : Sort,
   op : S * S -> S
-) {
+) laws
   law closure(
     x y : S
   )
     |- op(x, y) = op(x, y);
-};
+qed;
 
 theory Semigroup(
   S : Sort,
   op : S * S -> S
-) {
+) laws
   include Magma(S, op);
 
   law associativity(
     x y z : S
   )
     |- op(op(x, y), z) = op(x, op(y, z));
-};
+qed;
 
 theory Monoid(
   S : Sort,
   op : S * S -> S,
   e : S
-) {
+) laws
   include Semigroup(S, op);
 
   law left_identity(
@@ -2480,27 +2528,27 @@ theory Monoid(
     x : S
   )
     |- op(x, e) = x;
-};
+qed;
 
 theory CommutativeMonoid(
   S : Sort,
   op : S * S -> S,
   e : S
-) {
+) laws
   include Monoid(S, op, e);
 
   law commutativity(
     x y : S
   )
     |- op(x, y) = op(y, x);
-};
+qed;
 
 theory Group(
   S : Sort,
   op : S * S -> S,
   e : S,
   inv : S -> S
-) {
+) laws
   include Monoid(S, op, e);
 
   law left_inverse(
@@ -2512,21 +2560,21 @@ theory Group(
     x : S
   )
     |- op(x, inv(x)) = e;
-};
+qed;
 
 theory AbelianGroup(
   S : Sort,
   op : S * S -> S,
   e : S,
   inv : S -> S
-) {
+) laws
   include Group(S, op, e, inv);
 
   law commutativity(
     x y : S
   )
     |- op(x, y) = op(y, x);
-};
+qed;
 ```
 
 ---

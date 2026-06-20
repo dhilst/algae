@@ -435,7 +435,10 @@ fn cmd_verify(opts: &GlobalOpts, targets: &[PathBuf]) -> Result<(), ()> {
             }
         };
         let mut file_ok = true;
+        let mut wip_count = 0usize;
         for ob in &obligations {
+            // Admitted (`by wip`) cases are skipped by the checker; the sound
+            // parts are still checked.
             let errors = crate::core::check::check(&ob.root, &ob.label, n_jobs, &rewrite);
             if !errors.is_empty() {
                 file_ok = false;
@@ -444,11 +447,22 @@ fn cmd_verify(opts: &GlobalOpts, targets: &[PathBuf]) -> Result<(), ()> {
                     eprintln!("{}: {e}", f.display());
                 }
             }
+            if ob.wip {
+                wip_count += 1;
+                // wip means an incomplete proof: report it and fail the run.
+                ok = false;
+                eprintln!("{}: {} is in progress (wip)", f.display(), ob.label);
+            }
         }
         if file_ok && !opts.quiet {
             let tag = if cached { " (cached)" } else { "" };
+            let wip = if wip_count > 0 {
+                format!(", {wip_count} wip")
+            } else {
+                String::new()
+            };
             println!(
-                "{}: verified ({} proof obligation(s)){tag}",
+                "{}: checked {} proof obligation(s){wip}{tag}",
                 f.display(),
                 obligations.len()
             );
