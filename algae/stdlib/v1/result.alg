@@ -7,55 +7,52 @@ import monad(
   Monad
 );
 
-sort Result : Sort * Sort -> Sort;
+sort Result : Sort × Sort → Sort;
 
-op ok : A -> Result(A, E);
+op ok : A → Result(A, E);
 
-op err : E -> Result(A, E);
+op err : E → Result(A, E);
 
-op return : A -> Result(A, E);
+op return : A → Result(A, E);
 
-op bind : Result(A, E) * (A -> Result(B, E)) -> Result(B, E);
+op bind : Result(A, E) × (A → Result(B, E)) → Result(B, E);
 
 axiom return_def(
   A E : Sort,
   x : A
 )
-  |- return(x) = ok(x);
+  ⊢ return(x) = ok(x);
 
 axiom bind_ok(
   A B E : Sort,
   x : A,
-  f : A -> Result(B, E)
+  f : A → Result(B, E)
 )
-  |- bind(ok(x), f) = f(x);
+  ⊢ bind(ok(x), f) = f(x);
 
 axiom bind_err(
   A B E : Sort,
   e : E,
-  f : A -> Result(B, E)
+  f : A → Result(B, E)
 )
-  |- bind(err(e), f) = err(e);
+  ⊢ bind(err(e), f) = err(e);
 
 rule result_cases(
   A E : Sort,
   r : Result(A, E),
-  P : Result(A, E) -> Prop
+  P : Result(A, E) → Prop
 )
-  x : A |- P(ok(x));
-
-  e : E |- P(err(e))
-
-  ------------------------
-
-  |- P(r)
+  x : A ⊢ P(ok(x));
+  e : E ⊢ P(err(e))
+  ────────────────────────
+  ⊢ P(r)
 end;
 
 model ResultMonad satisfies Monad(
   A,
   B,
   C,
-  lambda (X : Sort) st Result(X, E),
+  λ (X : Sort) st Result(X, E),
   return,
   bind
 ) iff {
@@ -66,13 +63,13 @@ model ResultMonad satisfies Monad(
       return(x),
       ok(x),
       return_def(A, E, x),
-      lambda (r : Result(A, E)) st bind(r, f) = f(x)
+      λ (r : Result(A, E)) st bind(r, f) = f(x)
     )
     case
       A B E : Sort;
       x : A;
-      f : A -> Result(B, E);
-      |- bind(ok(x), f) = f(x);
+      f : A → Result(B, E);
+      ⊢ bind(ok(x), f) = f(x);
     proof
       by bind_ok(A, B, E, x, f);
     qed;
@@ -84,24 +81,24 @@ model ResultMonad satisfies Monad(
       A,
       E,
       m,
-      lambda (r : Result(A, E)) st bind(r, return) = r
+      λ (r : Result(A, E)) st bind(r, return) = r
     ) {
       case
         A E : Sort;
         x : A;
-        |- bind(ok(x), return) = ok(x);
+        ⊢ bind(ok(x), return) = ok(x);
       proof
         by rewrite_r(
           Result(A, E),
           bind(ok(x), return),
           return(x),
           bind_ok(A, A, E, x, return),
-          lambda (r : Result(A, E)) st r = ok(x)
+          λ (r : Result(A, E)) st r = ok(x)
         )
         case
           A E : Sort;
           x : A;
-          |- return(x) = ok(x);
+          ⊢ return(x) = ok(x);
         proof
           by return_def(A, E, x);
         qed;
@@ -110,7 +107,7 @@ model ResultMonad satisfies Monad(
       case
         A E : Sort;
         e : E;
-        |- bind(err(e), return) = err(e);
+        ⊢ bind(err(e), return) = err(e);
       proof
         by bind_err(A, A, E, e, return);
       qed;
@@ -123,24 +120,24 @@ model ResultMonad satisfies Monad(
       A,
       E,
       m,
-      lambda (r : Result(A, E)) st
+      λ (r : Result(A, E)) st
         bind(bind(r, f), g)
         =
         bind(
           r,
-          lambda (x : A) st bind(f(x), g)
+          λ (x : A) st bind(f(x), g)
         )
     ) {
       case
         A B C E : Sort;
         x : A;
-        f : A -> Result(B, E);
-        g : B -> Result(C, E);
-        |- bind(bind(ok(x), f), g)
+        f : A → Result(B, E);
+        g : B → Result(C, E);
+        ⊢ bind(bind(ok(x), f), g)
            =
            bind(
              ok(x),
-             lambda (y : A) st bind(f(y), g)
+             λ (y : A) st bind(f(y), g)
            );
       proof
         by rewrite_r(
@@ -148,24 +145,24 @@ model ResultMonad satisfies Monad(
           bind(ok(x), f),
           f(x),
           bind_ok(A, B, E, x, f),
-          lambda (r : Result(B, E)) st
+          λ (r : Result(B, E)) st
             bind(r, g)
             =
             bind(
               ok(x),
-              lambda (y : A) st bind(f(y), g)
+              λ (y : A) st bind(f(y), g)
             )
         )
         case
           A B C E : Sort;
           x : A;
-          f : A -> Result(B, E);
-          g : B -> Result(C, E);
-          |- bind(f(x), g)
+          f : A → Result(B, E);
+          g : B → Result(C, E);
+          ⊢ bind(f(x), g)
              =
              bind(
                ok(x),
-               lambda (y : A) st bind(f(y), g)
+               λ (y : A) st bind(f(y), g)
              );
         proof
           by bind_ok(
@@ -173,7 +170,7 @@ model ResultMonad satisfies Monad(
             C,
             E,
             x,
-            lambda (y : A) st bind(f(y), g)
+            λ (y : A) st bind(f(y), g)
           );
         qed;
       qed;
@@ -181,13 +178,13 @@ model ResultMonad satisfies Monad(
       case
         A B C E : Sort;
         e : E;
-        f : A -> Result(B, E);
-        g : B -> Result(C, E);
-        |- bind(bind(err(e), f), g)
+        f : A → Result(B, E);
+        g : B → Result(C, E);
+        ⊢ bind(bind(err(e), f), g)
            =
            bind(
              err(e),
-             lambda (x : A) st bind(f(x), g)
+             λ (x : A) st bind(f(x), g)
            );
       proof
         by rewrite_r(
@@ -195,24 +192,24 @@ model ResultMonad satisfies Monad(
           bind(err(e), f),
           err(e),
           bind_err(A, B, E, e, f),
-          lambda (r : Result(B, E)) st
+          λ (r : Result(B, E)) st
             bind(r, g)
             =
             bind(
               err(e),
-              lambda (x : A) st bind(f(x), g)
+              λ (x : A) st bind(f(x), g)
             )
         )
         case
           A B C E : Sort;
           e : E;
-          f : A -> Result(B, E);
-          g : B -> Result(C, E);
-          |- bind(err(e), g)
+          f : A → Result(B, E);
+          g : B → Result(C, E);
+          ⊢ bind(err(e), g)
              =
              bind(
                err(e),
-               lambda (x : A) st bind(f(x), g)
+               λ (x : A) st bind(f(x), g)
              );
         proof
           by bind_err(
@@ -220,7 +217,7 @@ model ResultMonad satisfies Monad(
             C,
             E,
             e,
-            lambda (x : A) st bind(f(x), g)
+            λ (x : A) st bind(f(x), g)
           );
         qed;
       qed;

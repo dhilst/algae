@@ -14,6 +14,7 @@ use crate::parse::lexer::{lex, TokenKind};
 fn glyph(kind: &TokenKind, ascii: bool, original: &str) -> Option<String> {
     let pair = match kind {
         TokenKind::Turnstile => ("|-", "⊢"),
+        TokenKind::Arrow => ("->", "→"),
         TokenKind::Star => ("*", "×"),
         TokenKind::Implies => ("=>", "⇒"),
         TokenKind::Iff => ("<=>", "⇔"),
@@ -21,6 +22,8 @@ fn glyph(kind: &TokenKind, ascii: bool, original: &str) -> Option<String> {
         TokenKind::Or => ("\\/", "∨"),
         TokenKind::Not => ("~", "¬"),
         TokenKind::KwLambda => ("lambda", "λ"),
+        TokenKind::KwForall => ("forall", "∀"),
+        TokenKind::KwExists => ("exists", "∃"),
         TokenKind::Separator => {
             let n = original.chars().count();
             let ch = if ascii { '-' } else { '─' };

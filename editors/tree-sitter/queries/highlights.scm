@@ -51,7 +51,9 @@
 ; Quantifiers and binder keywords are operator-flavoured keywords.
 [
   "forall"
+  "∀"
   "exists"
+  "∃"
   "st"
   "lambda"
   "λ"
@@ -142,6 +144,7 @@
 
 [
   "->"
+  "→"
   "="
   "*"
   "×"

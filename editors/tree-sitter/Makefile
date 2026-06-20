@@ -21,10 +21,10 @@ generate: grammar.js
 test: generate
 	$(TS) test
 
-# Parse every extracted stdlib module and fail on any ERROR/MISSING node.
+# Parse every canonical stdlib module and fail on any ERROR/MISSING node.
 parse-stdlib: generate
 	@status=0; \
-	for f in test/stdlib/*.alg test/*.alg; do \
+	for f in ../../algae/stdlib/v1/*.alg test/*.alg; do \
 		[ -f "$$f" ] || continue; \
 		if $(TS) parse -q "$$f" >/dev/null 2>&1; then \
 			echo "ok    $$f"; \

@@ -45,6 +45,20 @@ fn stdlib_verifies() {
 }
 
 #[test]
+fn accept_corpus_verifies() {
+    let dir = PathBuf::from("tests/accept");
+    for f in alg_files(&dir) {
+        let errors = verify(&f);
+        assert!(
+            errors.is_empty(),
+            "accept fixture {} failed to verify: {:?}",
+            f.display(),
+            errors
+        );
+    }
+}
+
+#[test]
 fn reject_corpus_fails() {
     let dir = PathBuf::from("tests/reject");
     let files = alg_files(&dir);

@@ -739,22 +739,8 @@ fn op_symbol(input: &mut In) -> ModalResult<Symbol> {
     Ok(Symbol::Name(q))
 }
 
-fn kw_op(input: &mut In) -> ModalResult<Span> {
-    match input.first() {
-        Some(Token {
-            kind: T::Ident(s),
-            span,
-        }) if s == "op" => {
-            let sp = *span;
-            *input = &input[1..];
-            Ok(sp)
-        }
-        _ => backtrack(),
-    }
-}
-
 fn op_decl(input: &mut In) -> ModalResult<OpDecl> {
-    let start = kw_op(input)?;
+    let start = expect(input, T::KwOp)?;
     let symbol = op_symbol(input)?;
     expect(input, T::Colon)?;
     // function_sig = [type_expr] "->" type_expr.
@@ -911,7 +897,7 @@ fn decl(input: &mut In) -> ModalResult<Decl> {
     match peek_kind(*input) {
         Some(T::KwImport) => import_decl(input).map(Decl::Import),
         Some(T::KwSort) => sort_decl(input).map(Decl::Sort),
-        Some(T::Ident(s)) if s == "op" => op_decl(input).map(Decl::Op),
+        Some(T::KwOp) => op_decl(input).map(Decl::Op),
         Some(T::KwAxiom) => axiom_decl(input).map(Decl::Axiom),
         Some(T::KwRule) => rule_decl(input).map(Decl::Rule),
         Some(T::KwLemma) => lemma_like(input, false).map(Decl::Lemma),

@@ -15,6 +15,7 @@ pub enum TokenKind {
     // Keywords
     KwImport,
     KwSort,
+    KwOp,
     KwAxiom,
     KwRule,
     KwLemma,
@@ -130,6 +131,7 @@ pub fn lex(src: &str) -> Result<Vec<Token>, Vec<Diagnostic>> {
         match c {
             // Single-char Unicode operators.
             '⊢' => { push(TokenKind::Turnstile, i, 1); i += 1; }
+            '→' => { push(TokenKind::Arrow, i, 1); i += 1; }
             '×' => { push(TokenKind::Star, i, 1); i += 1; }
             '∧' => { push(TokenKind::And, i, 1); i += 1; }
             '∨' => { push(TokenKind::Or, i, 1); i += 1; }
@@ -137,6 +139,8 @@ pub fn lex(src: &str) -> Result<Vec<Token>, Vec<Diagnostic>> {
             '⇔' => { push(TokenKind::Iff, i, 1); i += 1; }
             '¬' => { push(TokenKind::Not, i, 1); i += 1; }
             'λ' => { push(TokenKind::KwLambda, i, 1); i += 1; }
+            '∀' => { push(TokenKind::KwForall, i, 1); i += 1; }
+            '∃' => { push(TokenKind::KwExists, i, 1); i += 1; }
             '─' => {
                 let start = i;
                 while peek(i) == Some('─') {
@@ -302,9 +306,7 @@ fn keyword(s: &str) -> Option<TokenKind> {
     Some(match s {
         "import" => TokenKind::KwImport,
         "sort" => TokenKind::KwSort,
-        // `op` is a *contextual* keyword: it is also used as an ordinary
-        // identifier (e.g. a theory's binary-operation parameter), so it is
-        // lexed as an identifier and recognized as a declaration by lookahead.
+        "op" => TokenKind::KwOp,
         "axiom" => TokenKind::KwAxiom,
         "rule" => TokenKind::KwRule,
         "lemma" => TokenKind::KwLemma,
@@ -358,6 +360,13 @@ mod tests {
         assert_eq!(kinds("~a"), kinds("¬a"));
         assert_eq!(kinds("A * B"), kinds("A × B"));
         assert_eq!(kinds("lambda x"), kinds("λ x"));
+        assert_eq!(kinds("A -> B"), kinds("A → B"));
+    }
+
+    #[test]
+    fn op_is_a_keyword() {
+        use TokenKind::*;
+        assert_eq!(kinds("op"), vec![KwOp, Eof]);
     }
 
     #[test]

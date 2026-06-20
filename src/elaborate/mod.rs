@@ -533,7 +533,10 @@ pub fn ctx_to_param(e: CtxEntry) -> Param {
 pub fn build_rule(elab: &mut Elab, r: &ast::RuleDecl) -> Result<InlinedRule, ()> {
     let mut scope = Scope::new();
     let param_entries = elab.lower_telescope(&mut scope, &r.params)?;
-    let is_gen = r.name.text == "generalization";
+    // `generalization` no longer needs a special side-condition flag: its
+    // generalized variable is an eigenvariable in the premise context, so the
+    // §4.15 side condition is enforced by eigenvariable freshness.
+    let is_gen = false;
     let bidirectional = r.name.text == "rewrite_r" || r.name.text == "rewrite_l";
     // Premises: each premise's context entries are eigenvariables/hypotheses,
     // lowered as additional free variables in a cloned scope.

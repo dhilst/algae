@@ -7,86 +7,86 @@ import core(
 
 theory Magma(
   S : Sort,
-  op : S * S -> S
+  mul : S × S → S
 ) {
   law closure(
     x y : S
   )
-    |- op(x, y) = op(x, y);
+    ⊢ mul(x, y) = mul(x, y);
 };
 
 theory Semigroup(
   S : Sort,
-  op : S * S -> S
+  mul : S × S → S
 ) {
-  include Magma(S, op);
+  include Magma(S, mul);
 
   law associativity(
     x y z : S
   )
-    |- op(op(x, y), z) = op(x, op(y, z));
+    ⊢ mul(mul(x, y), z) = mul(x, mul(y, z));
 };
 
 theory Monoid(
   S : Sort,
-  op : S * S -> S,
+  mul : S × S → S,
   e : S
 ) {
-  include Semigroup(S, op);
+  include Semigroup(S, mul);
 
   law left_identity(
     x : S
   )
-    |- op(e, x) = x;
+    ⊢ mul(e, x) = x;
 
   law right_identity(
     x : S
   )
-    |- op(x, e) = x;
+    ⊢ mul(x, e) = x;
 };
 
 theory CommutativeMonoid(
   S : Sort,
-  op : S * S -> S,
+  mul : S × S → S,
   e : S
 ) {
-  include Monoid(S, op, e);
+  include Monoid(S, mul, e);
 
   law commutativity(
     x y : S
   )
-    |- op(x, y) = op(y, x);
+    ⊢ mul(x, y) = mul(y, x);
 };
 
 theory Group(
   S : Sort,
-  op : S * S -> S,
+  mul : S × S → S,
   e : S,
-  inv : S -> S
+  inv : S → S
 ) {
-  include Monoid(S, op, e);
+  include Monoid(S, mul, e);
 
   law left_inverse(
     x : S
   )
-    |- op(inv(x), x) = e;
+    ⊢ mul(inv(x), x) = e;
 
   law right_inverse(
     x : S
   )
-    |- op(x, inv(x)) = e;
+    ⊢ mul(x, inv(x)) = e;
 };
 
 theory AbelianGroup(
   S : Sort,
-  op : S * S -> S,
+  mul : S × S → S,
   e : S,
-  inv : S -> S
+  inv : S → S
 ) {
-  include Group(S, op, e, inv);
+  include Group(S, mul, e, inv);
 
   law commutativity(
     x y : S
   )
-    |- op(x, y) = op(y, x);
+    ⊢ mul(x, y) = mul(y, x);
 };

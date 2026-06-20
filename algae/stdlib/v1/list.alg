@@ -8,97 +8,94 @@ import monad(
   Monad
 );
 
-sort List : Sort -> Sort;
+sort List : Sort → Sort;
 
-op nil : -> List(A);
+op nil : → List(A);
 
-op cons : A * List(A) -> List(A);
+op cons : A × List(A) → List(A);
 
-op append : List(A) * List(A) -> List(A);
+op append : List(A) × List(A) → List(A);
 
-op singleton : A -> List(A);
+op singleton : A → List(A);
 
-op return : A -> List(A);
+op return : A → List(A);
 
-op bind : List(A) * (A -> List(B)) -> List(B);
+op bind : List(A) × (A → List(B)) → List(B);
 
 axiom append_nil_left(
   A : Sort,
   xs : List(A)
 )
-  |- append(nil, xs) = xs;
+  ⊢ append(nil, xs) = xs;
 
 axiom append_cons_left(
   A : Sort,
   x : A,
   xs ys : List(A)
 )
-  |- append(cons(x, xs), ys) = cons(x, append(xs, ys));
+  ⊢ append(cons(x, xs), ys) = cons(x, append(xs, ys));
 
 axiom singleton_def(
   A : Sort,
   x : A
 )
-  |- singleton(x) = cons(x, nil);
+  ⊢ singleton(x) = cons(x, nil);
 
 axiom return_def(
   A : Sort,
   x : A
 )
-  |- return(x) = singleton(x);
+  ⊢ return(x) = singleton(x);
 
 axiom bind_nil(
   A B : Sort,
-  f : A -> List(B)
+  f : A → List(B)
 )
-  |- bind(nil, f) = nil;
+  ⊢ bind(nil, f) = nil;
 
 axiom bind_cons(
   A B : Sort,
   x : A,
   xs : List(A),
-  f : A -> List(B)
+  f : A → List(B)
 )
-  |- bind(cons(x, xs), f) = append(f(x), bind(xs, f));
+  ⊢ bind(cons(x, xs), f) = append(f(x), bind(xs, f));
 
 axiom bind_singleton(
   A B : Sort,
   x : A,
-  f : A -> List(B)
+  f : A → List(B)
 )
-  |- bind(singleton(x), f) = f(x);
+  ⊢ bind(singleton(x), f) = f(x);
 
 axiom append_nil_right(
   A : Sort,
   xs : List(A)
 )
-  |- append(xs, nil) = xs;
+  ⊢ append(xs, nil) = xs;
 
 axiom append_associativity(
   A : Sort,
   xs ys zs : List(A)
 )
-  |- append(append(xs, ys), zs) = append(xs, append(ys, zs));
+  ⊢ append(append(xs, ys), zs) = append(xs, append(ys, zs));
 
 axiom bind_append(
   A B : Sort,
   xs ys : List(A),
-  f : A -> List(B)
+  f : A → List(B)
 )
-  |- bind(append(xs, ys), f) = append(bind(xs, f), bind(ys, f));
+  ⊢ bind(append(xs, ys), f) = append(bind(xs, f), bind(ys, f));
 
 rule list_induction(
   A : Sort,
   xs : List(A),
-  P : List(A) -> Prop
+  P : List(A) → Prop
 )
-  |- P(nil);
-
-  x : A, rest : List(A), ih := P(rest) |- P(cons(x, rest))
-
-  ------------------------
-
-  |- P(xs)
+  ⊢ P(nil);
+  x : A, rest : List(A), ih := P(rest) ⊢ P(cons(x, rest))
+  ────────────────────────
+  ⊢ P(xs)
 end;
 
 model ListMonad satisfies Monad(
@@ -116,13 +113,13 @@ model ListMonad satisfies Monad(
       return(x),
       singleton(x),
       return_def(A, x),
-      lambda (xs : List(A)) st bind(xs, f) = f(x)
+      λ (xs : List(A)) st bind(xs, f) = f(x)
     )
     case
       A B : Sort;
       x : A;
-      f : A -> List(B);
-      |- bind(singleton(x), f) = f(x);
+      f : A → List(B);
+      ⊢ bind(singleton(x), f) = f(x);
     proof
       by bind_singleton(A, B, x, f);
     qed;
@@ -133,11 +130,11 @@ model ListMonad satisfies Monad(
     by list_induction(
       A,
       m,
-      lambda (xs : List(A)) st bind(xs, return) = xs
+      λ (xs : List(A)) st bind(xs, return) = xs
     ) {
       case
         A : Sort;
-        |- bind(nil, return) = nil;
+        ⊢ bind(nil, return) = nil;
       proof
         by bind_nil(A, A, return);
       qed;
@@ -147,48 +144,48 @@ model ListMonad satisfies Monad(
         x : A;
         rest : List(A);
         ih := bind(rest, return) = rest;
-        |- bind(cons(x, rest), return) = cons(x, rest);
+        ⊢ bind(cons(x, rest), return) = cons(x, rest);
       proof
         by rewrite_r(
           List(A),
           bind(cons(x, rest), return),
           append(return(x), bind(rest, return)),
           bind_cons(A, A, x, rest, return),
-          lambda (ys : List(A)) st ys = cons(x, rest)
+          λ (ys : List(A)) st ys = cons(x, rest)
         )
         case
           A : Sort;
           x : A;
           rest : List(A);
           ih := bind(rest, return) = rest;
-          |- append(return(x), bind(rest, return)) = cons(x, rest);
+          ⊢ append(return(x), bind(rest, return)) = cons(x, rest);
         proof
           by rewrite_r(
             List(A),
             return(x),
             singleton(x),
             return_def(A, x),
-            lambda (ys : List(A)) st append(ys, bind(rest, return)) = cons(x, rest)
+            λ (ys : List(A)) st append(ys, bind(rest, return)) = cons(x, rest)
           )
           case
             A : Sort;
             x : A;
             rest : List(A);
             ih := bind(rest, return) = rest;
-            |- append(singleton(x), bind(rest, return)) = cons(x, rest);
+            ⊢ append(singleton(x), bind(rest, return)) = cons(x, rest);
           proof
             by rewrite_r(
               List(A),
               bind(rest, return),
               rest,
               ih,
-              lambda (ys : List(A)) st append(singleton(x), ys) = cons(x, rest)
+              λ (ys : List(A)) st append(singleton(x), ys) = cons(x, rest)
             )
             case
               A : Sort;
               x : A;
               rest : List(A);
-              |- append(singleton(x), rest) = cons(x, rest);
+              ⊢ append(singleton(x), rest) = cons(x, rest);
             proof
               by reflexivity(List(A), cons(x, rest));
             qed;
@@ -203,23 +200,23 @@ model ListMonad satisfies Monad(
     by list_induction(
       A,
       m,
-      lambda (xs : List(A)) st
+      λ (xs : List(A)) st
         bind(bind(xs, f), g)
         =
         bind(
           xs,
-          lambda (x : A) st bind(f(x), g)
+          λ (x : A) st bind(f(x), g)
         )
     ) {
       case
         A B C : Sort;
-        f : A -> List(B);
-        g : B -> List(C);
-        |- bind(bind(nil, f), g)
+        f : A → List(B);
+        g : B → List(C);
+        ⊢ bind(bind(nil, f), g)
            =
            bind(
              nil,
-             lambda (x : A) st bind(f(x), g)
+             λ (x : A) st bind(f(x), g)
            );
       proof
         by rewrite_r(
@@ -227,29 +224,29 @@ model ListMonad satisfies Monad(
           bind(nil, f),
           nil,
           bind_nil(A, B, f),
-          lambda (ys : List(B)) st
+          λ (ys : List(B)) st
             bind(ys, g)
             =
             bind(
               nil,
-              lambda (x : A) st bind(f(x), g)
+              λ (x : A) st bind(f(x), g)
             )
         )
         case
           A B C : Sort;
-          f : A -> List(B);
-          g : B -> List(C);
-          |- bind(nil, g)
+          f : A → List(B);
+          g : B → List(C);
+          ⊢ bind(nil, g)
              =
              bind(
                nil,
-               lambda (x : A) st bind(f(x), g)
+               λ (x : A) st bind(f(x), g)
              );
         proof
           by bind_nil(
             A,
             C,
-            lambda (x : A) st bind(f(x), g)
+            λ (x : A) st bind(f(x), g)
           );
         qed;
       qed;
@@ -258,14 +255,14 @@ model ListMonad satisfies Monad(
         A B C : Sort;
         x : A;
         rest : List(A);
-        ih := bind(bind(rest, f), g) = bind(rest, lambda (x : A) st bind(f(x), g));
-        f : A -> List(B);
-        g : B -> List(C);
-        |- bind(bind(cons(x, rest), f), g)
+        ih := bind(bind(rest, f), g) = bind(rest, λ (x : A) st bind(f(x), g));
+        f : A → List(B);
+        g : B → List(C);
+        ⊢ bind(bind(cons(x, rest), f), g)
            =
            bind(
              cons(x, rest),
-             lambda (y : A) st bind(f(y), g)
+             λ (y : A) st bind(f(y), g)
            );
       proof
         by rewrite_r(
@@ -273,26 +270,26 @@ model ListMonad satisfies Monad(
           bind(cons(x, rest), f),
           append(f(x), bind(rest, f)),
           bind_cons(A, B, x, rest, f),
-          lambda (ys : List(B)) st
+          λ (ys : List(B)) st
             bind(ys, g)
             =
             bind(
               cons(x, rest),
-              lambda (y : A) st bind(f(y), g)
+              λ (y : A) st bind(f(y), g)
             )
         )
         case
           A B C : Sort;
           x : A;
           rest : List(A);
-          ih := bind(bind(rest, f), g) = bind(rest, lambda (x : A) st bind(f(x), g));
-          f : A -> List(B);
-          g : B -> List(C);
-          |- bind(append(f(x), bind(rest, f)), g)
+          ih := bind(bind(rest, f), g) = bind(rest, λ (x : A) st bind(f(x), g));
+          f : A → List(B);
+          g : B → List(C);
+          ⊢ bind(append(f(x), bind(rest, f)), g)
              =
              bind(
                cons(x, rest),
-               lambda (y : A) st bind(f(y), g)
+               λ (y : A) st bind(f(y), g)
              );
         proof
           by rewrite_r(
@@ -300,55 +297,55 @@ model ListMonad satisfies Monad(
             bind(append(f(x), bind(rest, f)), g),
             append(bind(f(x), g), bind(bind(rest, f), g)),
             bind_append(B, C, f(x), bind(rest, f), g),
-            lambda (zs : List(C)) st
+            λ (zs : List(C)) st
               zs
               =
               bind(
                 cons(x, rest),
-                lambda (y : A) st bind(f(y), g)
+                λ (y : A) st bind(f(y), g)
               )
           )
           case
             A B C : Sort;
             x : A;
             rest : List(A);
-            ih := bind(bind(rest, f), g) = bind(rest, lambda (x : A) st bind(f(x), g));
-            f : A -> List(B);
-            g : B -> List(C);
-            |- append(bind(f(x), g), bind(bind(rest, f), g))
+            ih := bind(bind(rest, f), g) = bind(rest, λ (x : A) st bind(f(x), g));
+            f : A → List(B);
+            g : B → List(C);
+            ⊢ append(bind(f(x), g), bind(bind(rest, f), g))
                =
                bind(
                  cons(x, rest),
-                 lambda (y : A) st bind(f(y), g)
+                 λ (y : A) st bind(f(y), g)
                );
           proof
             by rewrite_r(
               List(C),
               bind(bind(rest, f), g),
-              bind(rest, lambda (x : A) st bind(f(x), g)),
+              bind(rest, λ (x : A) st bind(f(x), g)),
               ih,
-              lambda (zs : List(C)) st
+              λ (zs : List(C)) st
                 append(bind(f(x), g), zs)
                 =
                 bind(
                   cons(x, rest),
-                  lambda (y : A) st bind(f(y), g)
+                  λ (y : A) st bind(f(y), g)
                 )
             )
             case
               A B C : Sort;
               x : A;
               rest : List(A);
-              f : A -> List(B);
-              g : B -> List(C);
-              |- append(
+              f : A → List(B);
+              g : B → List(C);
+              ⊢ append(
                    bind(f(x), g),
-                   bind(rest, lambda (x : A) st bind(f(x), g))
+                   bind(rest, λ (x : A) st bind(f(x), g))
                  )
                  =
                  bind(
                    cons(x, rest),
-                   lambda (y : A) st bind(f(y), g)
+                   λ (y : A) st bind(f(y), g)
                  );
             proof
               by bind_cons(
@@ -356,7 +353,7 @@ model ListMonad satisfies Monad(
                 C,
                 x,
                 rest,
-                lambda (y : A) st bind(f(y), g)
+                λ (y : A) st bind(f(y), g)
               );
             qed;
           qed;

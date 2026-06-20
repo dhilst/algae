@@ -102,18 +102,21 @@ False
 
 Both forms are accepted.
 
-| Meaning           |                      ASCII |                    Unicode |     |   |
-| ----------------- | -------------------------: | -------------------------: | --- | - |
-| sequent turnstile |                          ` |                         -` | `⊢` |   |
-| product type      |                        `*` |                        `×` |     |   |
-| sum type          |                          ` |                          ` | `   | ` |
-| lambda            |                   `lambda` |                        `λ` |     |   |
-| conjunction       |                       `/\` |                        `∧` |     |   |
-| disjunction       |                       `\/` |                        `∨` |     |   |
-| implication       |                       `=>` |                        `⇒` |     |   |
-| biconditional     |                      `<=>` |                        `⇔` |     |   |
-| negation          |                        `~` |                        `¬` |     |   |
-| separator         | `------------------------` | `────────────────────────` |     |   |
+| Meaning           |                      ASCII |                    Unicode |
+| ----------------- | -------------------------: | -------------------------: |
+| sequent turnstile |                      `\|-` |                        `⊢` |
+| product type      |                        `*` |                        `×` |
+| sum type          |                       `\|` |                            |
+| lambda            |                   `lambda` |                        `λ` |
+| universal         |                   `forall` |                        `∀` |
+| existential       |                   `exists` |                        `∃` |
+| conjunction       |                       `/\` |                        `∧` |
+| disjunction       |                       `\/` |                        `∨` |
+| implication       |                       `=>` |                        `⇒` |
+| arrow             |                       `->` |                        `→` |
+| biconditional     |                      `<=>` |                        `⇔` |
+| negation          |                        `~` |                        `¬` |
+| separator         | `------------------------` | `────────────────────────` |
 
 The symbol `->` is only for function types.
 
@@ -282,11 +285,8 @@ rule transitivity(
   x y z : T
 )
   |- x = y;
-
   |- y = z
-
   ------------------------
-
   |- x = z
 end;
 ```
@@ -1081,9 +1081,7 @@ rule rewrite_r(
   P : T -> Prop
 )
   |- P(a)
-
   ------------------------
-
   |- P(b)
 end;
 
@@ -1094,9 +1092,7 @@ rule rewrite_l(
   P : T -> Prop
 )
   |- P(b)
-
   ------------------------
-
   |- P(a)
 end;
 
@@ -1105,9 +1101,7 @@ rule symmetry(
   x y : T
 )
   |- x = y
-
   ------------------------
-
   |- y = x
 end;
 
@@ -1116,11 +1110,8 @@ rule transitivity(
   x y z : T
 )
   |- x = y;
-
   |- y = z
-
   ------------------------
-
   |- x = z
 end;
 
@@ -1128,11 +1119,8 @@ rule and_intro(
   P Q : Prop
 )
   |- P;
-
   |- Q
-
   ------------------------
-
   |- P /\ Q
 end;
 
@@ -1140,9 +1128,7 @@ rule and_left(
   P Q : Prop
 )
   |- P /\ Q
-
   ------------------------
-
   |- P
 end;
 
@@ -1150,9 +1136,7 @@ rule and_right(
   P Q : Prop
 )
   |- P /\ Q
-
   ------------------------
-
   |- Q
 end;
 
@@ -1160,9 +1144,7 @@ rule or_intro_left(
   P Q : Prop
 )
   |- P
-
   ------------------------
-
   |- P \/ Q
 end;
 
@@ -1170,9 +1152,7 @@ rule or_intro_right(
   P Q : Prop
 )
   |- Q
-
   ------------------------
-
   |- P \/ Q
 end;
 
@@ -1180,13 +1160,9 @@ rule or_elim(
   P Q R : Prop
 )
   |- P \/ Q;
-
   P := P |- R;
-
   Q := Q |- R
-
   ------------------------
-
   |- R
 end;
 
@@ -1194,9 +1170,7 @@ rule implication_intro(
   P Q : Prop
 )
   P := P |- Q
-
   ------------------------
-
   |- P => Q
 end;
 
@@ -1204,11 +1178,8 @@ rule implication_elim(
   P Q : Prop
 )
   |- P => Q;
-
   |- P
-
   ------------------------
-
   |- Q
 end;
 
@@ -1216,9 +1187,7 @@ rule negation_intro(
   P : Prop
 )
   P := P |- False
-
   ------------------------
-
   |- ~P
 end;
 
@@ -1226,11 +1195,8 @@ rule negation_elim(
   P : Prop
 )
   |- P;
-
   |- ~P
-
   ------------------------
-
   |- False
 end;
 
@@ -1238,9 +1204,7 @@ rule false_elim(
   P : Prop
 )
   |- False
-
   ------------------------
-
   |- P
 end;
 
@@ -1248,11 +1212,8 @@ rule biconditional_intro(
   P Q : Prop
 )
   |- P => Q;
-
   |- Q => P
-
   ------------------------
-
   |- P <=> Q
 end;
 
@@ -1260,9 +1221,7 @@ rule biconditional_elim_left(
   P Q : Prop
 )
   |- P <=> Q
-
   ------------------------
-
   |- P => Q
 end;
 
@@ -1270,21 +1229,16 @@ rule biconditional_elim_right(
   P Q : Prop
 )
   |- P <=> Q
-
   ------------------------
-
   |- Q => P
 end;
 
 rule instantiation(
   T : Sort,
-  P : T -> Prop,
-  x : T
+  P : T -> Prop
 )
   |- forall (y : T) st P(y)
-
   ------------------------
-
   |- P(x)
 end;
 
@@ -1294,9 +1248,7 @@ rule generalization(
   P : T -> Prop
 )
   |- P(x)
-
   ------------------------
-
   |- forall (x : T) st P(x)
 end;
 
@@ -1306,9 +1258,7 @@ rule exists_intro(
   x : T
 )
   |- P(x)
-
   ------------------------
-
   |- exists (x : T) st P(x)
 end;
 
@@ -1318,11 +1268,8 @@ rule exists_elim(
   Q : Prop
 )
   |- exists (x : T) st P(x);
-
   x : T, witness := P(x) |- Q
-
   ------------------------
-
   |- Q
 end;
 ```
@@ -1373,9 +1320,7 @@ rule pair_cases(
   P : Pair(A, B) -> Prop
 )
   x : A, y : B |- P(pair(x, y))
-
   ------------------------
-
   |- P(p)
 end;
 
@@ -1383,11 +1328,8 @@ rule product_reflect_intro(
   P Q : Prop
 )
   |- P;
-
   |- Q
-
   ------------------------
-
   |- P /\ Q
 end;
 
@@ -1395,9 +1337,7 @@ rule product_reflect_left(
   P Q : Prop
 )
   |- P /\ Q
-
   ------------------------
-
   |- P
 end;
 
@@ -1405,9 +1345,7 @@ rule product_reflect_right(
   P Q : Prop
 )
   |- P /\ Q
-
   ------------------------
-
   |- Q
 end;
 
@@ -1423,11 +1361,8 @@ rule sum_cases(
   P : Sum(A, B) -> Prop
 )
   x : A |- P(inl(x));
-
   y : B |- P(inr(y))
-
   ------------------------
-
   |- P(s)
 end;
 
@@ -1435,9 +1370,7 @@ rule sum_reflect_left(
   P Q : Prop
 )
   |- P
-
   ------------------------
-
   |- P \/ Q
 end;
 
@@ -1445,9 +1378,7 @@ rule sum_reflect_right(
   P Q : Prop
 )
   |- Q
-
   ------------------------
-
   |- P \/ Q
 end;
 
@@ -1455,13 +1386,9 @@ rule sum_reflect_elim(
   P Q R : Prop
 )
   |- P \/ Q;
-
   P := P |- R;
-
   Q := Q |- R
-
   ------------------------
-
   |- R
 end;
 ```
@@ -1636,11 +1563,8 @@ rule option_cases(
   P : Option(A) -> Prop
 )
   |- P(none);
-
   x : A |- P(some(x))
-
   ------------------------
-
   |- P(m)
 end;
 
@@ -1864,11 +1788,8 @@ rule result_cases(
   P : Result(A, E) -> Prop
 )
   x : A |- P(ok(x));
-
   e : E |- P(err(e))
-
   ------------------------
-
   |- P(r)
 end;
 
@@ -2150,11 +2071,8 @@ rule list_induction(
   P : List(A) -> Prop
 )
   |- P(nil);
-
   x : A, rest : List(A), ih := P(rest) |- P(cons(x, rest))
-
   ------------------------
-
   |- P(xs)
 end;
 
@@ -2469,13 +2387,10 @@ rule induction(
   P : Nat -> Prop
 )
   |- P(0);
-
   n : Nat;
   ih := P(n);
   |- P(s(n))
-
   ------------------------
-
   |- forall (n : Nat) st P(n)
 end;
 
@@ -2736,3 +2651,45 @@ Tree-sitter highlight live in editors/tree-sitter
 ## Neovim
 
 The neovim plugin using the tree-sitter highligh lives in editors/neovim/
+
+---
+
+# 16. Style
+
+Stylistic conventions for writing Algae source. These are recommendations for
+readability; they are not enforced by the parser.
+
+1. **Avoid blank lines inside rules.** Keep a `rule`'s premises, separator line,
+   and conclusion on consecutive lines so the whole inference reads as a single
+   unit.
+
+   Preferred:
+
+   ```alg
+   rule transitivity(
+     T : Sort,
+     x y z : T
+   )
+     |- x = y;
+     |- y = z
+     ------------------------
+     |- x = z
+   end;
+   ```
+
+   Avoid:
+
+   ```alg
+   rule transitivity(
+     T : Sort,
+     x y z : T
+   )
+     |- x = y;
+
+     |- y = z
+
+     ------------------------
+
+     |- x = z
+   end;
+   ```

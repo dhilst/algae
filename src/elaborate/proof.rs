@@ -655,6 +655,22 @@ fn elaborate_step(
             );
             return None;
         }
+        // Eigenvariable freshness (spec §4.15 and the elimination rules): a
+        // freshly introduced variable must not already occur free in the parent
+        // context (otherwise it would capture an existing assumption).
+        for (s, _) in &user_new {
+            let clashes = ctx.iter().any(|e| match e {
+                CtxEntry::Term { ty, .. } => ty.has_free(*s),
+                CtxEntry::Proof { prop, .. } => prop.has_free(*s),
+            });
+            if clashes {
+                elab.err(
+                    "eigenvariable already occurs free in the context",
+                    case.span,
+                );
+                return None;
+            }
+        }
         // Build the renaming and apply it to the premise.
         let mut renamed = prem.clone();
         for (eig, (user, _is_proof)) in prem.ctx.iter().zip(&user_new) {

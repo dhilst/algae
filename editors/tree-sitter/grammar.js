@@ -73,8 +73,9 @@ module.exports = grammar({
     // 2.6 numeric symbol used as operator name, e.g. `0`
     numeric_symbol: _ => /[0-9]+/,
 
-    // 2.6 symbolic operators usable as names
-    symbolic_operator: _ => choice('+', '-', '*', '/', '==', '<=', '>=', '<', '>'),
+    // 2.6 symbolic operators usable as names (× is accepted wherever * is, to
+    // match the lexer, since fmt may render the multiplication operator as ×)
+    symbolic_operator: _ => choice('+', '-', '*', '×', '/', '==', '<=', '>=', '<', '>'),
 
     // 3.2 Top-Level Declarations
     _top_decl: $ => choice(
@@ -154,7 +155,7 @@ module.exports = grammar({
     // e.g. `Nat * Nat -> Nat`, `A -> B | Err`, `Option(A) * (A -> Option(B)) -> ...`.
     function_sig: $ => seq(
       optional(field('domain', alias($._sum_type, $.type_expr))),
-      '->',
+      choice('->', '→'),
       field('codomain', $.type_expr),
     ),
 
@@ -400,7 +401,7 @@ module.exports = grammar({
 
     _kind_function: $ => prec.right(PREC.arrow, seq(
       $._kind_product,
-      optional(seq('->', $._kind_function)),
+      optional(seq(choice('->', '→'), $._kind_function)),
     )),
 
     _kind_product: $ => prec.left(PREC.product, seq(
@@ -422,7 +423,7 @@ module.exports = grammar({
 
     _function_type: $ => prec.right(PREC.arrow, seq(
       $._sum_type,
-      optional(seq('->', $._function_type)),
+      optional(seq(choice('->', '→'), $._function_type)),
     )),
 
     _sum_type: $ => prec.left(PREC.sum, seq(
@@ -504,7 +505,7 @@ module.exports = grammar({
 
     // quantified_prop = ("forall" | "exists") binder "st" prop
     quantified_prop: $ => prec.right(seq(
-      field('quantifier', choice('forall', 'exists')),
+      field('quantifier', choice('forall', '∀', 'exists', '∃')),
       field('binder', $.binder),
       'st',
       field('body', $.prop),
@@ -557,9 +558,9 @@ module.exports = grammar({
       repeat(seq($.infix_op, $._application_term)),
     )),
 
-    // infix_op = + | - | * | / | qualified_or_unqualified_ident
+    // infix_op = + | - | * | / | qualified_or_unqualified_ident  (× ≡ *)
     infix_op: $ => choice(
-      '+', '-', '*', '/',
+      '+', '-', '*', '×', '/',
       $._ident_or_qualified,
     ),
 
