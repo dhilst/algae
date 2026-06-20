@@ -1,0 +1,9 @@
+{
+  "name": "app",
+  "version": 1,
+  "sources": ["."],
+  "dependencies": [
+    { "name": "geometry", "path": "../geometry" }
+  ],
+  "stdlib": "../../algae/stdlib/v1"
+}

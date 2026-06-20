@@ -1,1 +1,0 @@
-sort A, B : Sort;

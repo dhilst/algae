@@ -1,0 +1,32 @@
+{
+  "name": "tree-sitter-alg",
+  "version": "0.1.0",
+  "description": "Tree-sitter grammar for the Algae v2 (.alg) language",
+  "license": "MIT",
+  "keywords": [
+    "tree-sitter",
+    "parser",
+    "algae",
+    "alg"
+  ],
+  "files": [
+    "grammar.js",
+    "queries/*",
+    "src/**"
+  ],
+  "tree-sitter": [
+    {
+      "scope": "source.alg",
+      "file-types": [
+        "alg"
+      ],
+      "highlights": [
+        "queries/highlights.scm"
+      ],
+      "injection-regex": "^alg$"
+    }
+  ],
+  "devDependencies": {
+    "tree-sitter-cli": "0.26.9"
+  }
+}

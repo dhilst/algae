@@ -1,1 +1,0 @@
-sort Color = {red, green};

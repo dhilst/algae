@@ -1,85 +1,88 @@
-# alg.nvim
+# Algae v2 — Neovim sample config
 
-Neovim syntax highlighting for `.alg` algebraic specifications, powered by
-tree-sitter. Works with Neovim's built-in tree-sitter support (0.9+); the
-nvim-treesitter plugin is not required.
+A **self-contained** Neovim configuration that adds tree-sitter syntax
+highlighting for the Algae v2 language (`.alg` files). It opts you in
+explicitly and never touches your real `~/.config/nvim`.
 
-## Layout
+## Quick start
 
-```
-editors/neovim/
-├── tree-sitter-alg/      # grammar (grammar.js + generated src/parser.c)
-├── queries/alg/          # highlight queries
-├── plugin/alg.lua        # filetype detection + vim.treesitter.start
-├── ftplugin/alg.lua      # buffer-local options (commentstring)
-└── Makefile              # builds parser/alg.so from the committed parser.c
-```
-
-## Build
-
-Compiling the parser only needs a C compiler (`src/parser.c` is committed):
+From the repository root:
 
 ```sh
-make -C editors/neovim
+nvim -u editors/neovim/init.lua examples/anything.alg
 ```
 
-This produces `editors/neovim/parser/alg.so`, which Neovim picks up from the
-runtimepath automatically.
+(Any `.alg` file works; the standard-library samples extracted from the spec
+live under `editors/tree-sitter/test/stdlib/`.)
 
-`make generate` regenerates `src/parser.c` after editing `grammar.js`
-(requires the `tree-sitter` CLI).
+That is all. On first launch the config builds the parser shared object from
+the committed C source if it is missing, registers the `alg` filetype and the
+tree-sitter language, and starts highlighting.
 
-## Install
+## What it does
 
-### lazy.nvim (local clone)
+`init.lua`:
 
-```lua
-{
-  dir = '/path/to/algae/editors/neovim',
-  name = 'alg.nvim',
-  build = 'make',
-  -- Load eagerly: the plugin registers the .alg filetype itself,
-  -- so lazy-loading on `ft = 'alg'` would never trigger.
-  lazy = false,
-}
+1. Resolves all paths relative to itself, so it works from any working
+   directory.
+2. Prepends `editors/neovim/` to `runtimepath` so Neovim's built-in
+   tree-sitter finds the highlight queries at
+   `editors/neovim/queries/alg/highlights.scm`.
+3. Registers `*.alg` as filetype `alg` (`vim.filetype.add`).
+4. Builds `editors/neovim/parser/alg.so` from the committed parser source
+   (`editors/tree-sitter/src/parser.c`) if the `.so` is not present, then
+   registers it with `vim.treesitter.language.add('alg', { path = ... })`.
+
+`ftplugin/alg.lua` runs per `alg` buffer and calls `vim.treesitter.start()`
+to enable highlighting (plus `#`-comment settings and 2-space indentation).
+
+## Prerequisites
+
+- **Neovim 0.11+** (uses `vim.treesitter.language.add` and
+  `vim.filetype.add`). Tested with 0.11.6.
+- **A C compiler** (`cc` or `gcc`) — only needed the *first* time, to compile
+  `parser/alg.so` from the committed `editors/tree-sitter/src/parser.c`. After
+  that the prebuilt `.so` is reused.
+- **No plugins** are required. nvim-treesitter is **not** needed.
+- The tree-sitter CLI and npm are **only** needed if you want to regenerate
+  the grammar — see `editors/tree-sitter/`. They are not needed to use this
+  config.
+
+## Rebuilding the parser by hand
+
+If you change the grammar and regenerate `parser.c`, rebuild the `.so`:
+
+```sh
+cc -o editors/neovim/parser/alg.so -shared -Os -fPIC \
+   -I editors/tree-sitter/src editors/tree-sitter/src/parser.c
 ```
 
-### Manual
+Or simply delete `editors/neovim/parser/alg.so` and relaunch — `init.lua`
+rebuilds it automatically.
 
-Add the directory to your runtimepath in `init.lua`:
+If you also change the highlight queries in
+`editors/tree-sitter/queries/highlights.scm`, copy them across:
 
-```lua
-vim.opt.runtimepath:prepend('/path/to/algae/editors/neovim')
+```sh
+cp editors/tree-sitter/queries/highlights.scm \
+   editors/neovim/queries/alg/highlights.scm
 ```
 
-and run `make -C /path/to/algae/editors/neovim` once.
+## Verifying headlessly
 
-## Grammar notes
+```sh
+nvim --headless -u editors/neovim/init.lua \
+  editors/tree-sitter/test/stdlib/nat.alg \
+  -c 'set ft?' \
+  -c 'lua print(vim.treesitter.get_parser():lang())' \
+  -c 'lua local b=vim.api.nvim_get_current_buf(); print("highlighter active: "..tostring(vim.treesitter.highlighter.active[b]~=nil))' \
+  -c 'qa'
+```
 
-The grammar mirrors `algae/parser.py`. It covers:
+Expected output:
 
-- **Declarations**: `sort`/`param` with kinds (`sort List : Sort → Sort;`),
-  `op`, `eq`/`prop`/`lemma` (with optional binder parameters), `rule`,
-  `include` / `open` / `alias`, and top-level `let`.
-- **Propositions**: sequents `context ⊢ goal` whose context may carry typed
-  variables (`n : Nat`) and named assumptions (`h := A`), used by rule premises,
-  rule conclusions, and proof states.
-- **Proofs**: `proof … qed`/`wip`, `goal … by <tactic> therefore <state |
-  done>;` steps, with the `rewrite >`/`rewrite <`, `apply … case … qed; …
-  therefore <state> qed;`, and `wip` tactics. A subproof that uses `wip` (work
-  in progress) closes with `wip` instead of `qed`. Module obligations are
-  discharged in an `include … props <case …>* qed;` block.
-- **Types**: `×`, `→`/`⇸`, `|`, type application (`List[T]`, `Seq[T]`,
-  `list::List[Elem]`), and qualified names. The only built-in types are `𝔹`,
-  `Prop`, and `Sort`.
-- **Terms**: Pratt-style operator precedence, `if`/`then`/`else`, `let`/`in`,
-  quantifiers (`∀ (n : Nat) st …`, `∃`), and lambda (`λ (n : Nat) => …` / `fun`).
-
-Unicode symbols and their ASCII / keyword aliases (`->`/`arrow`, `/\`/`and`,
-`|-`/`⊢`, `forall`/`∀`, `fun`/`λ`, ...) are interchangeable, as in the reference
-parser. The rule bar between premises and conclusion is a run of the box-drawing
-dash `─` (U+2500). Use `algae.py check` for real validation (type checking,
-module resolution); the grammar only describes shape.
-
-Corpus tests live in `tree-sitter-alg/test/corpus/`; run them with
-`tree-sitter test` from `tree-sitter-alg/`.
+```
+  filetype=alg
+alg
+highlighter active: true
+```

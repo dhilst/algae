@@ -1,0 +1,117 @@
+================================================================================
+Import declarations
+================================================================================
+
+import core;
+
+import nat(
+  Nat,
+  s
+);
+
+import monad(
+  Monad as MonadTheory
+);
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (import_decl
+    module: (identifier))
+  (import_decl
+    module: (identifier)
+    (import_list
+      (import_item name: (identifier))
+      (import_item name: (identifier))))
+  (import_decl
+    module: (identifier)
+    (import_list
+      (import_item name: (identifier) alias: (identifier)))))
+
+================================================================================
+Sort declarations
+================================================================================
+
+sort Nat : Sort;
+sort A B Err : Sort;
+sort Option : Sort -> Sort;
+sort Result : Sort * Sort -> Sort;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sort_decl
+    (sort_binding
+      names: (ident_list (identifier))
+      kind: (kind_expr (sort_kind))))
+  (sort_decl
+    (sort_binding
+      names: (ident_list (identifier) (identifier) (identifier))
+      kind: (kind_expr (sort_kind))))
+  (sort_decl
+    (sort_binding
+      names: (ident_list (identifier))
+      kind: (kind_expr (sort_kind) (sort_kind))))
+  (sort_decl
+    (sort_binding
+      names: (ident_list (identifier))
+      kind: (kind_expr (sort_kind) (sort_kind) (sort_kind)))))
+
+================================================================================
+Operator declarations
+================================================================================
+
+op 0 : -> Nat;
+op s : Nat -> Nat;
+op + : Nat * Nat -> Nat;
+op may_fail : A -> B | Err;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (op_decl
+    name: (symbol (numeric_symbol))
+    signature: (function_sig
+      codomain: (type_expr (identifier))))
+  (op_decl
+    name: (symbol (identifier))
+    signature: (function_sig
+      domain: (type_expr (identifier))
+      codomain: (type_expr (identifier))))
+  (op_decl
+    name: (symbol (symbolic_operator))
+    signature: (function_sig
+      domain: (type_expr (identifier) (identifier))
+      codomain: (type_expr (identifier))))
+  (op_decl
+    name: (symbol (identifier))
+    signature: (function_sig
+      domain: (type_expr (identifier))
+      codomain: (type_expr (identifier) (sum_op) (identifier)))))
+
+================================================================================
+Axiom
+================================================================================
+
+axiom reflexivity(
+  T : Sort,
+  x : T
+)
+  |- x = x;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (axiom_decl
+    name: (identifier)
+    params: (formal_params
+      (formal_param
+        (term_binding names: (ident_list (identifier)) type: (type_expr (identifier))))
+      (formal_param
+        (term_binding names: (ident_list (identifier)) type: (type_expr (identifier)))))
+    statement: (sequent
+      (turnstile)
+      goal: (prop
+        (equality_prop
+          left: (term (identifier))
+          right: (term (identifier)))))))

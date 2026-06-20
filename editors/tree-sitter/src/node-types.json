@@ -1,0 +1,1772 @@
+[
+  {
+    "type": "actual_args",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "term_list",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "application",
+    "named": true,
+    "fields": {
+      "function": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "numeric_symbol",
+            "named": true
+          },
+          {
+            "type": "qualified_identifier",
+            "named": true
+          },
+          {
+            "type": "symbolic_operator",
+            "named": true
+          },
+          {
+            "type": "term",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "term_list",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "axiom_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "params": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "formal_params",
+            "named": true
+          }
+        ]
+      },
+      "statement": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "sequent",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "biconditional_op",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "binder",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "term_binding",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "by_stmt_many",
+    "named": true,
+    "fields": {
+      "ref": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "proof_ref",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "case_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "by_stmt_one",
+    "named": true,
+    "fields": {
+      "ref": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "proof_ref",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "case_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "by_stmt_zero",
+    "named": true,
+    "fields": {
+      "ref": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "proof_ref",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "case_block",
+    "named": true,
+    "fields": {
+      "proof": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "proof_block",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "case_body",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "case_body",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "context",
+          "named": true
+        },
+        {
+          "type": "sequent_goal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "conjunction_op",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "context",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "context_entry",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "context_entry",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "proof_binding",
+          "named": true
+        },
+        {
+          "type": "term_binding",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "disjunction_op",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "equality_prop",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "formal_param",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "proof_binding",
+          "named": true
+        },
+        {
+          "type": "term_binding",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "formal_params",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "formal_param",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "function_sig",
+    "named": true,
+    "fields": {
+      "codomain": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type_expr",
+            "named": true
+          }
+        ]
+      },
+      "domain": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_expr",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "ident_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "implication_op",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "import_decl",
+    "named": true,
+    "fields": {
+      "module": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "import_list",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "import_item",
+    "named": true,
+    "fields": {
+      "alias": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "import_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "import_item",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "include_decl",
+    "named": true,
+    "fields": {
+      "args": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "actual_args",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "infix_op",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "qualified_identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "kind_expr",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "kind_expr",
+          "named": true
+        },
+        {
+          "type": "sort_kind",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "lambda_term",
+    "named": true,
+    "fields": {
+      "binder": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "binder",
+            "named": true
+          }
+        ]
+      },
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "prop",
+            "named": true
+          },
+          {
+            "type": "term",
+            "named": true
+          }
+        ]
+      },
+      "lambda": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "lambda",
+            "named": false
+          },
+          {
+            "type": "λ",
+            "named": false
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "law_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "params": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "formal_params",
+            "named": true
+          }
+        ]
+      },
+      "statement": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "sequent",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "lemma_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "params": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "formal_params",
+            "named": true
+          }
+        ]
+      },
+      "proof": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "proof_block",
+            "named": true
+          }
+        ]
+      },
+      "statement": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "sequent",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "model_decl",
+    "named": true,
+    "fields": {
+      "args": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "actual_args",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "theory": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "model_law",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "model_law",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "qualified_identifier",
+            "named": true
+          }
+        ]
+      },
+      "proof": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "proof_block",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "negation",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "application",
+          "named": true
+        },
+        {
+          "type": "equality_prop",
+          "named": true
+        },
+        {
+          "type": "false_prop",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "negation",
+          "named": true
+        },
+        {
+          "type": "negation_op",
+          "named": true
+        },
+        {
+          "type": "prop",
+          "named": true
+        },
+        {
+          "type": "qualified_identifier",
+          "named": true
+        },
+        {
+          "type": "quantified_prop",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "negation_op",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "op_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "symbol",
+            "named": true
+          }
+        ]
+      },
+      "signature": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "function_sig",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "premise_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "sequent",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "proof_binding",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "prop": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "prop",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "proof_block",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "by_stmt_many",
+          "named": true
+        },
+        {
+          "type": "by_stmt_one",
+          "named": true
+        },
+        {
+          "type": "by_stmt_zero",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "proof_ref",
+    "named": true,
+    "fields": {
+      "args": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "actual_args",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "qualified_identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "prop",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "application",
+          "named": true
+        },
+        {
+          "type": "biconditional_op",
+          "named": true
+        },
+        {
+          "type": "conjunction_op",
+          "named": true
+        },
+        {
+          "type": "disjunction_op",
+          "named": true
+        },
+        {
+          "type": "equality_prop",
+          "named": true
+        },
+        {
+          "type": "false_prop",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "implication_op",
+          "named": true
+        },
+        {
+          "type": "negation",
+          "named": true
+        },
+        {
+          "type": "prop",
+          "named": true
+        },
+        {
+          "type": "qualified_identifier",
+          "named": true
+        },
+        {
+          "type": "quantified_prop",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "qualified_identifier",
+    "named": true,
+    "fields": {
+      "module": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "quantified_prop",
+    "named": true,
+    "fields": {
+      "binder": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "binder",
+            "named": true
+          }
+        ]
+      },
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "prop",
+            "named": true
+          }
+        ]
+      },
+      "quantifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "exists",
+            "named": false
+          },
+          {
+            "type": "forall",
+            "named": false
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "rule_body",
+    "named": true,
+    "fields": {
+      "conclusion": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "sequent",
+            "named": true
+          }
+        ]
+      },
+      "premises": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "premise_list",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "separator",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "params": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "formal_params",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "rule_body",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "sequent",
+    "named": true,
+    "fields": {
+      "context": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "context",
+            "named": true
+          }
+        ]
+      },
+      "goal": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "prop",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "turnstile",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "sequent_goal",
+    "named": true,
+    "fields": {
+      "goal": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "prop",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "turnstile",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "sort_binding",
+    "named": true,
+    "fields": {
+      "kind": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "kind_expr",
+            "named": true
+          }
+        ]
+      },
+      "names": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident_list",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "sort_decl",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "sort_binding",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "source_file",
+    "named": true,
+    "root": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "axiom_decl",
+          "named": true
+        },
+        {
+          "type": "import_decl",
+          "named": true
+        },
+        {
+          "type": "lemma_decl",
+          "named": true
+        },
+        {
+          "type": "model_decl",
+          "named": true
+        },
+        {
+          "type": "op_decl",
+          "named": true
+        },
+        {
+          "type": "rule_decl",
+          "named": true
+        },
+        {
+          "type": "sort_decl",
+          "named": true
+        },
+        {
+          "type": "theorem_decl",
+          "named": true
+        },
+        {
+          "type": "theory_decl",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "symbol",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "numeric_symbol",
+          "named": true
+        },
+        {
+          "type": "qualified_identifier",
+          "named": true
+        },
+        {
+          "type": "symbolic_operator",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "symbolic_operator",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "term",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "application",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "infix_op",
+          "named": true
+        },
+        {
+          "type": "lambda_term",
+          "named": true
+        },
+        {
+          "type": "numeric_symbol",
+          "named": true
+        },
+        {
+          "type": "qualified_identifier",
+          "named": true
+        },
+        {
+          "type": "symbolic_operator",
+          "named": true
+        },
+        {
+          "type": "term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "term_binding",
+    "named": true,
+    "fields": {
+      "names": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident_list",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type_expr",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "term_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "theorem_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "params": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "formal_params",
+            "named": true
+          }
+        ]
+      },
+      "proof": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "proof_block",
+            "named": true
+          }
+        ]
+      },
+      "statement": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "sequent",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "theory_decl",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "params": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "formal_params",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "include_decl",
+          "named": true
+        },
+        {
+          "type": "law_decl",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "turnstile",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "type_application",
+    "named": true,
+    "fields": {
+      "constructor": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "qualified_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "type_expr",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "type_expr",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "prop_type",
+          "named": true
+        },
+        {
+          "type": "qualified_identifier",
+          "named": true
+        },
+        {
+          "type": "sum_op",
+          "named": true
+        },
+        {
+          "type": "type_application",
+          "named": true
+        },
+        {
+          "type": "type_expr",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "(",
+    "named": false
+  },
+  {
+    "type": ")",
+    "named": false
+  },
+  {
+    "type": "*",
+    "named": false
+  },
+  {
+    "type": "+",
+    "named": false
+  },
+  {
+    "type": ",",
+    "named": false
+  },
+  {
+    "type": "-",
+    "named": false
+  },
+  {
+    "type": "->",
+    "named": false
+  },
+  {
+    "type": ".",
+    "named": false
+  },
+  {
+    "type": "/",
+    "named": false
+  },
+  {
+    "type": "/\\",
+    "named": false
+  },
+  {
+    "type": ":",
+    "named": false
+  },
+  {
+    "type": ":=",
+    "named": false
+  },
+  {
+    "type": ";",
+    "named": false
+  },
+  {
+    "type": "<",
+    "named": false
+  },
+  {
+    "type": "<=",
+    "named": false
+  },
+  {
+    "type": "<=>",
+    "named": false
+  },
+  {
+    "type": "=",
+    "named": false
+  },
+  {
+    "type": "==",
+    "named": false
+  },
+  {
+    "type": "=>",
+    "named": false
+  },
+  {
+    "type": ">",
+    "named": false
+  },
+  {
+    "type": ">=",
+    "named": false
+  },
+  {
+    "type": "\\/",
+    "named": false
+  },
+  {
+    "type": "as",
+    "named": false
+  },
+  {
+    "type": "axiom",
+    "named": false
+  },
+  {
+    "type": "by",
+    "named": false
+  },
+  {
+    "type": "case",
+    "named": false
+  },
+  {
+    "type": "comment",
+    "named": true,
+    "extra": true
+  },
+  {
+    "type": "end",
+    "named": false
+  },
+  {
+    "type": "exists",
+    "named": false
+  },
+  {
+    "type": "false_prop",
+    "named": true
+  },
+  {
+    "type": "forall",
+    "named": false
+  },
+  {
+    "type": "identifier",
+    "named": true
+  },
+  {
+    "type": "iff",
+    "named": false
+  },
+  {
+    "type": "import",
+    "named": false
+  },
+  {
+    "type": "include",
+    "named": false
+  },
+  {
+    "type": "lambda",
+    "named": false
+  },
+  {
+    "type": "law",
+    "named": false
+  },
+  {
+    "type": "lemma",
+    "named": false
+  },
+  {
+    "type": "model",
+    "named": false
+  },
+  {
+    "type": "numeric_symbol",
+    "named": true
+  },
+  {
+    "type": "op",
+    "named": false
+  },
+  {
+    "type": "proof",
+    "named": false
+  },
+  {
+    "type": "prop_type",
+    "named": true
+  },
+  {
+    "type": "qed",
+    "named": false
+  },
+  {
+    "type": "rule",
+    "named": false
+  },
+  {
+    "type": "satisfies",
+    "named": false
+  },
+  {
+    "type": "separator",
+    "named": true
+  },
+  {
+    "type": "sort",
+    "named": false
+  },
+  {
+    "type": "sort_kind",
+    "named": true
+  },
+  {
+    "type": "st",
+    "named": false
+  },
+  {
+    "type": "sum_op",
+    "named": true
+  },
+  {
+    "type": "theorem",
+    "named": false
+  },
+  {
+    "type": "theory",
+    "named": false
+  },
+  {
+    "type": "{",
+    "named": false
+  },
+  {
+    "type": "|-",
+    "named": false
+  },
+  {
+    "type": "}",
+    "named": false
+  },
+  {
+    "type": "~",
+    "named": false
+  },
+  {
+    "type": "¬",
+    "named": false
+  },
+  {
+    "type": "×",
+    "named": false
+  },
+  {
+    "type": "λ",
+    "named": false
+  },
+  {
+    "type": "⇒",
+    "named": false
+  },
+  {
+    "type": "⇔",
+    "named": false
+  },
+  {
+    "type": "∧",
+    "named": false
+  },
+  {
+    "type": "∨",
+    "named": false
+  },
+  {
+    "type": "⊢",
+    "named": false
+  }
+]

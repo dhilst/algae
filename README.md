@@ -1,74 +1,100 @@
-# algae - Algebraic Specifications for AI-Assisted Development
+# Algae
 
-A Claude Code plugin and Codex CLI skill for writing lightweight algebraic specifications using equational notation.
+Algae v2 is a parser-oriented proof and algebraic-specification language: typed
+sorts, total operators, product/sum types, propositions, sequents, axioms,
+inference rules, lemmas/theorems, theories, laws, models, and **explicit proof
+trees**. This repository is a from-scratch Rust implementation of the toolchain.
 
-`.alg` files describe sorts, module parameters, operation signatures, equations, proof obligations, lemmas, inference rules, and modules. `check` parses **and type-checks** them (kinds, operations, equations, lemma/prop/rule propositions, rule application, and module obligations). It does not perform model checking or equational/proof verification — proofs are parsed and their structure checked, but rewrite steps are not discharged.
+The language is specified in [`lang-specs/spec.md`](lang-specs/spec.md).
 
-## Quick Example
+## Building
 
-```
-sort Stack : Sort;
-sort Elem : Sort;
-sort Error : Sort;
+Requires a Rust toolchain (`cargo`).
 
-op empty_error : → Error;
-
-op empty : → Stack;
-op push : Stack × Elem → Stack;
-op pop : Stack → Stack × Elem | Error;
-op top : Stack → Elem | Error;
-
-eq push_top(s : Stack, e : Elem) top(push(s, e)) = e;
-eq push_pop(s : Stack, e : Elem) pop(push(s, e)) = (s, e);
-eq empty_top empty().top = empty_error;
-eq empty_pop empty().pop = empty_error;
+```sh
+cargo build --release
 ```
 
-## Install
+## CLI
 
-### Claude Code
-
-```bash
-claude plugin add /path/to/algae
+```
+algae <command> [targets...] [flags]
 ```
 
-### Codex CLI
+| Command     | Description |
+|-------------|-------------|
+| `parse`     | Tokenize and parse; report syntax errors (`--dump-ast` to print the tree). |
+| `typecheck` | Parse + elaborate (name/import resolution, kind/type checks, build proof steps). |
+| `compile`   | Full pipeline → write `.algo` bytecode (parallel across files; cached). |
+| `verify`    | Compile if needed, then run the parallel proof checker over the bytecode. |
+| `fmt`       | Normalize operator glyphs (ASCII→Unicode by default, `--ascii` for the reverse), preserving all whitespace. |
 
-```bash
-./install-codex.sh
+Global flags: `--stdlib <dir>` (select a vendored stdlib), `-p/--project <path>`
+(`algae.json` or its directory), `-j/--jobs <N>`, `--force` (ignore cache),
+`-q/--quiet`, `-v/--verbose`. `fmt` also takes `--stdout` and `--check`.
+
+```sh
+# Verify the standard library (all proofs pass)
+cargo run -- verify algae/stdlib/v1/
+
+# Compile to bytecode, then re-verify from cache (fast second run)
+cargo run -- compile algae/stdlib/v1/
+cargo run -- verify  algae/stdlib/v1/      # "(cached)"
+
+# Convert a file's operators to Unicode in place
+cargo run -- fmt examples/app/main.alg
 ```
 
-## Usage
+## How it works
 
-| Command | Description |
-|---------|-------------|
-| `/alg write <description>` | Author a `.alg` spec from natural language or existing code |
-| `/alg refine <file.alg>` | Iteratively refine a spec in dialogue with the model |
-| `/alg impl <file.alg>` | Generate implementation code from a spec |
-| `/alg verify <file.alg>` | Check code conformance against a spec |
-| `/alg extract <source-files...>` | Reverse-engineer a spec from existing code |
-| `python algae.py check <file.alg>` | Check `.alg` syntax and types |
-| `python algae.py fmt <file.alg>` | Respell symbol aliases (Unicode ⇄ ASCII), preserving layout |
-| `python algae.py print <file.alg>` | Print the parsed AST as JSON |
+Compilation: **Parse → Elaborate → IR (interned) → Bytecode (`.algo`) → write**.
 
-## Language Overview
+- *Elaboration* resolves names/imports, kind/type-checks, and unfolds every
+  axiom/rule/lemma into self-contained **proof steps**. Each step records its
+  context, current goal, the inlined tactic, the tactic arguments, and the next
+  goal(s) — so checking needs no further elaboration and no cross-lemma lookups.
+- Operators are defined by equational axioms; the checker treats those axioms as
+  definitional rewrite rules (sound, since axioms are assumed true) for
+  definitional equality.
 
-- **Declarations**: `sort`, `param`, `op`, `eq`, `prop`, `lemma`, `rule`, `include`, `open`, `alias`, `let`
-- **Typed sorts (kinds)**: `sort Nat : Sort;`, sort constructors `sort List : Sort → Sort;`, used as `List[Elem]`
-- **Module parameters**: `param T : Sort;` — abstract sorts/constructors bound by `include … with (…)`
-- **Operation signatures**: `op push : Stack × Elem → Stack;` (nullary `→ T`, sum-typed `… | Error`, partial `⇸`). Nullary ops are constants, used bare (`z`, `empty_error`)
-- **Equations**: `eq f(a : T) g(a) = a;` — a trusted equation; binder variables are its schematic parameters. There are no top-level `var`s and no built-in numeric sorts; sorts and their elements are user-declared
-- **Proof obligations**: `prop name(x : T) lhs = rhs;` — required of any instantiation; discharged at the `include` site
-- **Lemmas with proofs**: `lemma name(x : T) lhs = rhs; proof … qed;` — provable equations, parsed/structure-checked, not discharged
-- **Sum/error result types**: `Stack × Elem | Error`
-- **Explicit narrowing**: `T | Error` never narrows to `T` implicitly; declare `op cast : (T | Error) → T;` and wrap happy-path uses with `cast(...)` (convention)
-- **Inference rules**: `rule` with named premise `case … end;` blocks; sequent contexts (`⊢`) may carry typed variables and assumptions
-- **Structured proofs**: `goal <state> by <tactic> therefore <state | done>;`, with the `rewrite >`/`rewrite <`, `apply`, and `wip` tactics. Subproofs close with `qed`, or `wip` ("work in progress") when they use (virally) the `wip` tactic
-- **Modules**: `include foo::bar with (T := Elem);`, `open`, and `alias`, resolved through an `alg-project.json` project root; included `prop`s become obligations discharged in an `include … props <case …>* qed;` block
-- **ASCII aliases** available for Unicode symbols, such as `*`, `arrow`, `/\`, `\/`, `Bool`, `neq`, and `implies`
+Proof checking has three phases: (1) read the steps from bytecode; (2) **in
+parallel**, verify each step locally (`next_goal == tactic(current_goal, args)`,
+recomputed — never trusted); (3) verify the parent/child goal linkage and that
+leaves close their goal.
 
-See [skills/alg/references/syntax.md](skills/alg/references/syntax.md) for the full language reference.
+`.algo` files are invalidated by a stable content hash of the source and of each
+dependency; compilation is deterministic (byte-identical regardless of `--jobs`).
 
-## License
+## Standard library
 
-Apache 2.0
+`algae/stdlib/v1/`: `core`, `adt`, `monad`, `option`, `result`, `list`, `nat`,
+`group`. `algae verify algae/stdlib/v1/` checks every proof.
+
+## Projects (`algae.json`)
+
+A project manifest lets modules be imported from elsewhere in the tree:
+
+```json
+{
+  "name": "app",
+  "version": 1,
+  "sources": ["."],
+  "dependencies": [{ "name": "geometry", "path": "../geometry" }],
+  "stdlib": "../../algae/stdlib/v1"
+}
+```
+
+See [`examples/app/`](examples/app/) for a worked cross-tree import.
+
+## Editor support
+
+Tree-sitter grammar and queries live in [`editors/tree-sitter/`](editors/tree-sitter/)
+(the generated `parser.c` is committed). A self-contained Neovim sample config is
+in [`editors/neovim/`](editors/neovim/):
+
+```sh
+nvim -u editors/neovim/init.lua algae/stdlib/v1/nat.alg
+```
+
+It registers the `alg` filetype and the local parser without touching your own
+Neovim configuration.

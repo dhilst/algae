@@ -1,0 +1,10 @@
+# The Neovim parser .so is platform-specific and auto-built on demand by
+# init.lua from the committed editors/tree-sitter/src/parser.c, so don't
+# commit the binary.
+neovim/parser/*.so
+
+# tree-sitter CLI scratch / npm install output.
+tree-sitter/node_modules/
+tree-sitter/.build/
+tree-sitter/build/
+tree-sitter/*.wasm

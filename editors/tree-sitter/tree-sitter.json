@@ -1,0 +1,42 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "alg",
+      "camelcase": "Alg",
+      "scope": "source.alg",
+      "path": ".",
+      "file-types": [
+        "alg"
+      ],
+      "highlights": [
+        "queries/highlights.scm"
+      ],
+      "injection-regex": "^alg$"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Tree-sitter grammar for the Algae v2 (.alg) language",
+    "authors": [
+      {
+        "name": "Algae project"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/danielhilst/algae"
+    },
+    "namespace": "tree-sitter"
+  },
+  "bindings": {
+    "c": true,
+    "go": false,
+    "node": false,
+    "python": false,
+    "rust": false,
+    "swift": false,
+    "kotlin": false
+  },
+  "tree-sitter-cli": "0.26.9"
+}
