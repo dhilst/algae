@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build, test, verify stdlib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      # 1. The project compiles.
+      - name: Build
+        run: cargo build --locked --verbose
+
+      # 2. All tests pass.
+      - name: Test
+        run: cargo test --locked --verbose
+
+      # 3. Compile the standard library to bytecode, then verify every proof.
+      - name: Compile stdlib
+        run: cargo run --locked -- compile algae/stdlib/v1/
+
+      - name: Verify stdlib proofs
+        run: cargo run --locked -- verify algae/stdlib/v1/
+
+  tree-sitter:
+    name: Tree-sitter grammar
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: editors/tree-sitter
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      # Installs the pinned tree-sitter CLI (devDependency in package.json).
+      - name: Install tree-sitter CLI
+        run: npm install
+
+      # 4. Tree-sitter compiles successfully: the grammar generates, the corpus
+      #    tests pass, the canonical stdlib parses with no ERROR nodes, and the
+      #    generated C parser compiles.
+      - name: Generate parser
+        run: make generate TS="npx tree-sitter"
+
+      - name: Corpus tests
+        run: make test TS="npx tree-sitter"
+
+      - name: Parse the standard library
+        run: make parse-stdlib TS="npx tree-sitter"
+
+      - name: Compile the C parser
+        run: cc -shared -Os -fPIC -I src -o /tmp/alg.so src/parser.c
