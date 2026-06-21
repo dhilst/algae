@@ -21,6 +21,20 @@ fn verify(path: &Path) -> Vec<String> {
     algae::verify_source(&src, &module_name(path), &resolver, 4)
 }
 
+/// Extract the substring from an optional `#expect: <text>` comment line in a
+/// fixture. Reject fixtures use it to assert they fail for the *intended*
+/// reason, not merely that some error occurred.
+fn expected_substring(path: &Path) -> Option<String> {
+    let src = std::fs::read_to_string(path).expect("read source");
+    for line in src.lines() {
+        let line = line.trim_start();
+        if let Some(rest) = line.strip_prefix("#expect:") {
+            return Some(rest.trim().to_string());
+        }
+    }
+    None
+}
+
 fn alg_files(dir: &Path) -> Vec<PathBuf> {
     let mut v: Vec<PathBuf> = std::fs::read_dir(dir)
         .unwrap()
@@ -98,5 +112,16 @@ fn reject_corpus_fails() {
             "reject fixture {} was accepted but should have failed",
             f.display()
         );
+        // If the fixture pins down its expected failure reason, the error list
+        // must contain it — so the fixture fails for the *intended* reason.
+        if let Some(sub) = expected_substring(&f) {
+            assert!(
+                errors.iter().any(|e| e.contains(&sub)),
+                "reject fixture {} failed, but no error matched #expect {:?}; errors: {:?}",
+                f.display(),
+                sub,
+                errors
+            );
+        }
     }
 }
