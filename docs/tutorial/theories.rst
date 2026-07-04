@@ -38,34 +38,44 @@ as an obligation. Here's the ``Monad`` interface from ``monad.alg``:
        ⊢ bind(bind(m, f), g) = bind(m, λ (x : A) st bind(f(x), g));
    qed;
 
-``option.alg`` declares ``Option``, ``return``, ``bind``, then proves they form a
-monad. Take the first law, ``bind(return(x), f) = f(x)``. Since ``return(x)``
-equals ``some(x)`` only *through* the axiom ``return_def`` — never by silent
-computation — the proof **rewrites** ``return(x)`` to ``some(x)`` with
+``option.alg`` proves ``Option`` is a lawful monad with a ``model`` block. Its
+shape is: name the theory, bind each parameter to a concrete operator, then prove
+every law just like a lemma (this listing elides the proof bodies):
+
+.. code-block:: text
+
+   model OptionMonad satisfies Monad(A, B, C, Option, return, bind) iff props
+     law left_identity;   proof … qed;
+     law right_identity;  proof … qed;
+     law associativity;   proof … qed;
+   qed;
+
+Here's that first law — ``bind(return(x), f) = f(x)`` — as a standalone lemma you
+can actually run (inside the model it's the body of ``law left_identity;``). Since
+``return(x)`` equals ``some(x)`` only *through* the axiom ``return_def`` — never by
+silent computation — the proof **rewrites** ``return(x)`` to ``some(x)`` with
 ``rewrite_r``, then finishes with ``bind_some``:
 
 .. code-block:: alg
 
-   model OptionMonad satisfies Monad(
-     A, B, C, Option, return, bind
-   ) iff props
-     law left_identity;
-     proof
-       by rewrite_r(
-         Option(A),
-         return(x), some(x),
-         return_def(A, x),                       # return(x) = some(x)
-         λ (o : Option(A)) st bind(o, f) = f(x)
-       )
-       then ⊢ bind(some(x), f) = f(x);
-       by bind_some(A, B, x, f);
-     qed;
+   import option;
+   import core(rewrite_r);
 
-     # ... right_identity and associativity follow
+   lemma option_left_identity(A B : Sort, x : A, f : A → Option(B))
+     ⊢ bind(return(x), f) = f(x);
+   proof
+     by rewrite_r(
+       Option(A),
+       return(x), some(x),
+       return_def(A, x),                       # return(x) = some(x)
+       λ (o : Option(A)) st bind(o, f) = f(x)
+     )
+     then ⊢ bind(some(x), f) = f(x);
+     by bind_some(A, B, x, f);
    qed;
 
-Each ``law <name>;`` in the model names one obligation from the theory and proves
-it just like a lemma. It's also the ``defeq`` discipline from
+A model bundles three proofs like this — one per law — and, once verified,
+certifies ``Option`` as a monad. It's the ``defeq`` discipline from
 :doc:`first-proofs` at scale: every monad-law proof in ``option.alg``,
 ``list.alg``, and ``result.alg`` reaches its equalities through explicit
 ``rewrite_r`` / ``rewrite_l`` steps — never by silent evaluation.

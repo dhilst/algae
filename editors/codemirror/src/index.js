@@ -13,12 +13,12 @@ import {
 } from "@codemirror/view";
 import { history, defaultKeymap, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { bracketMatching } from "@codemirror/language";
-import { lintGutter, lintKeymap, forceLinting } from "@codemirror/lint";
+import { lintGutter, lintKeymap } from "@codemirror/lint";
 import { algae } from "./algae-lang.js";
-import { algaeLinter } from "./lint.js";
+import { runAlgaeCheck } from "./lint.js";
 
 export { algae, algaeStreamLanguage, algaeHighlightStyle } from "./algae-lang.js";
-export { algaeLinter } from "./lint.js";
+export { runAlgaeCheck } from "./lint.js";
 
 // A compact, light editor surface. The highlight palette in algae-lang.js is
 // tuned for a light background; we keep the editor light even on dark pages so
@@ -130,6 +130,20 @@ export function mountAlgaeEditor(parent, opts = {}) {
   const pane = el("div", "algae-result");
   container.appendChild(editorHost);
 
+  // Manual check: run the checker on demand and install its diagnostics. There
+  // is *no* auto-linter watching edits, so a reported error stays visible while
+  // you type, until the next check.
+  const doCheck = (v) => {
+    if (wasm) {
+      runAlgaeCheck(v, {
+        wasm,
+        moduleName,
+        extra: opts.extra,
+        onResult: (r) => renderResult(pane, r),
+      });
+    }
+  };
+
   const extensions = [
     lineNumbers(),
     highlightActiveLineGutter(),
@@ -139,9 +153,8 @@ export function mountAlgaeEditor(parent, opts = {}) {
     highlightActiveLine(),
     bracketMatching(),
     // Ctrl-Enter / Cmd-Enter runs the checker (same as the Check button).
-    // Checking is manual — see the linter's delay in lint.js.
     keymap.of([
-      { key: "Mod-Enter", run: (v) => { if (wasm) forceLinting(v); return true; } },
+      { key: "Mod-Enter", run: (v) => { doCheck(v); return true; } },
     ]),
     keymap.of([...defaultKeymap, ...historyKeymap, ...lintKeymap, indentWithTab]),
     algae(),
@@ -150,18 +163,10 @@ export function mountAlgaeEditor(parent, opts = {}) {
     EditorView.editable.of(!opts.readOnly),
   ];
 
-  // Only wire the checker when a wasm module is supplied (highlighting-only
-  // editors — e.g. non-interactive doc blocks — omit it).
+  // Gutter markers for diagnostics (populated by manual checks). Only wired when
+  // a wasm module is supplied; highlighting-only doc blocks omit it.
   if (wasm) {
     extensions.push(lintGutter());
-    extensions.push(
-      algaeLinter({
-        wasm,
-        moduleName,
-        extra: opts.extra,
-        onResult: (r) => renderResult(pane, r),
-      })
-    );
   }
 
   const view = new EditorView({
@@ -169,7 +174,7 @@ export function mountAlgaeEditor(parent, opts = {}) {
     parent: editorHost,
   });
 
-  const check = () => { if (wasm) forceLinting(view); };
+  const check = () => doCheck(view);
 
   if (wasm && opts.showToolbar !== false) {
     const toolbar = el("div", "algae-toolbar");

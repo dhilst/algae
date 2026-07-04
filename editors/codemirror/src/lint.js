@@ -1,7 +1,10 @@
-// A CodeMirror `linter` source that proof-checks the buffer with algae-wasm and
-// renders diagnostics as inline squiggles + gutter markers.
+// Proof-checks the buffer with algae-wasm and renders diagnostics as inline
+// squiggles + gutter markers. Checking is **manual** — there is no auto-linter
+// watching document changes; `runAlgaeCheck` is called explicitly (Check button
+// / Ctrl-Enter) and installs the diagnostics via `setDiagnostics`. Existing
+// diagnostics stay put (remapped) while you type, until the next manual check.
 
-import { linter } from "@codemirror/lint";
+import { setDiagnostics } from "@codemirror/lint";
 
 // Map a wasm diagnostic (1-based line/col, per algae_kernel::line_col) to an
 // absolute CodeMirror position. We deliberately use line/col rather than the
@@ -40,32 +43,27 @@ function toCmDiagnostic(doc, d) {
 // (default "playground"). `opts.extra` is an optional array of [name, source]
 // pairs exposed to `import`. `opts.onResult(result)` (optional) is called with
 // the raw CheckResult after every run, so a results pane can react.
-export function algaeLinter(opts) {
+// Run the checker on the current document and install its diagnostics. Returns
+// the raw CheckResult (also passed to `opts.onResult`, for a results pane).
+export function runAlgaeCheck(view, opts) {
   const wasm = opts.wasm;
   const moduleName = opts.moduleName || "playground";
   const extra = opts.extra || undefined;
   const onResult = opts.onResult;
+  const doc = view.state.doc;
 
-  return linter(
-    (view) => {
-      const doc = view.state.doc;
-      const source = doc.toString();
-      let result;
-      try {
-        result = wasm.check(source, moduleName, extra);
-      } catch (err) {
-        // A panic in the checker should surface, not silently pass.
-        const message = "internal checker error: " + (err && err.message ? err.message : String(err));
-        if (onResult) onResult({ ok: false, diagnostics: [], obligations: 0, wip: 0, error: message });
-        return [{ from: 0, to: Math.min(doc.line(1).to, doc.length), severity: "error", message }];
-      }
-      if (onResult) onResult(result);
-      return result.diagnostics.map((d) => toCmDiagnostic(doc, d));
-    },
-    // Checking is manual: run only when forced (the Check button / Ctrl-Enter),
-    // not on every keystroke. A huge debounce means edits never auto-trigger a
-    // re-check, so existing diagnostics stay put while you type; `forceLinting`
-    // bypasses the delay. See index.js.
-    { delay: 1e9 }
-  );
+  let result;
+  let cmDiags;
+  try {
+    result = wasm.check(doc.toString(), moduleName, extra);
+    cmDiags = result.diagnostics.map((d) => toCmDiagnostic(doc, d));
+  } catch (err) {
+    // A panic in the checker should surface, not silently pass.
+    const message = "internal checker error: " + (err && err.message ? err.message : String(err));
+    result = { ok: false, diagnostics: [], obligations: 0, wip: 0, error: message };
+    cmDiags = [{ from: 0, to: Math.min(doc.line(1).to, doc.length), severity: "error", message }];
+  }
+  view.dispatch(setDiagnostics(view.state, cmDiags));
+  if (onResult) onResult(result);
+  return result;
 }
