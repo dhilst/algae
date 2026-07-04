@@ -1,5 +1,5 @@
 [workspace]
-members = ["algae-kernel", "algae-cli"]
+members = ["algae-kernel", "algae-cli", "algae-wasm"]
 resolver = "2"
 
 [profile.release]

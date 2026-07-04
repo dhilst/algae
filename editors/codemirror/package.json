@@ -1,0 +1,23 @@
+{
+  "name": "algae-codemirror",
+  "version": "0.1.0",
+  "description": "CodeMirror 6 editor for the Algae proof language: syntax highlighting, error reporting, and in-browser proof checking via algae-wasm.",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --format=esm --outfile=dist/algae-editor.js --minify",
+    "build:dev": "esbuild src/index.js --bundle --format=esm --outfile=dist/algae-editor.js --sourcemap"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.0.0",
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/lint": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "@lezer/highlight": "^1.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

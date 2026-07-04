@@ -44,7 +44,7 @@ cargo run -p algae-cli -- fmt examples/app/main.alg
 
 ## How it works
 
-The toolchain is split into two crates:
+The toolchain is split into three crates:
 
 - **`algae-kernel`** — the environment-free core: parsing, elaboration, and
   type/proof checking. It depends only on a parser library and touches no
@@ -52,6 +52,9 @@ The toolchain is split into two crates:
   WASM).
 - **`algae-cli`** — the command-line front end: file reading, module resolution,
   and terminal reporting on top of the kernel.
+- **`algae-wasm`** — a `wasm-bindgen` wrapper that compiles the kernel to
+  WebAssembly and exposes `check`/`format` to JavaScript, with the standard
+  library embedded so `import`s resolve in the browser. Powers the docs site.
 
 Pipeline: **Parse → Elaborate → IR (interned) → Check**.
 
@@ -101,3 +104,27 @@ nvim -u editors/neovim/init.lua algae/stdlib/v1/nat.alg
 
 It registers the `alg` filetype and the local parser without touching your own
 Neovim configuration.
+
+A **CodeMirror 6** editor lives in
+[`editors/codemirror/`](editors/codemirror/): syntax highlighting, plus live
+proof checking and inline error reporting driven by `algae-wasm`. It is the
+editing surface embedded in the documentation site.
+
+## Documentation site
+
+An interactive documentation site is built from [`docs/`](docs/) with Sphinx.
+Every `.alg` example on the site is a live CodeMirror editor: readers can edit
+proofs and check them in the browser (the kernel runs as WebAssembly — nothing
+is sent to a server). It reuses the prose from `lang-specs/` as the single
+source of truth.
+
+```sh
+# Build the whole site locally (needs cargo + wasm-pack, node + npm, and the
+# Python packages in docs/requirements.txt), then open docs/_build/html.
+bash docs/build.sh
+```
+
+CI (`.github/workflows/ci.yml`, the `docs` job) builds the same site on every
+push/PR and, on `main`, deploys it to the **`gh-pages`** branch. To publish it,
+enable GitHub Pages once in the repository settings with source **"Deploy from a
+branch: `gh-pages`"**.

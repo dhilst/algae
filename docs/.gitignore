@@ -1,0 +1,12 @@
+# Sphinx output
+_build/
+
+# Prose copied in from ../lang-specs at build time (single source of truth)
+tutorial.md
+spec.md
+
+# Runtime assets staged into _static/ by build.sh / CI
+_static/algae_wasm.js
+_static/algae_wasm_bg.wasm
+_static/algae-editor.js
+_static/examples/

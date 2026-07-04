@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 # Cancel superseded runs on the same ref.
 concurrency:
@@ -67,3 +68,57 @@ jobs:
 
       - name: Compile the C parser
         run: cc -shared -Os -fPIC -I src -o /tmp/alg.so src/parser.c
+
+  docs:
+    name: Build docs and deploy to gh-pages
+    runs-on: ubuntu-latest
+    # Only the deploy step is gated on `main`; the build runs on every trigger
+    # so pull requests and manual dispatches catch breakage before merge.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable) with wasm target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: latest
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Sphinx toolchain
+        run: pip install -r docs/requirements.txt
+
+      # Compiles algae-wasm, bundles the CodeMirror editor, stages runtime
+      # assets into docs/_static, and runs Sphinx — identical to local builds.
+      - name: Build the documentation site
+        run: bash docs/build.sh
+
+      - name: Disable Jekyll processing
+        run: touch docs/_build/html/.nojekyll
+
+      # Publish to the gh-pages branch only from main. Enable Pages in the repo
+      # settings with source "Deploy from a branch: gh-pages".
+      - name: Deploy to gh-pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html
+          publish_branch: gh-pages
