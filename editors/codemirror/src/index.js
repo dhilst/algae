@@ -138,6 +138,11 @@ export function mountAlgaeEditor(parent, opts = {}) {
     drawSelection(),
     highlightActiveLine(),
     bracketMatching(),
+    // Ctrl-Enter / Cmd-Enter runs the checker (same as the Check button).
+    // Checking is manual — see the linter's delay in lint.js.
+    keymap.of([
+      { key: "Mod-Enter", run: (v) => { if (wasm) forceLinting(v); return true; } },
+    ]),
     keymap.of([...defaultKeymap, ...historyKeymap, ...lintKeymap, indentWithTab]),
     algae(),
     baseTheme,
@@ -170,6 +175,7 @@ export function mountAlgaeEditor(parent, opts = {}) {
     const toolbar = el("div", "algae-toolbar");
     const checkBtn = el("button", "algae-btn", "Check ▶");
     checkBtn.type = "button";
+    checkBtn.title = "Check the proof (Ctrl-Enter)";
     checkBtn.addEventListener("click", check);
     toolbar.appendChild(checkBtn);
 

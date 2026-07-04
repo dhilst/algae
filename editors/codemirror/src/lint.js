@@ -62,6 +62,10 @@ export function algaeLinter(opts) {
       if (onResult) onResult(result);
       return result.diagnostics.map((d) => toCmDiagnostic(doc, d));
     },
-    { delay: 400 }
+    // Checking is manual: run only when forced (the Check button / Ctrl-Enter),
+    // not on every keystroke. A huge debounce means edits never auto-trigger a
+    // re-check, so existing diagnostics stay put while you type; `forceLinting`
+    // bypasses the delay. See index.js.
+    { delay: 1e9 }
   );
 }
