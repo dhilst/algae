@@ -3,10 +3,10 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Rewriting with a motive" href="rewrite.html"><link rel="prev" title="Your first proofs" href="first-proofs.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Induction and friends" href="induction.html"><link rel="prev" title="Proving with holes" href="holes.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
-        <title>Proving with holes - Algae</title>
+        <title>Rewriting with a motive - Algae</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -194,8 +194,8 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Tutorial</a><input aria-label="Toggle navigation of Tutorial" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first-proofs.html">Your first proofs</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Proving with holes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rewrite.html">Rewriting with a motive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="holes.html">Proving with holes</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Rewriting with a motive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theories.html">Theories, laws, and models</a></li>
 </ul>
@@ -221,7 +221,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/tutorial/holes.rst.txt" title="View this page">
+  <a class="muted-link" href="../_sources/tutorial/rewrite.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -239,132 +239,96 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="proving-with-holes">
-<h1>Proving with holes<a class="headerlink" href="#proving-with-holes" title="Link to this heading">¶</a></h1>
-<p>Here’s the secret that makes Algae pleasant to <em>write</em> proofs in, not just read
-them: you don’t have to know the whole proof before you start. You leave a
-<strong>hole</strong>, and the checker tells you what goes there.</p>
-<p><code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">wip;</span></code> <strong>admits</strong> the current goal without proving it (a block that admits
-must be closed with <code class="docutils literal notranslate"><span class="pre">wip</span></code> instead of <code class="docutils literal notranslate"><span class="pre">qed</span></code>). Its more helpful cousin,
-<code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">wip(?name)</span></code>, admits the goal <em>and</em> prints a <strong>hole report</strong>: the goal, the
-context in scope, and candidate tactics. Grow your proof one step at a time.</p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>The reports below appear on the command line <strong>and</strong> inline in the editors on
-this page. Press <strong>Check ▶</strong> on the holed examples to watch it happen.</p>
+          <section id="rewriting-with-a-motive">
+<h1>Rewriting with a motive<a class="headerlink" href="#rewriting-with-a-motive" title="Link to this heading">¶</a></h1>
+<p>So far we’ve closed goals by matching an axiom’s conclusion, and continued with
+<code class="docutils literal notranslate"><span class="pre">then</span></code>. Now meet the workhorse of equational reasoning, <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code>, which
+takes an equation and rewrites <em>one chosen subterm</em> of the goal. Recall the rule
+from <a class="reference internal" href="first-proofs.html"><span class="doc">Your first proofs</span></a>:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">rewrite_r</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+</pre></div>
 </div>
-<p>Start with just a skeleton and a hole:</p>
+<p>The interesting argument is the last one, <code class="docutils literal notranslate"><span class="pre">P</span></code> — the <strong>motive</strong>. It’s a function
+<code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">→</span> <span class="pre">Prop</span></code>: a proposition with a <em>hole</em>, and the hole marks exactly where the
+equation lands. Given <code class="docutils literal notranslate"><span class="pre">eq</span> <span class="pre">:</span> <span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> swaps <code class="docutils literal notranslate"><span class="pre">a</span></code> for <code class="docutils literal notranslate"><span class="pre">b</span></code> at that
+spot.</p>
+<p>Writing motives as <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">…</span></code> gets old fast, so <code class="docutils literal notranslate"><span class="pre">_</span></code> is sugar for a
+lambda: the motive <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">_</span></code> means <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">Nat)</span> <span class="pre">st</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">x</span></code>. The <code class="docutils literal notranslate"><span class="pre">_</span></code> is the slot
+the equation’s sides plug into.</p>
+<p>Let’s re-prove <code class="docutils literal notranslate"><span class="pre">zero_left_flip</span></code> — this time by rewriting instead of flipping
+with <code class="docutils literal notranslate"><span class="pre">symmetry</span></code>:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">symmetry</span><span class="p">);</span>
+<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">rewrite_r</span><span class="p">);</span>
 
 <span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
-<span class="kp">wip</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>Check it, and the kernel tells you where you are and where to look next:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>found hole ?goal : proof
-
-Expected:
-  n = 0 + n
-
-Context:
-  n : Nat
-
-Goal:
-  n = 0 + n
-
-Candidates:
-  symmetry (rule)
-  transitivity (rule)
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">symmetry</span></code> turns <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> into <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>. Apply it and slide the hole
-into the <code class="docutils literal notranslate"><span class="pre">then</span></code> continuation to see what’s left:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">symmetry</span><span class="p">);</span>
-
-<span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
-<span class="k">proof</span>
-  <span class="k">by</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
-  <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">rest</span><span class="p">);</span>
-<span class="kp">wip</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>Now the hole reports <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>, with <code class="docutils literal notranslate"><span class="pre">add_zero_left</span> <span class="pre">(fact)</span></code> right there in
-the candidates — exactly the axiom that closes it. Drop it in, swap the final
-<code class="docutils literal notranslate"><span class="pre">wip</span></code> for <code class="docutils literal notranslate"><span class="pre">qed</span></code>, and you’re done:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">symmetry</span><span class="p">);</span>
-
-<span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
-<span class="k">proof</span>
-  <span class="k">by</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">rewrite_r</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">n</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span>
+  <span class="n">then</span> <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>A module with any <code class="docutils literal notranslate"><span class="pre">wip</span></code> — holed or not — is <strong>incomplete</strong>: the checker reports
-it and the run fails, so a hole can never sneak past as a finished proof.
-Candidates are a best-effort hint (local hypotheses, facts and rules whose
-conclusion matches the goal, and <code class="docutils literal notranslate"><span class="pre">refl</span></code> for a reflexive equation), not a
-promise — but they’re usually enough to find the next <code class="docutils literal notranslate"><span class="pre">by</span></code>.</p>
-<section id="holes-inside-a-tactic">
-<h2>Holes inside a tactic<a class="headerlink" href="#holes-inside-a-tactic" title="Link to this heading">¶</a></h2>
-<p>Once you’ve <em>picked</em> a tactic, a <code class="docutils literal notranslate"><span class="pre">?</span></code> helps you fill it in. Put <code class="docutils literal notranslate"><span class="pre">?</span></code> after a
-whole application to <strong>inspect</strong> it — the checker applies the tactic and hands you
-the next step, ready to paste:</p>
+<p>Read the <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> call as: with the equation <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code> (that’s
+<code class="docutils literal notranslate"><span class="pre">add_zero_left(n)</span></code>, so <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">n</span></code>), and the motive <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">_</span></code>,
+rewrite <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> to <code class="docutils literal notranslate"><span class="pre">n</span></code>. Plug the two sides into the hole to see what it does:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code> in the hole → <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> — that’s our current goal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">b</span></code> in the hole → <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code> — the new goal after the rewrite.</p></li>
+</ul>
+<p>So the step turns <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> into <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>, which <code class="docutils literal notranslate"><span class="pre">refl</span></code> closes. The motive
+is how you <em>point</em> at the <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> on the right rather than the <code class="docutils literal notranslate"><span class="pre">n</span></code> on the left.</p>
+<section id="when-the-motive-misses">
+<h2>When the motive misses<a class="headerlink" href="#when-the-motive-misses" title="Link to this heading">¶</a></h2>
+<p>The motive has to reproduce the goal when the equation fills the hole. Aim it at
+the wrong subterm and you’ll get a very common error. Suppose we write <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">=</span> <span class="pre">n</span></code>
+by mistake:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">symmetry</span><span class="p">);</span>
+<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">rewrite_r</span><span class="p">);</span>
 
 <span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>?<span class="p">;</span>
-<span class="kp">wip</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">rewrite_r</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">_</span> <span class="o">=</span> <span class="n">n</span><span class="p">)</span>
+  <span class="n">then</span> <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+<span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Applying it leaves:
-  ⊢ 0 + n = n
-
-Continue with:
-  then ⊢ 0 + n = n;
-  by wip(?goal);
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>error: tactic `rewrite_r`: rule conclusion does not match the current goal
 </pre></div>
 </div>
-<p>Or leave individual arguments as <strong>named holes</strong> <code class="docutils literal notranslate"><span class="pre">?a</span></code> and let the checker solve
-them straight from the goal. <code class="docutils literal notranslate"><span class="pre">symmetry</span></code>’s conclusion <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">x</span></code> must match
-<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code>, which pins down <code class="docutils literal notranslate"><span class="pre">?a</span></code> and <code class="docutils literal notranslate"><span class="pre">?b</span></code> — and even the sort <code class="docutils literal notranslate"><span class="pre">?T</span></code>,
-recovered by type inference:</p>
+<p>Here <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">=</span> <span class="pre">n</span></code> is <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">Nat)</span> <span class="pre">st</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">n</span></code>. Filling the hole gives <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>
+and <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code> — and <em>neither</em> is the goal <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code>. The checker is telling you
+that, with this motive, the rewrite step can’t produce the goal you’re standing on.
+When you hit “rule conclusion does not match the current goal” on a <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code>,
+the motive is almost always the culprit: move the <code class="docutils literal notranslate"><span class="pre">_</span></code> to the subterm you actually
+mean to rewrite.</p>
+</section>
+<section id="no-sugar-same-proof">
+<h2>No sugar, same proof<a class="headerlink" href="#no-sugar-same-proof" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">_</span></code> is <em>only</em> shorthand. The motive is a plain lambda, and writing it out
+long-hand checks identically:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">symmetry</span><span class="p">);</span>
+<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">rewrite_r</span><span class="p">);</span>
 
 <span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> ?<span class="n">a</span><span class="p">,</span> ?<span class="n">b</span><span class="p">)</span> <span class="n">then</span> ?<span class="n">g</span><span class="p">;</span>
-<span class="kp">wip</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">rewrite_r</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="o">λ</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="p">)</span>
+  <span class="n">then</span> <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+<span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Holes:
-  ?a : Nat = 0 + n
-  ?b : Nat = n
-
-Subgoal(s):
-  ?g : ⊢ 0 + n = n
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">symmetry?;</span></code> (no arguments at all) holes <em>every</em> parameter at once. Holes
-even work in proof-argument positions: <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">rewrite_r(Nat,</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0,</span> <span class="pre">k,</span> <span class="pre">?eq,</span> <span class="pre">_)?;</span></code>
-reports <code class="docutils literal notranslate"><span class="pre">?eq</span> <span class="pre">:</span> <span class="pre">⊢</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">k</span></code> — the equation you still owe a proof of. And a hole
-the goal <em>doesn’t</em> pin down — a genuinely free choice, like <code class="docutils literal notranslate"><span class="pre">transitivity</span></code>’s
-middle term — is shown with its type and no value, so you know it’s yours to pick.</p>
+<p>Reach for <code class="docutils literal notranslate"><span class="pre">_</span></code> when the motive is obvious, and spell out the lambda when you want
+to be explicit about the bound variable. <code class="docutils literal notranslate"><span class="pre">rewrite_l</span></code> is the mirror image — it
+rewrites <code class="docutils literal notranslate"><span class="pre">b</span></code> to <code class="docutils literal notranslate"><span class="pre">a</span></code> — and the induction proof in <a class="reference internal" href="induction.html"><span class="doc">Induction and friends</span></a> puts
+<code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> to work with a hypothesis as its equation.</p>
 </section>
 </section>
 
@@ -373,23 +337,23 @@ middle term — is shown with its type and no value, so you know it’s yours to
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="rewrite.html">
+          <a class="next-page" href="induction.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Rewriting with a motive</div>
+                <div class="title">Induction and friends</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="first-proofs.html">
+          <a class="prev-page" href="holes.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Your first proofs</div>
+                <div class="title">Proving with holes</div>
                 
               </div>
             </a>
@@ -423,8 +387,9 @@ middle term — is shown with its type and no value, so you know it’s yours to
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Proving with holes</a><ul>
-<li><a class="reference internal" href="#holes-inside-a-tactic">Holes inside a tactic</a></li>
+<li><a class="reference internal" href="#">Rewriting with a motive</a><ul>
+<li><a class="reference internal" href="#when-the-motive-misses">When the motive misses</a></li>
+<li><a class="reference internal" href="#no-sugar-same-proof">No sugar, same proof</a></li>
 </ul>
 </li>
 </ul>
