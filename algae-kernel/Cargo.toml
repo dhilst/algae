@@ -1,0 +1,13 @@
+[package]
+name = "algae-kernel"
+version = "0.1.0"
+edition = "2021"
+description = "Algae v2 proof kernel — parsing, elaboration, type and proof checking (environment-free)"
+license = "MIT"
+
+[lib]
+name = "algae_kernel"
+path = "src/lib.rs"
+
+[dependencies]
+winnow = "0.7"

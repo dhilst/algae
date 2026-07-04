@@ -55,8 +55,6 @@ pub struct Elab {
     pub interner: Interner,
     pub sig: Signature,
     pub diags: Vec<Diagnostic>,
-    /// Transitive dependencies as (module name, source content hash).
-    pub deps: Vec<(String, u128)>,
 }
 
 /// Lexical scope used while lowering an expression.
@@ -104,7 +102,6 @@ impl Elab {
             interner: Interner::new(),
             sig: Signature::default(),
             diags: Vec::new(),
-            deps: Vec::new(),
         }
     }
 

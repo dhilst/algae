@@ -25,29 +25,33 @@ algae <command> [targets...] [flags]
 |-------------|-------------|
 | `parse`     | Tokenize and parse; report syntax errors (`--dump-ast` to print the tree). |
 | `typecheck` | Parse + elaborate (name/import resolution, kind/type checks, build proof steps). |
-| `compile`   | Full pipeline → write `.algo` bytecode (parallel across files; cached). |
-| `verify`    | Compile if needed, then run the parallel proof checker over the bytecode. |
+| `verify`    | Elaborate, then run the proof checker over every obligation. |
 | `fmt`       | Normalize operator glyphs (ASCII→Unicode by default, `--ascii` for the reverse), preserving all whitespace. |
 
 Global flags: `--stdlib <dir>` (select a vendored stdlib), `-p/--project <path>`
-(`algae.json` or its directory), `-j/--jobs <N>`, `--force` (ignore cache),
-`-q/--quiet`, `-v/--verbose`. `fmt` also takes `--stdout` and `--check`.
+(`algae.json` or its directory), `-q/--quiet`, `-v/--verbose`. `fmt` also takes
+`--stdout` and `--check`.
 
 ```sh
 # Verify the standard library (all proofs pass)
-cargo run -- verify algae/stdlib/v1/
-
-# Compile to bytecode, then re-verify from cache (fast second run)
-cargo run -- compile algae/stdlib/v1/
-cargo run -- verify  algae/stdlib/v1/      # "(cached)"
+cargo run -p algae-cli -- verify algae/stdlib/v1/
 
 # Convert a file's operators to Unicode in place
-cargo run -- fmt examples/app/main.alg
+cargo run -p algae-cli -- fmt examples/app/main.alg
 ```
 
 ## How it works
 
-Compilation: **Parse → Elaborate → IR (interned) → Bytecode (`.algo`) → write**.
+The toolchain is split into two crates:
+
+- **`algae-kernel`** — the environment-free core: parsing, elaboration, and
+  type/proof checking. It depends only on a parser library and touches no
+  threads, filesystem, or terminal (this is what makes it portable, e.g. to
+  WASM).
+- **`algae-cli`** — the command-line front end: file reading, module resolution,
+  and terminal reporting on top of the kernel.
+
+Pipeline: **Parse → Elaborate → IR (interned) → Check**.
 
 - *Elaboration* resolves names/imports, kind/type-checks, and unfolds every
   axiom/rule/lemma into self-contained **proof steps**. Each step records its
@@ -57,13 +61,10 @@ Compilation: **Parse → Elaborate → IR (interned) → Bytecode (`.algo`) → 
   definitional rewrite rules (sound, since axioms are assumed true) for
   definitional equality.
 
-Proof checking has three phases: (1) read the steps from bytecode; (2) **in
-parallel**, verify each step locally (`next_goal == tactic(current_goal, args)`,
+Proof checking has three phases: (1) read the steps from the elaborated tree;
+(2) verify each step locally (`next_goal == tactic(current_goal, args)`,
 recomputed — never trusted); (3) verify the parent/child goal linkage and that
 leaves close their goal.
-
-`.algo` files are invalidated by a stable content hash of the source and of each
-dependency; compilation is deterministic (byte-identical regardless of `--jobs`).
 
 ## Standard library
 

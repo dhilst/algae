@@ -1,11 +1,17 @@
 //! Integration tests: the standard library must verify; the reject corpus must
-//! fail. Run from the crate root (cargo's default test working directory).
+//! fail. Paths are anchored at the repo root via `CARGO_MANIFEST_DIR` so they
+//! resolve regardless of the test's working directory.
 
-use algae::project::DirResolver;
+use algae_cli::project::DirResolver;
 use std::path::{Path, PathBuf};
 
+/// The repository root (one level up from this crate's manifest directory).
+fn repo_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("..")
+}
+
 fn stdlib_dir() -> PathBuf {
-    PathBuf::from("algae/stdlib/v1")
+    repo_root().join("algae/stdlib/v1")
 }
 
 fn module_name(path: &Path) -> String {
@@ -18,7 +24,10 @@ fn verify(path: &Path) -> Vec<String> {
     let src = std::fs::read_to_string(path).expect("read source");
     let roots = vec![path.parent().unwrap().to_path_buf(), stdlib_dir()];
     let resolver = DirResolver::new(roots);
-    algae::verify_source(&src, &module_name(path), &resolver, 4)
+    algae_kernel::verify_source(&src, &module_name(path), &resolver)
+        .iter()
+        .map(|d| d.render(None))
+        .collect()
 }
 
 /// Extract the substring from an optional `#expect: <text>` comment line in a
@@ -60,7 +69,7 @@ fn stdlib_verifies() {
 
 #[test]
 fn accept_corpus_verifies() {
-    let dir = PathBuf::from("tests/accept");
+    let dir = repo_root().join("tests/accept");
     for f in alg_files(&dir) {
         let errors = verify(&f);
         assert!(
@@ -87,7 +96,7 @@ proof
 wip;
 ";
     let resolver = DirResolver::new(vec![stdlib_dir()]);
-    let unit = algae::elaborate::proof::elaborate_unit(src, "t", &resolver, true)
+    let unit = algae_kernel::elaborate::proof::elaborate_unit(src, "t", &resolver, true)
         .expect("wip proof should elaborate");
     assert!(
         unit.obligations.iter().any(|o| o.wip),
@@ -95,14 +104,14 @@ wip;
     );
     // The sound part still checks clean (the admit is skipped).
     for o in &unit.obligations {
-        let errs = algae::core::check::check(&o.root, &o.label, 1, &unit.rewrite);
+        let errs = algae_kernel::core::check::check(&o.root, &o.label, &unit.rewrite);
         assert!(errs.is_empty(), "admitted proof should not produce check errors: {errs:?}");
     }
 }
 
 #[test]
 fn reject_corpus_fails() {
-    let dir = PathBuf::from("tests/reject");
+    let dir = repo_root().join("tests/reject");
     let files = alg_files(&dir);
     assert!(!files.is_empty(), "no reject fixtures found");
     for f in files {

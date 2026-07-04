@@ -26,8 +26,6 @@ pub struct CompiledUnit {
     pub obligations: Vec<Obligation>,
     /// The equational rewrite system used for definitional equality.
     pub rewrite: RewriteSystem,
-    /// Transitive dependencies as (module name, source content hash).
-    pub deps: Vec<(String, u128)>,
 }
 
 pub struct Obligation {
@@ -77,13 +75,11 @@ pub fn elaborate_unit(
         return Err(elab.diags);
     }
     let exports = elab.sig.exported.clone();
-    let deps = elab.deps.clone();
     Ok(CompiledUnit {
         interner: elab.interner,
         exports,
         obligations,
         rewrite,
-        deps,
     })
 }
 
@@ -146,10 +142,6 @@ fn process_decls(
                 match resolver.resolve(&imp.module.text) {
                     Ok(src) => match parse::parse(&src) {
                         Ok(m) => {
-                            elab.deps.push((
-                                imp.module.text.clone(),
-                                crate::bytecode::hash128(src.as_bytes()),
-                            ));
                             process_decls(
                                 elab,
                                 &m.decls,
@@ -615,7 +607,7 @@ fn elaborate_step(
 ) -> Option<(Step, bool)> {
     // Admit: `by wip` closes the goal without a proof (tainted).
     if stmt.admit {
-        return Some((admit_step(elab, ctx, goal), true));
+        return Some((admit_step(elab, ctx, goal, stmt.span), true));
     }
     let reference = stmt.reference.as_ref().expect("non-admit statement has a reference");
 
@@ -768,12 +760,13 @@ fn elaborate_step(
         next_goals,
         children,
         admitted: false,
+        span: stmt.span,
     };
     Some((step, child_tainted))
 }
 
 /// An admitted (`by wip`) leaf step: the goal is assumed, not checked.
-fn admit_step(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr) -> Step {
+fn admit_step(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr, span: Span) -> Step {
     let name = elab.interner.intern("wip");
     Step {
         context: ctx.to_vec(),
@@ -790,6 +783,7 @@ fn admit_step(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr) -> Step {
         next_goals: Vec::new(),
         children: Vec::new(),
         admitted: true,
+        span,
     }
 }
 

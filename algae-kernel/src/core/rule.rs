@@ -8,6 +8,7 @@
 use crate::core::name::Sym;
 use crate::core::sequent::{CtxEntry, Sequent};
 use crate::core::term::Expr;
+use crate::diagnostics::Span;
 
 /// A rule parameter.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -79,4 +80,7 @@ pub struct Step {
     pub children: Vec<Step>,
     /// True for an admitted (`by wip`) leaf: the goal is assumed, not checked.
     pub admitted: bool,
+    /// Source span of the `by` statement this step was elaborated from, for
+    /// diagnostics.
+    pub span: Span,
 }

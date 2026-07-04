@@ -31,12 +31,9 @@ jobs:
       - name: Test
         run: cargo test --locked --verbose
 
-      # 3. Compile the standard library to bytecode, then verify every proof.
-      - name: Compile stdlib
-        run: cargo run --locked -- compile algae/stdlib/v1/
-
+      # 3. Verify every proof in the standard library.
       - name: Verify stdlib proofs
-        run: cargo run --locked -- verify algae/stdlib/v1/
+        run: cargo run -p algae-cli --locked -- verify algae/stdlib/v1/
 
   tree-sitter:
     name: Tree-sitter grammar

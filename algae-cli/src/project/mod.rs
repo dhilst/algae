@@ -1,7 +1,7 @@
-//! Project model: module resolution and (later) the `algae.json` manifest and
-//! `.algo` cache. For now, a directory-based source resolver.
+//! Project model: `algae.json` manifest lookup and a directory-based source
+//! resolver.
 
-use crate::elaborate::proof::SourceResolver;
+use algae_kernel::elaborate::proof::SourceResolver;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 

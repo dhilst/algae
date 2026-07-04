@@ -1,7 +1,4 @@
 __pycache__/
 *.pyc
 
-# Compiled bytecode
-*.algo
-*.algo.tmp
 /target
