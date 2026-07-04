@@ -1,5 +1,5 @@
 # The model tries to prove `l_bogus`, which is not a law of the theory.
-import core(reflexivity);
+import core(refl);
 
 sort S : Sort;
 
@@ -16,11 +16,11 @@ theory T(
 model M satisfies T(S, e) iff {
   law l1;
   proof
-    by reflexivity(S, x);
+    by refl(S, x);
   qed;
 
   law l_bogus;
   proof
-    by reflexivity(S, x);
+    by refl(S, x);
   qed;
 };

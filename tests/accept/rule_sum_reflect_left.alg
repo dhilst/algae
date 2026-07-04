@@ -1,6 +1,6 @@
 # Happy path for adt rule `sum_reflect_left`
-# (|- P ==> |- P \/ Q). The single premise P is proved by reflexivity.
-import adt(sum_reflect_left, reflexivity);
+# (|- P ==> |- P \/ Q). The single premise P is proved by refl.
+import adt(sum_reflect_left, refl);
 
 sort T : Sort;
 op a : -> T;
@@ -13,6 +13,6 @@ proof
   case
     |- a = a;
   proof
-    by reflexivity(T, a);
+    by refl(T, a);
   qed;
 qed;

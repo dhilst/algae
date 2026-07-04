@@ -2,7 +2,7 @@
 # disjuncts swapped (`b = b \/ a = a`). The conclusion cannot match the goal,
 # so the checker must reject.
 #expect: tactic `sum_reflect_left`: rule conclusion does not match the current goal
-import adt(sum_reflect_left, reflexivity);
+import adt(sum_reflect_left, refl);
 
 sort T : Sort;
 op a : -> T;
@@ -15,6 +15,6 @@ proof
   case
     |- a = a;
   proof
-    by reflexivity(T, a);
+    by refl(T, a);
   qed;
 qed;

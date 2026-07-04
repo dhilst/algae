@@ -3,7 +3,7 @@
 # the existential `exists (x : T) st P(x)`, but here the first case states `a = a`
 # instead, so the case goal does not match the subgoal `exists_elim` generates.
 #expect: case goal does not match the generated subgoal
-import core(reflexivity, exists_elim);
+import core(refl, exists_elim);
 
 sort T : Sort;
 op a : -> T;
@@ -16,14 +16,14 @@ proof
     case
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
     case
       x : T;
       witness := x = x;
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
   qed;
 qed;

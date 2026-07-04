@@ -1,5 +1,5 @@
 # A proof that admits a goal with `by wip` must be closed by `wip`, not `qed`.
-import core(reflexivity);
+import core(refl);
 
 sort Nat : Sort;
 op z : -> Nat;

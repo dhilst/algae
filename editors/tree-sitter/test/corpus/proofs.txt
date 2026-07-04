@@ -72,7 +72,7 @@ lemma add_zero_right(
 )
   |- n + 0 = n;
 proof
-  by reflexivity(Nat, n);
+  by refl(Nat, n);
 qed;
 
 --------------------------------------------------------------------------------

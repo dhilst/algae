@@ -1,7 +1,7 @@
 # Happy path for core rule `rewrite_l` (|- P(b) ==> |- P(a)).
 # With eq : a = b and motive P = (lambda k. k = k), P(b) = (b = b) and
 # P(a) = (a = a). The goal is P(a) = (a = a); the premise is P(b) = (b = b).
-import core(reflexivity, rewrite_l);
+import core(refl, rewrite_l);
 
 sort T : Sort;
 op a : -> T;
@@ -15,6 +15,6 @@ proof
   case
     |- b = b;
   proof
-    by reflexivity(T, b);
+    by refl(T, b);
   qed;
 qed;

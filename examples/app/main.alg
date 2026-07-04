@@ -1,6 +1,6 @@
 # Imports `point` from the `geometry` dependency (resolved via algae.json) and
-# `reflexivity` from the standard library.
-import core(reflexivity);
+# `refl` from the standard library.
+import core(refl);
 
 import point(
   Point,
@@ -10,5 +10,5 @@ import point(
 lemma origin_reflexive
   |- origin = origin;
 proof
-  by reflexivity(Point, origin);
+  by refl(Point, origin);
 qed;

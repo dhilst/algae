@@ -1,6 +1,6 @@
 # `rewrite_r`'s `eq` argument must prove `a = b` (here `z = o`), but `zz`
 # only proves `z = z`. The proof-argument check must reject this.
-import core(rewrite_r, reflexivity);
+import core(rewrite_r, refl);
 
 sort Nat : Sort;
 
@@ -17,6 +17,6 @@ proof
   case
     |- o = o;
   proof
-    by reflexivity(Nat, o);
+    by refl(Nat, o);
   qed;
 qed;

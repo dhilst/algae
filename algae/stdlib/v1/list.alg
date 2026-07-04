@@ -1,5 +1,5 @@
 import core(
-  reflexivity,
+  refl,
   rewrite_r,
   transitivity
 );
@@ -187,7 +187,7 @@ model ListMonad satisfies Monad(
               rest : List(A);
               ⊢ append(singleton(x), rest) = cons(x, rest);
             proof
-              by reflexivity(List(A), cons(x, rest));
+              by refl(List(A), cons(x, rest));
             qed;
           qed;
         qed;

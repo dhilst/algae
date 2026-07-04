@@ -985,7 +985,7 @@ mod tests {
 
     #[test]
     fn parses_axiom_and_rule() {
-        let src = "axiom reflexivity(T : Sort, x : T) |- x = x;\n\
+        let src = "axiom refl(T : Sort, x : T) |- x = x;\n\
                    rule transitivity(T : Sort, x y z : T)\n\
                      |- x = y;\n\
                      |- y = z\n\

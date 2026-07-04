@@ -400,8 +400,8 @@ mod tests {
     fn comments_and_qualified() {
         use TokenKind::*;
         assert_eq!(
-            kinds("core.reflexivity # comment\n"),
-            vec![Ident("core".into()), Dot, Ident("reflexivity".into()), Eof]
+            kinds("core.refl # comment\n"),
+            vec![Ident("core".into()), Dot, Ident("refl".into()), Eof]
         );
     }
 }

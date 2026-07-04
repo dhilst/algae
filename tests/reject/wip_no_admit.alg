@@ -1,6 +1,6 @@
 # `wip` may only close a proof that actually admits a goal; a complete proof
 # must use `qed`.
-import core(reflexivity);
+import core(refl);
 
 sort Nat : Sort;
 op z : -> Nat;
@@ -8,5 +8,5 @@ op z : -> Nat;
 lemma t
   |- z = z;
 proof
-  by reflexivity(Nat, z);
+  by refl(Nat, z);
 wip;

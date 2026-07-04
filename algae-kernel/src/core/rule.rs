@@ -39,9 +39,9 @@ pub struct InlinedRule {
     pub premises: Vec<Sequent>,
     /// The conclusion proposition (the rule concludes `|- conclusion`).
     pub conclusion: Expr,
-    /// True for the built-in `generalization` rule, which carries a
+    /// True for the built-in `forall_intro` rule, which carries a
     /// side-condition (spec §4.15).
-    pub is_generalization: bool,
+    pub is_forall_intro: bool,
     /// True for the congruence rewrite rules (`rewrite_r`/`rewrite_l`). Their
     /// single premise establishes a congruence under a verified equation, so
     /// the goal may match either the conclusion (standard) or the premise (the

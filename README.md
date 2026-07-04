@@ -5,7 +5,9 @@ sorts, total operators, product/sum types, propositions, sequents, axioms,
 inference rules, lemmas/theorems, theories, laws, models, and **explicit proof
 trees**. This repository is a from-scratch Rust implementation of the toolchain.
 
-The language is specified in [`lang-specs/spec.md`](lang-specs/spec.md).
+The language is specified in [`lang-specs/spec.md`](lang-specs/spec.md); for a
+gentler, example-driven introduction see the
+[tutorial](lang-specs/tutorial.md).
 
 ## Building
 

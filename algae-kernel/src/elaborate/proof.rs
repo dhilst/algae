@@ -85,7 +85,7 @@ pub fn elaborate_unit(
 
 /// Build the equational rewrite system from 0-premise equational facts in the
 /// signature (sorted for determinism; degenerate bare-metavariable rules such
-/// as reflexivity's `x = x` are skipped).
+/// as refl's `x = x` are skipped).
 fn build_rewrite_system(elab: &Elab) -> RewriteSystem {
     let mut rs = RewriteSystem::new();
     let mut entries: Vec<(&Sym, &InlinedRule)> = elab.sig.tactics.iter().collect();
@@ -346,7 +346,7 @@ fn build_theory(elab: &mut Elab, td: &ast::TheoryDecl) -> Option<TheorySig> {
                         params: all.into_iter().map(ctx_to_param).collect(),
                         premises: Vec::new(),
                         conclusion: concl,
-                        is_generalization: false,
+                        is_forall_intro: false,
                         bidirectional: false,
                     },
                 });
@@ -710,7 +710,7 @@ fn elaborate_step(
         params: base_rule.params.clone(),
         premises: new_premises,
         conclusion: base_rule.conclusion.clone(),
-        is_generalization: base_rule.is_generalization,
+        is_forall_intro: base_rule.is_forall_intro,
         bidirectional: base_rule.bidirectional,
     };
 
@@ -771,7 +771,7 @@ fn admit_step(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr, span: Span) -> Ste
             params: Vec::new(),
             premises: Vec::new(),
             conclusion: goal.clone(),
-            is_generalization: false,
+            is_forall_intro: false,
             bidirectional: false,
         },
         args: Vec::new(),
@@ -911,7 +911,7 @@ fn resolve_tactic(
                             params: Vec::new(),
                             premises: Vec::new(),
                             conclusion: prop.clone(),
-                            is_generalization: false,
+                            is_forall_intro: false,
                             bidirectional: false,
                         },
                     ));

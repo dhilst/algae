@@ -521,7 +521,7 @@ pub fn build_fact_rule(
         params: all.into_iter().map(ctx_to_param).collect(),
         premises: Vec::new(),
         conclusion,
-        is_generalization: false,
+        is_forall_intro: false,
         bidirectional: false,
     })
 }
@@ -537,7 +537,7 @@ pub fn ctx_to_param(e: CtxEntry) -> Param {
 pub fn build_rule(elab: &mut Elab, r: &ast::RuleDecl) -> Result<InlinedRule, ()> {
     let mut scope = Scope::new();
     let param_entries = elab.lower_telescope(&mut scope, &r.params)?;
-    // `generalization` no longer needs a special side-condition flag: its
+    // `forall_intro` no longer needs a special side-condition flag: its
     // generalized variable is an eigenvariable in the premise context, so the
     // §4.15 side condition is enforced by eigenvariable freshness.
     let is_gen = false;
@@ -562,7 +562,7 @@ pub fn build_rule(elab: &mut Elab, r: &ast::RuleDecl) -> Result<InlinedRule, ()>
         params,
         premises,
         conclusion,
-        is_generalization: is_gen,
+        is_forall_intro: is_gen,
         bidirectional,
     })
 }

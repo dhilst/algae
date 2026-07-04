@@ -1,6 +1,6 @@
-# `reflexivity` proves `z = z`, but the goal is `z = o`. With no equation
+# `refl` proves `z = z`, but the goal is `z = o`. With no equation
 # relating z and o, the proof checker must reject this.
-import core(reflexivity);
+import core(refl);
 
 sort Nat : Sort;
 
@@ -10,5 +10,5 @@ op o : -> Nat;
 lemma bad
   |- z = o;
 proof
-  by reflexivity(Nat, z);
+  by refl(Nat, z);
 qed;

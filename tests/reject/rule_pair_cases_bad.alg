@@ -3,7 +3,7 @@
 # wrong goal `x = x` (the field, not the reconstructed pair), which cannot match
 # the rule's premise, so the checker must reject.
 #expect: case goal does not match the generated subgoal
-import adt(pair_cases, reflexivity);
+import adt(pair_cases, refl);
 
 lemma e(A B : Sort, p : Pair(A, B))
   |- p = p;
@@ -14,6 +14,6 @@ proof
     y : B;
     |- x = x;
   proof
-    by reflexivity(A, x);
+    by refl(A, x);
   qed;
 qed;

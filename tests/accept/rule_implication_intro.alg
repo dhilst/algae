@@ -1,7 +1,7 @@
 # Happy path for core rule `implication_intro` ((hyp P) |- Q ==> |- P => Q).
 # The goal `(b = b) => (a = a)` introduces hypothesis `b = b`, and the subgoal
-# `a = a` is provable independently by reflexivity (the hypothesis is unused).
-import core(implication_intro, reflexivity);
+# `a = a` is provable independently by refl (the hypothesis is unused).
+import core(implication_intro, refl);
 
 sort T : Sort;
 op a : -> T;
@@ -15,6 +15,6 @@ proof
     hyp := b = b;
     |- a = a;
   proof
-    by reflexivity(T, a);
+    by refl(T, a);
   qed;
 qed;

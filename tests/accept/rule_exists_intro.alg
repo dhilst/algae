@@ -1,6 +1,6 @@
 # Happy path for core rule `exists_intro` (|- P(x) ==> |- exists x. P(x)).
-# Witness a; motive P = (lambda k. k = k); P(a) = (a = a) by reflexivity.
-import core(reflexivity, exists_intro);
+# Witness a; motive P = (lambda k. k = k); P(a) = (a = a) by refl.
+import core(refl, exists_intro);
 
 sort T : Sort;
 op a : -> T;
@@ -12,6 +12,6 @@ proof
   case
     |- a = a;
   proof
-    by reflexivity(T, a);
+    by refl(T, a);
   qed;
 qed;

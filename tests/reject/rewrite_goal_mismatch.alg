@@ -6,7 +6,7 @@
 #
 # (No equational axioms are declared, so definitional equality is plain
 # beta/structural and cannot paper over the mismatch.)
-import core(rewrite_r, reflexivity);
+import core(rewrite_r, refl);
 
 sort Nat : Sort;
 
@@ -23,6 +23,6 @@ proof
   case
     |- b = z;
   proof
-    by reflexivity(Nat, b);
+    by refl(Nat, b);
   qed;
 qed;

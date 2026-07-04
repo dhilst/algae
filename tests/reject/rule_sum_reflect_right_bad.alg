@@ -3,7 +3,7 @@
 # the supplied subproof does not match the rule's premise and the checker must
 # reject.
 #expect: case goal does not match the generated subgoal
-import adt(sum_reflect_right, reflexivity);
+import adt(sum_reflect_right, refl);
 
 sort T : Sort;
 op a : -> T;
@@ -16,6 +16,6 @@ proof
   case
     |- a = a;
   proof
-    by reflexivity(T, a);
+    by refl(T, a);
   qed;
 qed;

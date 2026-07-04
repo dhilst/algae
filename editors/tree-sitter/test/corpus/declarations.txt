@@ -93,7 +93,7 @@ op may_fail : A -> B | Err;
 Axiom
 ================================================================================
 
-axiom reflexivity(
+axiom refl(
   T : Sort,
   x : T
 )

@@ -1,5 +1,5 @@
 # The model proves `l1` but omits `l2`, which is in the theory's law set.
-import core(reflexivity);
+import core(refl);
 
 sort S : Sort;
 
@@ -19,6 +19,6 @@ theory T(
 model M satisfies T(S, e) iff {
   law l1;
   proof
-    by reflexivity(S, x);
+    by refl(S, x);
   qed;
 };

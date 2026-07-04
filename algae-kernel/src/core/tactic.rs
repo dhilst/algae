@@ -12,7 +12,7 @@ use crate::core::term::Expr;
 /// generated premises (next goals) on success.
 ///
 /// Performs the full soundness check: argument arity/kinds, proof-argument
-/// statements, conclusion match, and the `generalization` side-condition.
+/// statements, conclusion match, and the `forall_intro` side-condition.
 pub fn apply(
     rule: &InlinedRule,
     args: &[Arg],
@@ -60,7 +60,7 @@ pub fn apply(
         if rule.bidirectional && rule.premises.len() == 1 && rule.premises[0].ctx.is_empty() {
             let prem = subst_all(&rule.premises[0].goal, &subst);
             if rs.defeq(&prem, current_goal) {
-                check_generalization(rule, args, parent_ctx)?;
+                check_forall_intro(rule, args, parent_ctx)?;
                 return Ok(vec![Sequent {
                     ctx: parent_ctx.to_vec(),
                     goal: rs.nf(&concl),
@@ -70,7 +70,7 @@ pub fn apply(
         return Err("rule conclusion does not match the current goal".into());
     }
 
-    check_generalization(rule, args, parent_ctx)?;
+    check_forall_intro(rule, args, parent_ctx)?;
 
     // Build the next goals: parent context extended by each premise's context.
     // Goals are normalized so child steps see normal forms.
@@ -88,14 +88,14 @@ pub fn apply(
 
 /// Generalization side-condition (spec §4.15): the generalized variable must
 /// not be free in any proof hypothesis of the current context.
-fn check_generalization(rule: &InlinedRule, args: &[Arg], parent_ctx: &[CtxEntry]) -> Result<(), String> {
-    if rule.is_generalization {
+fn check_forall_intro(rule: &InlinedRule, args: &[Arg], parent_ctx: &[CtxEntry]) -> Result<(), String> {
+    if rule.is_forall_intro {
         if let Some(Arg::Term(Expr::Free(v))) = args.get(1) {
             for e in parent_ctx {
                 if let CtxEntry::Proof { prop, .. } = e {
                     if prop.has_free(*v) {
                         return Err(
-                            "generalization side-condition violated: variable is free in a hypothesis"
+                            "forall_intro side-condition violated: variable is free in a hypothesis"
                                 .into(),
                         );
                     }

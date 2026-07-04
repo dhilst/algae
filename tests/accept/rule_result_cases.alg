@@ -1,5 +1,5 @@
 # Happy: result_cases over a Result(A, E), proving the trivial r = r.
-import result(result_cases, reflexivity);
+import result(result_cases, refl);
 
 lemma e(A E : Sort, r : Result(A, E))
   |- r = r;
@@ -9,13 +9,13 @@ proof
       x : A;
       |- ok(x) = ok(x);
     proof
-      by reflexivity(Result(A, E), ok(x));
+      by refl(Result(A, E), ok(x));
     qed;
     case
       e : E;
       |- err(e) = err(e);
     proof
-      by reflexivity(Result(A, E), err(e));
+      by refl(Result(A, E), err(e));
     qed;
   qed;
 qed;

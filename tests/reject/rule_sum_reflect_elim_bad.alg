@@ -3,7 +3,7 @@
 # instead of the disjunction, so the supplied subproof does not match the rule's
 # premise and the checker must reject.
 #expect: case goal does not match the generated subgoal
-import adt(sum_reflect_elim, reflexivity);
+import adt(sum_reflect_elim, refl);
 
 sort T : Sort;
 op a : -> T;
@@ -19,19 +19,19 @@ proof
     case
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
     case
       hyp := a = b;
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
     case
       hyp := b = a;
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
   qed;
 qed;

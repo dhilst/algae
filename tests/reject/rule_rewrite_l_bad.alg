@@ -2,7 +2,7 @@
 # `_ = c`, P(a) = (a = c), but the goal is `a = a`. The conclusion the rule
 # produces (a = c) is not the goal, so the checker must reject this.
 #expect: tactic `rewrite_l`: rule conclusion does not match the current goal
-import core(reflexivity, rewrite_l);
+import core(refl, rewrite_l);
 
 sort T : Sort;
 op a : -> T;
@@ -17,6 +17,6 @@ proof
   case
     |- b = c;
   proof
-    by reflexivity(T, b);
+    by refl(T, b);
   qed;
 qed;

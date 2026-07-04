@@ -2,7 +2,7 @@
 # different prop (a = a) and the goal-side premise subgoal is `a = a` not False,
 # so the premise subgoal cannot match `False`.
 #expect: case goal does not match the generated subgoal
-import core(false_elim, reflexivity);
+import core(false_elim, refl);
 
 sort T : Sort;
 op a : -> T;
@@ -15,6 +15,6 @@ proof
   case
     |- a = a;
   proof
-    by reflexivity(T, a);
+    by refl(T, a);
   qed;
 qed;

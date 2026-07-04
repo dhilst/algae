@@ -1,5 +1,5 @@
 import core(
-  reflexivity,
+  refl,
   rewrite_r,
   transitivity
 );

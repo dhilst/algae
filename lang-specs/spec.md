@@ -64,7 +64,7 @@ module.symbol
 Examples:
 
 ```alg
-core.reflexivity
+core.refl
 nat.Nat
 monad.Monad
 ```
@@ -80,6 +80,7 @@ rule
 lemma
 theorem
 proof
+by
 qed
 wip
 case
@@ -100,6 +101,7 @@ end
 Sort
 Prop
 False
+lambda
 ```
 
 ## 2.6 Preferred ASCII and Unicode Alternatives
@@ -255,7 +257,7 @@ axiom_decl =
 Example:
 
 ```alg
-axiom reflexivity(
+axiom refl(
   T : Sort,
   x : T
 )
@@ -310,14 +312,17 @@ theorem_decl =
 Example:
 
 ```alg
-lemma add_zero_right(
-  n : Nat
+lemma eq_refl(
+  x : Nat
 )
-  |- n + 0 = n;
+  |- x = x;
 proof
-  by reflexivity(Nat, n);
+  by refl(Nat, x);
 qed;
 ```
+
+For a non-trivial proof (induction over `nat`), see `add_zero_right` in §11 and
+the tutorial (`tutorial.md`).
 
 ---
 
@@ -434,14 +439,11 @@ qed;
 
 ```ebnf
 proof_block =
-  "proof" proof_stmt_list terminator ";" ;
+  "proof" proof_stmt terminator ";" ;
 
 terminator =
     "qed"            (* a complete, sound proof *)
   | "wip" ;          (* an in-progress proof (contains an admit) *)
-
-proof_stmt_list =
-  { proof_stmt } ;
 
 proof_stmt =
     by_stmt_wip ";"
@@ -461,6 +463,10 @@ by_stmt_one =
 by_stmt_many =
   "by" proof_ref "cases" case_block { case_block } terminator ;
 ```
+
+A proof block contains **exactly one** `by` statement; the parser rejects a
+second one. Proofs compose downward through the sub-proofs of `case`s, not by
+sequencing multiple statements in a block.
 
 ---
 
@@ -831,20 +837,26 @@ symbolic_operator =
 
 ## 4.1 Namespaces
 
-The language has separate namespaces for:
+Names resolve in **two disjoint namespaces**, corresponding to the language's two
+worlds — the *term* world (what propositions are built from) and the *proof* world
+(what proofs use):
 
-* modules;
-* sorts;
-* operators;
-* axioms;
-* rules;
-* lemmas;
-* theorems;
-* theories;
-* laws inside theories;
-* models;
-* local term variables;
-* local proof variables.
+* **Term namespace** — sorts, operators, and locally-bound term variables
+  (including eigenvariables introduced by a `case`). Every expression, type, and
+  proposition resolves its names here.
+* **Proof namespace** — axioms, rules, lemmas, theorems, theory laws, and local
+  proof hypotheses (`h := P`). A `by` reference and every proof argument resolve
+  their names here.
+
+A name in one namespace is **invisible to the other.** In particular, a
+proposition may not mention a proof-former: writing `|- bar(x)` where `bar` is an
+axiom (or rule/lemma) is an error, because `bar(x)` is elaborated in the term
+namespace and no term named `bar` exists. To use `bar` as a predicate inside a
+proposition it must be declared as an operator, e.g. `op bar : T -> Prop`.
+Conversely, an operator cannot be applied as a tactic in a `by`.
+
+Modules, theories, and models each occupy their own separate namespace as well
+(so a module and a sort may share a name without clashing).
 
 ## 4.2 Import Semantics
 
@@ -1070,7 +1082,7 @@ It may be used as a proof reference.
 
 ## 4.15 Generalization Rule Side Condition
 
-The rule `generalization` may only be applied if the generalized variable is not free in any undischarged proof assumption. This is enforced as eigenvariable freshness: the variable is introduced in the rule's premise context, and a case's freshly introduced variable must not already occur in the surrounding context.
+The rule `forall_intro` may only be applied if the generalized variable is not free in any undischarged proof assumption. This is enforced as eigenvariable freshness: the variable is introduced in the rule's premise context, and a case's freshly introduced variable must not already occur in the surrounding context.
 
 This is a proof-checking side condition, not a grammar condition.
 
@@ -1116,7 +1128,7 @@ sort Bool : Sort;
 op true : -> Bool;
 op false : -> Bool;
 
-axiom reflexivity(
+axiom refl(
   T : Sort,
   x : T
 )
@@ -1281,7 +1293,7 @@ rule biconditional_elim_right(
   |- Q => P
 end;
 
-rule instantiation(
+rule forall_elim(
   T : Sort,
   P : T -> Prop
 )
@@ -1290,7 +1302,7 @@ rule instantiation(
   |- P(x)
 end;
 
-rule generalization(
+rule forall_intro(
   T : Sort,
   x : T,
   P : T -> Prop
@@ -1328,7 +1340,7 @@ end;
 
 ```alg
 import core(
-  reflexivity,
+  refl,
   rewrite_r,
   rewrite_l,
   transitivity,
@@ -1449,7 +1461,7 @@ Note: built-in type syntax `A * B` and `A | B` exists independently from the nam
 
 ```alg
 import core(
-  reflexivity,
+  refl,
   rewrite_r,
   rewrite_l,
   transitivity
@@ -1565,7 +1577,7 @@ qed;
 
 ```alg
 import core(
-  reflexivity,
+  refl,
   rewrite_r,
   transitivity
 );
@@ -1792,7 +1804,7 @@ qed;
 
 ```alg
 import core(
-  reflexivity,
+  refl,
   rewrite_r
 );
 
@@ -2025,7 +2037,7 @@ qed;
 
 ```alg
 import core(
-  reflexivity,
+  refl,
   rewrite_r,
   transitivity
 );
@@ -2213,7 +2225,7 @@ model ListMonad satisfies Monad(
               rest : List(A);
               |- append(singleton(x), rest) = cons(x, rest);
             proof
-              by reflexivity(List(A), cons(x, rest));
+              by refl(List(A), cons(x, rest));
             qed;
           qed;
         qed;
@@ -2396,7 +2408,7 @@ qed;
 
 ```alg
 import core(
-  reflexivity,
+  refl,
   rewrite_r,
   transitivity
 );
@@ -2484,7 +2496,7 @@ qed;
 
 ```alg
 import core(
-  reflexivity,
+  refl,
   rewrite_r,
   transitivity,
   symmetry
@@ -2685,7 +2697,7 @@ A complete Algae v2 implementation must include:
 24. Case checker.
 25. Context checker.
 26. Proof binding resolver.
-27. Side-condition checker for generalization.
+27. Side-condition checker for forall_intro.
 28. Verification that every model law is proven exactly once.
 29. Verification that no unknown model law is proven.
 30. Verification that all terms in proofs typecheck.

@@ -3,7 +3,7 @@
 # disjunction `P \/ Q`, but here the first case states `a = a` instead, so the
 # case goal does not match the subgoal `or_elim` generates.
 #expect: case goal does not match the generated subgoal
-import core(or_elim, reflexivity);
+import core(or_elim, refl);
 
 sort T : Sort;
 op a : -> T;
@@ -17,19 +17,19 @@ proof
     case
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
     case
       hyp := a = b;
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
     case
       hyp := b = a;
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
   qed;
 qed;

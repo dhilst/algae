@@ -1,8 +1,8 @@
 # Happy path for core rule `or_elim`
 # (|- P \/ Q ; (hyp P) |- R ; (hyp Q) |- R ==> |- R).
 # The disjunction premise is asserted by axiom; both hypothesis cases share the
-# goal `a = a`, which is provable independently by reflexivity.
-import core(or_elim, reflexivity);
+# goal `a = a`, which is provable independently by refl.
+import core(or_elim, refl);
 
 sort T : Sort;
 op a : -> T;
@@ -24,13 +24,13 @@ proof
       hyp := a = b;
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
     case
       hyp := b = a;
       |- a = a;
     proof
-      by reflexivity(T, a);
+      by refl(T, a);
     qed;
   qed;
 qed;

@@ -2,7 +2,7 @@
 # here to a plain equation goal (not existential), the rule's conclusion cannot
 # match the goal, so `exists_intro` itself rejects the step.
 #expect: tactic `exists_intro`: rule conclusion does not match
-import core(reflexivity, exists_intro);
+import core(refl, exists_intro);
 
 sort T : Sort;
 op a : -> T;
@@ -14,6 +14,6 @@ proof
   case
     |- a = a;
   proof
-    by reflexivity(T, a);
+    by refl(T, a);
   qed;
 qed;

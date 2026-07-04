@@ -1,5 +1,5 @@
 # Happy path for core rule `and_left` (|- P /\ Q ==> |- P).
-import core(and_left, reflexivity);
+import core(and_left, refl);
 
 sort T : Sort;
 op a : -> T;

@@ -86,7 +86,7 @@ fn wip_admits_and_is_flagged() {
     // A `by wip` proof: the admitted goal is skipped (no check error), but the
     // obligation is flagged `wip` so the CLI fails the run.
     let src = "\
-import core(reflexivity);
+import core(refl);
 sort Nat : Sort;
 op z : -> Nat;
 lemma t

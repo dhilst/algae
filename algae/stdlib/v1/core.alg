@@ -3,7 +3,7 @@ sort Bool : Sort;
 op true : → Bool;
 op false : → Bool;
 
-axiom reflexivity(
+axiom refl(
   T : Sort,
   x : T
 )
@@ -168,7 +168,7 @@ rule biconditional_elim_right(
   ⊢ Q ⇒ P
 end;
 
-rule instantiation(
+rule forall_elim(
   T : Sort,
   P : T → Prop
 )
@@ -177,7 +177,7 @@ rule instantiation(
   x : T ⊢ P(x)
 end;
 
-rule generalization(
+rule forall_intro(
   T : Sort,
   P : T → Prop
 )

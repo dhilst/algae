@@ -1,5 +1,5 @@
 # Happy path for core rule `or_intro_right` (|- Q ==> |- P \/ Q).
-import core(or_intro_right, reflexivity);
+import core(or_intro_right, refl);
 
 sort T : Sort;
 op a : -> T;
@@ -12,6 +12,6 @@ proof
   case
     |- b = b;
   proof
-    by reflexivity(T, b);
+    by refl(T, b);
   qed;
 qed;

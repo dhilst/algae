@@ -3,7 +3,7 @@
 # asserts the `inl` constructor again (`inl(y) = inl(y)`), which cannot match
 # the rule's `inr` premise, so the checker must reject.
 #expect: case goal does not match the generated subgoal
-import adt(sum_cases, reflexivity);
+import adt(sum_cases, refl);
 
 lemma e(A B : Sort, s : Sum(A, B))
   |- s = s;
@@ -13,13 +13,13 @@ proof
       x : A;
       |- inl(x) = inl(x);
     proof
-      by reflexivity(Sum(A, B), inl(x));
+      by refl(Sum(A, B), inl(x));
     qed;
     case
       y : B;
       |- inl(y) = inl(y);
     proof
-      by reflexivity(Sum(A, B), inl(y));
+      by refl(Sum(A, B), inl(y));
     qed;
   qed;
 qed;
