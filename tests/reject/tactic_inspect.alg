@@ -1,5 +1,5 @@
 # A trailing `?` on a fully concrete application applies the tactic and suggests
-# the next step (a paste-able `then … / by wip?`). Incomplete.
+# the next step (a paste-able `then … / by wip(?goal)`). Incomplete.
 #expect: Continue with:
 import nat;
 import core(symmetry);

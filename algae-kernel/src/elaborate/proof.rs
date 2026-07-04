@@ -899,10 +899,9 @@ fn report_tactic_hole(
                     }
                 }
                 if next.len() == 1 {
-                    let name = stmt.subgoal_name.clone().unwrap_or_else(|| "next".into());
-                    let _ = name;
+                    let name = stmt.subgoal_name.clone().unwrap_or_else(|| "goal".into());
                     msg.push_str(&format!(
-                        "\nContinue with:\n  then ⊢ {};\n  by wip?;\n",
+                        "\nContinue with:\n  then ⊢ {};\n  by wip(?{name});\n",
                         show(&next[0].goal, &elab.interner)
                     ));
                 } else {
