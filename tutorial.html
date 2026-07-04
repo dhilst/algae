@@ -691,6 +691,56 @@ the run fails, so a hole can never masquerade as a finished proof. Candidates ar
 best-effort hint (local hypotheses, facts and rules whose conclusion matches the goal
 shape, and <code class="docutils literal notranslate"><span class="pre">refl</span></code> for a reflexive equation), not a guarantee — but they are usually
 enough to find the next <code class="docutils literal notranslate"><span class="pre">by</span></code>.</p>
+<section id="holes-inside-a-tactic">
+<h3>Holes inside a tactic<a class="headerlink" href="#holes-inside-a-tactic" title="Link to this heading">¶</a></h3>
+<p>Once you have picked a tactic, a <code class="docutils literal notranslate"><span class="pre">?</span></code> helps you <em>fill it in</em>. Put <code class="docutils literal notranslate"><span class="pre">?</span></code> after a whole
+application to <strong>inspect</strong> it — the checker applies the tactic and hands you the next
+step, ready to paste:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">symmetry</span><span class="p">);</span>
+
+<span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>?<span class="p">;</span>
+<span class="kp">wip</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Applying it leaves:
+  ⊢ 0 + n = n
+
+Continue with:
+  then ⊢ 0 + n = n;
+  by wip?;
+</pre></div>
+</div>
+<p>Or leave individual arguments as <strong>named holes</strong> <code class="docutils literal notranslate"><span class="pre">?a</span></code> and let the checker solve them
+from the goal. <code class="docutils literal notranslate"><span class="pre">symmetry</span></code>’s conclusion <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">x</span></code> must match <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code>, which forces
+<code class="docutils literal notranslate"><span class="pre">?a</span></code> and <code class="docutils literal notranslate"><span class="pre">?b</span></code> (and even the sort <code class="docutils literal notranslate"><span class="pre">?T</span></code>, recovered by type inference):</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">symmetry</span><span class="p">);</span>
+
+<span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> ?<span class="n">a</span><span class="p">,</span> ?<span class="n">b</span><span class="p">)</span> <span class="n">then</span> ?<span class="n">g</span><span class="p">;</span>
+<span class="kp">wip</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Holes:
+  ?a : Nat = 0 + n
+  ?b : Nat = n
+
+Subgoal(s):
+  ?g : ⊢ 0 + n = n
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">symmetry?;</span></code> (no arguments) holes <em>every</em> parameter at once. Holes also work in
+proof-argument positions: <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">rewrite_r(Nat,</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0,</span> <span class="pre">k,</span> <span class="pre">?eq,</span> <span class="pre">_)?;</span></code> reports
+<code class="docutils literal notranslate"><span class="pre">?eq</span> <span class="pre">:</span> <span class="pre">⊢</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">k</span></code> — the equation you still owe a proof of. A hole an argument does
+not pin down (a genuinely free choice, like <code class="docutils literal notranslate"><span class="pre">transitivity</span></code>’s middle term) is shown
+with its type and no value.</p>
+</section>
 </section>
 <section id="theories-laws-and-models">
 <h2>Theories, laws, and models<a class="headerlink" href="#theories-laws-and-models" title="Link to this heading">¶</a></h2>
@@ -887,7 +937,10 @@ usable (that is why <code class="docutils literal notranslate"><span class="pre"
 <li><a class="reference internal" href="#the-two-namespaces">The two namespaces</a></li>
 <li><a class="reference internal" href="#parameters-vs-forall">Parameters vs. <code class="docutils literal notranslate"><span class="pre">forall</span></code></a></li>
 <li><a class="reference internal" href="#holes">Holes</a></li>
-<li><a class="reference internal" href="#building-a-proof-with-holes">Building a proof with holes</a></li>
+<li><a class="reference internal" href="#building-a-proof-with-holes">Building a proof with holes</a><ul>
+<li><a class="reference internal" href="#holes-inside-a-tactic">Holes inside a tactic</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#theories-laws-and-models">Theories, laws, and models</a></li>
 <li><a class="reference internal" href="#imports-and-the-standard-library">Imports and the standard library</a></li>
 <li><a class="reference internal" href="#where-to-go-next">Where to go next</a></li>

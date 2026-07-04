@@ -478,6 +478,62 @@ best-effort hint (local hypotheses, facts and rules whose conclusion matches the
 shape, and `refl` for a reflexive equation), not a guarantee — but they are usually
 enough to find the next `by`.
 
+### Holes inside a tactic
+
+Once you have picked a tactic, a `?` helps you *fill it in*. Put `?` after a whole
+application to **inspect** it — the checker applies the tactic and hands you the next
+step, ready to paste:
+
+```alg
+import nat;
+import core(symmetry);
+
+lemma zero_left_flip(n : Nat)
+  ⊢ n = 0 + n;
+proof
+  by symmetry(Nat, 0 + n, n)?;
+wip;
+```
+
+```text
+Applying it leaves:
+  ⊢ 0 + n = n
+
+Continue with:
+  then ⊢ 0 + n = n;
+  by wip?;
+```
+
+Or leave individual arguments as **named holes** `?a` and let the checker solve them
+from the goal. `symmetry`'s conclusion `y = x` must match `n = 0 + n`, which forces
+`?a` and `?b` (and even the sort `?T`, recovered by type inference):
+
+```alg
+import nat;
+import core(symmetry);
+
+lemma zero_left_flip(n : Nat)
+  ⊢ n = 0 + n;
+proof
+  by symmetry(Nat, ?a, ?b) then ?g;
+wip;
+```
+
+```text
+Holes:
+  ?a : Nat = 0 + n
+  ?b : Nat = n
+
+Subgoal(s):
+  ?g : ⊢ 0 + n = n
+```
+
+`by symmetry?;` (no arguments) holes *every* parameter at once. Holes also work in
+proof-argument positions: `by rewrite_r(Nat, k + 0, k, ?eq, _)?;` reports
+`?eq : ⊢ k + 0 = k` — the equation you still owe a proof of. A hole an argument does
+not pin down (a genuinely free choice, like `transitivity`'s middle term) is shown
+with its type and no value.
+
 ## Theories, laws, and models
 
 Beyond single facts, Algae groups requirements into **theories** and discharges them
