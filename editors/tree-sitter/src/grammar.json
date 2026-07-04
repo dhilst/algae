@@ -584,11 +584,11 @@
         "members": [
           {
             "type": "PATTERN",
-            "value": "-{24,}"
+            "value": "-{24}-*"
           },
           {
             "type": "PATTERN",
-            "value": "─{24,}"
+            "value": "─{24}─*"
           }
         ]
       }

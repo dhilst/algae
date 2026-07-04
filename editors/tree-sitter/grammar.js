@@ -190,9 +190,12 @@ module.exports = grammar({
     ),
 
     // separator = 24+ dashes (ASCII) | 24+ box-drawing (Unicode)
+    // Written as `{24}` + `*` rather than `{24,}`: tree-sitter's lexer compiles
+    // an open-ended counted repetition as if it were exact, so `{24,}` would
+    // stop after exactly 24 characters and treat any extra as an error.
     separator: _ => token(choice(
-      /-{24,}/,
-      /─{24,}/,
+      /-{24}-*/,
+      /─{24}─*/,
     )),
 
     // 3.8 Lemmas and Theorems
