@@ -99,7 +99,7 @@ fn go(e: &Expr, names: &Interner, binders: &mut Vec<String>, out: &mut String) {
         }
         Expr::Free(s) | Expr::Const(s) => out.push_str(names.resolve(*s)),
         Expr::App(f, args) => {
-            // A symbolic binary operator (e.g. `+`, `×`) renders infix.
+            // A symbolic binary operator (e.g. `+`, `*`) renders infix.
             if let Expr::Const(s) = f.as_ref() {
                 let op = names.resolve(*s);
                 if args.len() == 2 && op.chars().next().is_some_and(|c| !c.is_alphanumeric() && c != '_') {
@@ -125,7 +125,7 @@ fn go(e: &Expr, names: &Interner, binders: &mut Vec<String>, out: &mut String) {
         Expr::Forall(ty, b) => quantifier("∀", ty, b, names, binders, out),
         Expr::Exists(ty, b) => quantifier("∃", ty, b, names, binders, out),
         Expr::Arrow(a, b) => binary(a, " → ", b, names, binders, out),
-        Expr::Product(xs) => join(xs, " × ", names, binders, out),
+        Expr::Product(xs) => join(xs, " * ", names, binders, out),
         Expr::Sum(xs) => join(xs, " | ", names, binders, out),
         Expr::Eq(a, b) => binary(a, " = ", b, names, binders, out),
         Expr::And(a, b) => binary(a, " ∧ ", b, names, binders, out),

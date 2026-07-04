@@ -7,7 +7,7 @@ trees**. This repository is a from-scratch Rust implementation of the toolchain.
 
 The language is specified in [`lang-specs/spec.md`](lang-specs/spec.md); for a
 gentler, example-driven introduction see the
-[tutorial](docs/tutorial.md).
+[tutorial](docs/tutorial/index.rst).
 
 ## Building
 
@@ -115,7 +115,7 @@ editing surface embedded in the documentation site.
 An interactive documentation site is built from [`docs/`](docs/) with Sphinx.
 Every `.alg` example on the site is a live CodeMirror editor: readers can edit
 proofs and check them in the browser (the kernel runs as WebAssembly — nothing
-is sent to a server). The tutorial prose lives in `docs/tutorial.md`; the full
+is sent to a server). The tutorial prose lives in `docs/tutorial/`; the full
 language specification stays in `lang-specs/spec.md` and is not published on the
 site.
 

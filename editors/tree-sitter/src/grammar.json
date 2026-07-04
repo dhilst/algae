@@ -89,10 +89,6 @@
         },
         {
           "type": "STRING",
-          "value": "×"
-        },
-        {
-          "type": "STRING",
           "value": "/"
         },
         {
@@ -1596,17 +1592,8 @@
       "value": "Sort"
     },
     "_product_op": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "*"
-        },
-        {
-          "type": "STRING",
-          "value": "×"
-        }
-      ]
+      "type": "STRING",
+      "value": "*"
     },
     "type_expr": {
       "type": "SYMBOL",
@@ -2289,10 +2276,6 @@
         {
           "type": "STRING",
           "value": "*"
-        },
-        {
-          "type": "STRING",
-          "value": "×"
         },
         {
           "type": "STRING",

@@ -23,7 +23,7 @@ const PREC = {
   neg: 6,      // ~ / ¬
   // term / type precedences
   sum: 1,      // | (sum type)
-  product: 2,  // * / × (product type / kind)
+  product: 2,  // * (product type / kind)
   arrow: 1,    // -> (function type, right associative)
   infix: 3,    // term infix operators (+ - * / == < > <= >=)
   app: 10,     // application
@@ -73,9 +73,8 @@ module.exports = grammar({
     // 2.6 numeric symbol used as operator name, e.g. `0`
     numeric_symbol: _ => /[0-9]+/,
 
-    // 2.6 symbolic operators usable as names (× is accepted wherever * is, to
-    // match the lexer, since fmt may render the multiplication operator as ×)
-    symbolic_operator: _ => choice('+', '-', '*', '×', '/', '==', '<=', '>=', '<', '>'),
+    // 2.6 symbolic operators usable as names.
+    symbolic_operator: _ => choice('+', '-', '*', '/', '==', '<=', '>=', '<', '>'),
 
     // 3.2 Top-Level Declarations
     _top_decl: $ => choice(
@@ -437,7 +436,7 @@ module.exports = grammar({
 
     sort_kind: _ => 'Sort',
 
-    _product_op: _ => choice('*', '×'),
+    _product_op: _ => '*',
 
     // 3.20 Types
     type_expr: $ => $._function_type,
@@ -579,9 +578,9 @@ module.exports = grammar({
       repeat(seq($.infix_op, $._application_term)),
     )),
 
-    // infix_op = + | - | * | / | qualified_or_unqualified_ident  (× ≡ *)
+    // infix_op = + | - | * | / | qualified_or_unqualified_ident
     infix_op: $ => choice(
-      '+', '-', '*', '×', '/',
+      '+', '-', '*', '/',
       $._ident_or_qualified,
     ),
 

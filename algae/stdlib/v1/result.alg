@@ -7,7 +7,7 @@ import monad(
   Monad
 );
 
-sort Result : Sort × Sort → Sort;
+sort Result : Sort * Sort → Sort;
 
 op ok : A → Result(A, E);
 
@@ -15,7 +15,7 @@ op err : E → Result(A, E);
 
 op return : A → Result(A, E);
 
-op bind : Result(A, E) × (A → Result(B, E)) → Result(B, E);
+op bind : Result(A, E) * (A → Result(B, E)) → Result(B, E);
 
 axiom return_def(
   A E : Sort,

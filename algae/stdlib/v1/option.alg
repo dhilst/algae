@@ -18,7 +18,7 @@ op some : A → Option(A);
 
 op return : A → Option(A);
 
-op bind : Option(A) × (A → Option(B)) → Option(B);
+op bind : Option(A) * (A → Option(B)) → Option(B);
 
 axiom return_def(
   A : Sort,

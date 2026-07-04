@@ -70,7 +70,7 @@ directory.
 - `init.lua` — the standalone `-u` entry point; just calls `require("alg").setup()`.
 
 Both ASCII and Unicode operator spellings are highlighted (`|-`/`⊢`, `->`/`→`,
-`*`/`×`, `/\`/`∧`, `\/`/`∨`, `=>`/`⇒`, `<=>`/`⇔`, `~`/`¬`, `lambda`/`λ`, and the
+`/\`/`∧`, `\/`/`∨`, `=>`/`⇒`, `<=>`/`⇔`, `~`/`¬`, `lambda`/`λ`, and the
 `------`/`──────` separator).
 
 ## After changing the grammar

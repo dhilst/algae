@@ -35,7 +35,7 @@ const DECL_TYPE = new Set(["theory", "model", "include"]);
 // Unicode operator glyphs that are single code points.
 const UNI_BINDER = new Set(["∀", "∃", "λ"]);
 const UNI_LOGIC = new Set(["¬", "∧", "∨", "⇒", "⇔", "⊢"]);
-const UNI_OP = new Set(["→", "×"]);
+const UNI_OP = new Set(["→"]);
 
 const IDENT_START = /[A-Za-z_]/;
 const IDENT_CHAR = /[A-Za-z0-9_]/;

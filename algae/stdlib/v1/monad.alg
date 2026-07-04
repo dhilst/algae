@@ -8,7 +8,7 @@ import core(
 theory Functor(
   A B C : Sort,
   F : Sort → Sort,
-  map : (A → B) × F(A) → F(B)
+  map : (A → B) * F(A) → F(B)
 ) laws
   law identity(
     x : F(A)
@@ -35,7 +35,7 @@ theory Applicative(
   A B C : Sort,
   F : Sort → Sort,
   pure : A → F(A),
-  ap : F(A → B) × F(A) → F(B)
+  ap : F(A → B) * F(A) → F(B)
 ) laws
   law identity(
     v : F(A)
@@ -82,7 +82,7 @@ theory Monad(
   A B C : Sort,
   M : Sort → Sort,
   return : A → M(A),
-  bind : M(A) × (A → M(B)) → M(B)
+  bind : M(A) * (A → M(B)) → M(B)
 ) laws
   law left_identity(
     x : A,

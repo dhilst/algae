@@ -157,7 +157,6 @@
   "→"
   "="
   "*"
-  "×"
 ] @operator
 
 ":=" @operator

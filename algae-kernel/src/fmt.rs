@@ -15,7 +15,6 @@ fn glyph(kind: &TokenKind, ascii: bool, original: &str) -> Option<String> {
     let pair = match kind {
         TokenKind::Turnstile => ("|-", "⊢"),
         TokenKind::Arrow => ("->", "→"),
-        TokenKind::Star => ("*", "×"),
         TokenKind::Implies => ("=>", "⇒"),
         TokenKind::Iff => ("<=>", "⇔"),
         TokenKind::And => ("/\\", "∧"),

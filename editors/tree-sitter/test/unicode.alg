@@ -3,9 +3,9 @@
 import core;
 
 sort Nat : Sort;
-sort Result : Sort × Sort -> Sort;
+sort Result : Sort * Sort -> Sort;
 
-op + : Nat × Nat -> Nat;
+op + : Nat * Nat -> Nat;
 op may_fail : A -> B | Err;
 
 axiom demo(

@@ -112,7 +112,7 @@ Both forms are accepted.
 | Meaning           |                      ASCII |                    Unicode |
 | ----------------- | -------------------------: | -------------------------: |
 | sequent turnstile |                      `\|-` |                        `⊢` |
-| product type      |                        `*` |                        `×` |
+| product type      |                        `*` |                            |
 | sum type          |                       `\|` |                            |
 | lambda            |                   `lambda` |                        `λ` |
 | universal         |                   `forall` |                        `∀` |
@@ -323,7 +323,7 @@ qed;
 ```
 
 For a non-trivial proof (induction over `nat`), see `add_zero_right` in §11 and
-the tutorial (`docs/tutorial.md`).
+the tutorial (`docs/tutorial/`).
 
 ---
 
@@ -633,7 +633,7 @@ kind_function =
   kind_product [ "->" kind_function ] ;
 
 kind_product =
-  kind_atom { ("*" | "×") kind_atom } ;
+  kind_atom { "*" kind_atom } ;
 
 kind_atom =
     "Sort"
@@ -669,7 +669,7 @@ sum_type =
   product_type { "|" product_type } ;
 
 product_type =
-  type_atom { ("*" | "×") type_atom } ;
+  type_atom { "*" type_atom } ;
 
 type_atom =
     qualified_or_unqualified_ident

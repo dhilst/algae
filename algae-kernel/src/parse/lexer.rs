@@ -57,7 +57,7 @@ pub enum TokenKind {
     And,       // /\  ∧
     Or,        // \/  ∨
     Not,       // ~   ¬
-    Star,      // *   ×
+    Star,      // *
     Bar,       // |   (sum)
     Eq,        // =
     Separator, // ----...  ────...
@@ -142,7 +142,6 @@ pub fn lex(src: &str) -> Result<Vec<Token>, Vec<Diagnostic>> {
             // Single-char Unicode operators.
             '⊢' => { push(TokenKind::Turnstile, i, 1); i += 1; }
             '→' => { push(TokenKind::Arrow, i, 1); i += 1; }
-            '×' => { push(TokenKind::Star, i, 1); i += 1; }
             '∧' => { push(TokenKind::And, i, 1); i += 1; }
             '∨' => { push(TokenKind::Or, i, 1); i += 1; }
             '⇒' => { push(TokenKind::Implies, i, 1); i += 1; }
@@ -379,7 +378,6 @@ mod tests {
         assert_eq!(kinds("a => b"), kinds("a ⇒ b"));
         assert_eq!(kinds("a <=> b"), kinds("a ⇔ b"));
         assert_eq!(kinds("~a"), kinds("¬a"));
-        assert_eq!(kinds("A * B"), kinds("A × B"));
         assert_eq!(kinds("lambda x"), kinds("λ x"));
         assert_eq!(kinds("A -> B"), kinds("A → B"));
     }
