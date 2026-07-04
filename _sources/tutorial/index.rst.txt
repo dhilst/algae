@@ -31,4 +31,5 @@ We work through the real standard library — ``core``, ``nat``, ``option``,
    holes
    rewrite
    induction
+   stack
    theories
