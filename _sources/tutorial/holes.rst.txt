@@ -112,7 +112,7 @@ the next step, ready to paste:
 
    Continue with:
      then ⊢ 0 + n = n;
-     by wip?;
+     by wip(?goal);
 
 Or leave individual arguments as **named holes** ``?a`` and let the checker solve
 them straight from the goal. ``symmetry``'s conclusion ``y = x`` must match
