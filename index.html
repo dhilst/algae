@@ -192,22 +192,6 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Algae Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html">Algae v2 Language Specification</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#lexical-structure">2. Lexical Structure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#grammar">3. Grammar</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#static-semantics">4. Static Semantics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-core-alg">5. Standard Module: core.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-adt-alg">6. Standard Module: adt.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-monad-alg">7. Standard Module: monad.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-option-alg">8. Standard Module: option.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-result-alg">9. Standard Module: result.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-list-alg">10. Standard Module: list.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-nat-alg">11. Standard Module: nat.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-group-alg">12. Standard Module: group.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#complete-construct-semantics-summary">13. Complete Construct Semantics Summary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#checker-completeness-checklist">14. Checker Completeness Checklist</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#tree-sitter-and-editors">15. Tree-sitter and editors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#style">16. Style</a></li>
 <li class="toctree-l1"><a class="reference internal" href="playground.html">Playground</a></li>
 </ul>
 
@@ -299,104 +283,12 @@ uses.</p>
 <li class="toctree-l2"><a class="reference internal" href="tutorial.html#the-two-namespaces">The two namespaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial.html#parameters-vs-forall">Parameters vs. <code class="docutils literal notranslate"><span class="pre">forall</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial.html#holes">Holes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#theories-laws-and-models-brief">Theories, laws, and models (brief)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#building-a-proof-with-holes">Building a proof with holes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#theories-laws-and-models">Theories, laws, and models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial.html#imports-and-the-standard-library">Imports and the standard library</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial.html#where-to-go-next">Where to go next</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html">Algae v2 Language Specification</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#purpose">1. Purpose</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#lexical-structure">2. Lexical Structure</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#comments">2.1 Comments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#whitespace">2.2 Whitespace</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#identifiers">2.3 Identifiers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#qualified-identifiers">2.4 Qualified Identifiers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#reserved-keywords">2.5 Reserved Keywords</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#preferred-ascii-and-unicode-alternatives">2.6 Preferred ASCII and Unicode Alternatives</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#grammar">3. Grammar</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#file">3.1 File</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#top-level-declarations">3.2 Top-Level Declarations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#imports">3.3 Imports</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#sort-declarations">3.4 Sort Declarations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#operator-declarations">3.5 Operator Declarations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#axioms">3.6 Axioms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#rules">3.7 Rules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#lemmas-and-theorems">3.8 Lemmas and Theorems</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#theories">3.9 Theories</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#theory-includes">3.10 Theory Includes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#laws">3.11 Laws</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#models">3.12 Models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#proof-blocks">3.13 Proof Blocks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#proof-references">3.14 Proof References</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#cases">3.15 Cases</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#sequents">3.16 Sequents</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#contexts">3.17 Contexts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#formal-parameters">3.18 Formal Parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#kinds">3.19 Kinds</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#types">3.20 Types</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#propositions">3.21 Propositions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#binders">3.22 Binders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#terms">3.23 Terms</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#static-semantics">4. Static Semantics</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#namespaces">4.1 Namespaces</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#import-semantics">4.2 Import Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#sort-semantics">4.3 Sort Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#operator-semantics">4.4 Operator Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#sum-type-semantics">4.5 Sum Type Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#product-type-semantics">4.6 Product Type Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#axiom-semantics">4.7 Axiom Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#rule-semantics">4.8 Rule Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#lemma-and-theorem-semantics">4.9 Lemma and Theorem Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#law-semantics">4.10 Law Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#theory-semantics">4.11 Theory Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#include-semantics">4.12 Include Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#model-semantics">4.13 Model Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#proof-binding-semantics">4.14 Proof Binding Semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#generalization-rule-side-condition">4.15 Generalization Rule Side Condition</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#holes">4.16 Holes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#work-in-progress-wip">4.17 Work in progress (<code class="docutils literal notranslate"><span class="pre">wip</span></code>)</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-core-alg">5. Standard Module: core.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-adt-alg">6. Standard Module: adt.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-monad-alg">7. Standard Module: monad.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-option-alg">8. Standard Module: option.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-result-alg">9. Standard Module: result.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-list-alg">10. Standard Module: list.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-nat-alg">11. Standard Module: nat.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-group-alg">12. Standard Module: group.alg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#complete-construct-semantics-summary">13. Complete Construct Semantics Summary</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#sort"><code class="docutils literal notranslate"><span class="pre">sort</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#op"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#axiom"><code class="docutils literal notranslate"><span class="pre">axiom</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#rule"><code class="docutils literal notranslate"><span class="pre">rule</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#lemma"><code class="docutils literal notranslate"><span class="pre">lemma</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#theorem"><code class="docutils literal notranslate"><span class="pre">theorem</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#proof"><code class="docutils literal notranslate"><span class="pre">proof</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#qed"><code class="docutils literal notranslate"><span class="pre">qed;</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#by"><code class="docutils literal notranslate"><span class="pre">by</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#case"><code class="docutils literal notranslate"><span class="pre">case</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#theory"><code class="docutils literal notranslate"><span class="pre">theory</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#include"><code class="docutils literal notranslate"><span class="pre">include</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#law"><code class="docutils literal notranslate"><span class="pre">law</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#model"><code class="docutils literal notranslate"><span class="pre">model</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#satisfies"><code class="docutils literal notranslate"><span class="pre">satisfies</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#iff"><code class="docutils literal notranslate"><span class="pre">iff</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#checker-completeness-checklist">14. Checker Completeness Checklist</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#tree-sitter-and-editors">15. Tree-sitter and editors</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="spec.html#neovim">Neovim</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="spec.html#style">16. Style</a></li>
 <li class="toctree-l1"><a class="reference internal" href="playground.html">Playground</a></li>
 </ul>
 </div>
