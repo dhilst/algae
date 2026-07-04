@@ -272,32 +272,40 @@ as an obligation. Here’s the <code class="docutils literal notranslate"><span 
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">option.alg</span></code> declares <code class="docutils literal notranslate"><span class="pre">Option</span></code>, <code class="docutils literal notranslate"><span class="pre">return</span></code>, <code class="docutils literal notranslate"><span class="pre">bind</span></code>, then proves they form a
-monad. Take the first law, <code class="docutils literal notranslate"><span class="pre">bind(return(x),</span> <span class="pre">f)</span> <span class="pre">=</span> <span class="pre">f(x)</span></code>. Since <code class="docutils literal notranslate"><span class="pre">return(x)</span></code>
-equals <code class="docutils literal notranslate"><span class="pre">some(x)</span></code> only <em>through</em> the axiom <code class="docutils literal notranslate"><span class="pre">return_def</span></code> — never by silent
-computation — the proof <strong>rewrites</strong> <code class="docutils literal notranslate"><span class="pre">return(x)</span></code> to <code class="docutils literal notranslate"><span class="pre">some(x)</span></code> with
+<p><code class="docutils literal notranslate"><span class="pre">option.alg</span></code> proves <code class="docutils literal notranslate"><span class="pre">Option</span></code> is a lawful monad with a <code class="docutils literal notranslate"><span class="pre">model</span></code> block. Its
+shape is: name the theory, bind each parameter to a concrete operator, then prove
+every law just like a lemma (this listing elides the proof bodies):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>model OptionMonad satisfies Monad(A, B, C, Option, return, bind) iff props
+  law left_identity;   proof … qed;
+  law right_identity;  proof … qed;
+  law associativity;   proof … qed;
+qed;
+</pre></div>
+</div>
+<p>Here’s that first law — <code class="docutils literal notranslate"><span class="pre">bind(return(x),</span> <span class="pre">f)</span> <span class="pre">=</span> <span class="pre">f(x)</span></code> — as a standalone lemma you
+can actually run (inside the model it’s the body of <code class="docutils literal notranslate"><span class="pre">law</span> <span class="pre">left_identity;</span></code>). Since
+<code class="docutils literal notranslate"><span class="pre">return(x)</span></code> equals <code class="docutils literal notranslate"><span class="pre">some(x)</span></code> only <em>through</em> the axiom <code class="docutils literal notranslate"><span class="pre">return_def</span></code> — never by
+silent computation — the proof <strong>rewrites</strong> <code class="docutils literal notranslate"><span class="pre">return(x)</span></code> to <code class="docutils literal notranslate"><span class="pre">some(x)</span></code> with
 <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code>, then finishes with <code class="docutils literal notranslate"><span class="pre">bind_some</span></code>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">model</span> <span class="n">OptionMonad</span> <span class="k">satisfies</span> <span class="n">Monad</span><span class="p">(</span>
-  <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">Option</span><span class="p">,</span> <span class="n">return</span><span class="p">,</span> <span class="n">bind</span>
-<span class="p">)</span> <span class="k">iff</span> <span class="k">props</span>
-  <span class="k">law</span> <span class="n">left_identity</span><span class="p">;</span>
-  <span class="k">proof</span>
-    <span class="k">by</span> <span class="n">rewrite_r</span><span class="p">(</span>
-      <span class="n">Option</span><span class="p">(</span><span class="n">A</span><span class="p">),</span>
-      <span class="n">return</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">some</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
-      <span class="n">return_def</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span>                       <span class="c1"># return(x) = some(x)</span>
-      <span class="o">λ</span> <span class="p">(</span><span class="n">o</span> <span class="p">:</span> <span class="n">Option</span><span class="p">(</span><span class="n">A</span><span class="p">))</span> <span class="k">st</span> <span class="n">bind</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">then</span> <span class="o">⊢</span> <span class="n">bind</span><span class="p">(</span><span class="n">some</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
-    <span class="k">by</span> <span class="n">bind_some</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">);</span>
-  <span class="k">qed</span><span class="p">;</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">option</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">rewrite_r</span><span class="p">);</span>
 
-  <span class="c1"># ... right_identity and associativity follow</span>
+<span class="k">lemma</span> <span class="n">option_left_identity</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">f</span> <span class="p">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">Option</span><span class="p">(</span><span class="n">B</span><span class="p">))</span>
+  <span class="o">⊢</span> <span class="n">bind</span><span class="p">(</span><span class="n">return</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="n">rewrite_r</span><span class="p">(</span>
+    <span class="n">Option</span><span class="p">(</span><span class="n">A</span><span class="p">),</span>
+    <span class="n">return</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">some</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+    <span class="n">return_def</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span>                       <span class="c1"># return(x) = some(x)</span>
+    <span class="o">λ</span> <span class="p">(</span><span class="n">o</span> <span class="p">:</span> <span class="n">Option</span><span class="p">(</span><span class="n">A</span><span class="p">))</span> <span class="k">st</span> <span class="n">bind</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="p">)</span>
+  <span class="n">then</span> <span class="o">⊢</span> <span class="n">bind</span><span class="p">(</span><span class="n">some</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">bind_some</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">);</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Each <code class="docutils literal notranslate"><span class="pre">law</span> <span class="pre">&lt;name&gt;;</span></code> in the model names one obligation from the theory and proves
-it just like a lemma. It’s also the <code class="docutils literal notranslate"><span class="pre">defeq</span></code> discipline from
+<p>A model bundles three proofs like this — one per law — and, once verified,
+certifies <code class="docutils literal notranslate"><span class="pre">Option</span></code> as a monad. It’s the <code class="docutils literal notranslate"><span class="pre">defeq</span></code> discipline from
 <a class="reference internal" href="first-proofs.html"><span class="doc">Your first proofs</span></a> at scale: every monad-law proof in <code class="docutils literal notranslate"><span class="pre">option.alg</span></code>,
 <code class="docutils literal notranslate"><span class="pre">list.alg</span></code>, and <code class="docutils literal notranslate"><span class="pre">result.alg</span></code> reaches its equalities through explicit
 <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> / <code class="docutils literal notranslate"><span class="pre">rewrite_l</span></code> steps — never by silent evaluation.</p>
