@@ -1,0 +1,471 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Algae Tutorial" href="tutorial.html">
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Algae</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="#"><div class="brand">Algae</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+  
+  <span class="sidebar-brand-text">Algae</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Algae Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html">Algae v2 Language Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#lexical-structure">2. Lexical Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#grammar">3. Grammar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#static-semantics">4. Static Semantics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-core-alg">5. Standard Module: core.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-adt-alg">6. Standard Module: adt.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-monad-alg">7. Standard Module: monad.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-option-alg">8. Standard Module: option.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-result-alg">9. Standard Module: result.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-list-alg">10. Standard Module: list.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-nat-alg">11. Standard Module: nat.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-group-alg">12. Standard Module: group.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#complete-construct-semantics-summary">13. Complete Construct Semantics Summary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#checker-completeness-checklist">14. Checker Completeness Checklist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#tree-sitter-and-editors">15. Tree-sitter and editors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#style">16. Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="playground.html">Playground</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/index.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="algae">
+<h1>Algae<a class="headerlink" href="#algae" title="Link to this heading">¶</a></h1>
+<p><strong>Algae</strong> is a small proof and algebraic-specification language. You declare a
+vocabulary (sorts, operators), assert facts (axioms) and inference rules, and
+then prove lemmas by writing <strong>explicit proof trees</strong> that a tiny trusted kernel
+re-checks.</p>
+<p>This site is <strong>interactive</strong>: every example below is a live editor. Edit a
+proof and press <strong>Check ▶</strong> — it runs the real Algae kernel, compiled to
+WebAssembly, right in your browser. No install, no server.</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">);</span>
+
+<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">;</span>
+
+<span class="k">lemma</span> <span class="n">a_refl</span>
+  <span class="o">|-</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
+<span class="k">qed</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="tip admonition">
+<p class="admonition-title">Try it</p>
+<p>The block above is editable. Change <code class="docutils literal notranslate"><span class="pre">refl(T,</span> <span class="pre">a)</span></code> to <code class="docutils literal notranslate"><span class="pre">refl(T,</span> <span class="pre">T)</span></code> and press
+<strong>Check ▶</strong> to see the kernel reject the proof, with the error underlined
+inline.</p>
+</div>
+<section id="how-checking-works">
+<h2>How checking works<a class="headerlink" href="#how-checking-works" title="Link to this heading">¶</a></h2>
+<p>The toolchain is a pipeline — <strong>Parse → Elaborate → IR → Check</strong> — and the
+kernel is deliberately <em>environment-free</em> (no threads, filesystem, or terminal
+I/O), which is exactly what makes it portable to WebAssembly. The checker never
+trusts a proof: it re-derives every step locally and verifies the goal linkage,
+so what you see checked here is checked by the same logic the command-line tool
+uses.</p>
+</section>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Algae Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#two-worlds-two-namespaces">Two worlds, two namespaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#running-the-checker">Running the checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#sorts-operators-types">Sorts, operators, types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#propositions-and-sequents">Propositions and sequents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#axioms-and-definitional-equality">Axioms and definitional equality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#rules-proofs-with-subgoals">Rules: proofs with subgoals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#proof-blocks">Proof blocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#worked-example-proof-by-induction">Worked example: proof by induction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#the-two-namespaces">The two namespaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#parameters-vs-forall">Parameters vs. <code class="docutils literal notranslate"><span class="pre">forall</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#holes">Holes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#theories-laws-and-models-brief">Theories, laws, and models (brief)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#imports-and-the-standard-library">Imports and the standard library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html">Algae v2 Language Specification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#purpose">1. Purpose</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#lexical-structure">2. Lexical Structure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#comments">2.1 Comments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#whitespace">2.2 Whitespace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#identifiers">2.3 Identifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#qualified-identifiers">2.4 Qualified Identifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#reserved-keywords">2.5 Reserved Keywords</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#preferred-ascii-and-unicode-alternatives">2.6 Preferred ASCII and Unicode Alternatives</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#grammar">3. Grammar</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#file">3.1 File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#top-level-declarations">3.2 Top-Level Declarations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#imports">3.3 Imports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#sort-declarations">3.4 Sort Declarations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#operator-declarations">3.5 Operator Declarations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#axioms">3.6 Axioms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#rules">3.7 Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#lemmas-and-theorems">3.8 Lemmas and Theorems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#theories">3.9 Theories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#theory-includes">3.10 Theory Includes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#laws">3.11 Laws</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#models">3.12 Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#proof-blocks">3.13 Proof Blocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#proof-references">3.14 Proof References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#cases">3.15 Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#sequents">3.16 Sequents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#contexts">3.17 Contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#formal-parameters">3.18 Formal Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#kinds">3.19 Kinds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#types">3.20 Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#propositions">3.21 Propositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#binders">3.22 Binders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#terms">3.23 Terms</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#static-semantics">4. Static Semantics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#namespaces">4.1 Namespaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#import-semantics">4.2 Import Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#sort-semantics">4.3 Sort Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#operator-semantics">4.4 Operator Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#sum-type-semantics">4.5 Sum Type Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#product-type-semantics">4.6 Product Type Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#axiom-semantics">4.7 Axiom Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#rule-semantics">4.8 Rule Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#lemma-and-theorem-semantics">4.9 Lemma and Theorem Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#law-semantics">4.10 Law Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#theory-semantics">4.11 Theory Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#include-semantics">4.12 Include Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#model-semantics">4.13 Model Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#proof-binding-semantics">4.14 Proof Binding Semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#generalization-rule-side-condition">4.15 Generalization Rule Side Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#holes">4.16 Holes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#work-in-progress-wip">4.17 Work in progress (<code class="docutils literal notranslate"><span class="pre">wip</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-core-alg">5. Standard Module: core.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-adt-alg">6. Standard Module: adt.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-monad-alg">7. Standard Module: monad.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-option-alg">8. Standard Module: option.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-result-alg">9. Standard Module: result.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-list-alg">10. Standard Module: list.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-nat-alg">11. Standard Module: nat.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#standard-module-group-alg">12. Standard Module: group.alg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#complete-construct-semantics-summary">13. Complete Construct Semantics Summary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#sort"><code class="docutils literal notranslate"><span class="pre">sort</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#op"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#axiom"><code class="docutils literal notranslate"><span class="pre">axiom</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#rule"><code class="docutils literal notranslate"><span class="pre">rule</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#lemma"><code class="docutils literal notranslate"><span class="pre">lemma</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#theorem"><code class="docutils literal notranslate"><span class="pre">theorem</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#proof"><code class="docutils literal notranslate"><span class="pre">proof</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#qed"><code class="docutils literal notranslate"><span class="pre">qed;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#by"><code class="docutils literal notranslate"><span class="pre">by</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#case"><code class="docutils literal notranslate"><span class="pre">case</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#theory"><code class="docutils literal notranslate"><span class="pre">theory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#include"><code class="docutils literal notranslate"><span class="pre">include</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#law"><code class="docutils literal notranslate"><span class="pre">law</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#model"><code class="docutils literal notranslate"><span class="pre">model</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#satisfies"><code class="docutils literal notranslate"><span class="pre">satisfies</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#iff"><code class="docutils literal notranslate"><span class="pre">iff</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#checker-completeness-checklist">14. Checker Completeness Checklist</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#tree-sitter-and-editors">15. Tree-sitter and editors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spec.html#neovim">Neovim</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html#style">16. Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="playground.html">Playground</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="tutorial.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Algae Tutorial</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Algae contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Algae</a><ul>
+<li><a class="reference internal" href="#how-checking-works">How checking works</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script type="module" src="_static/algae-init.js?v=292c38a8"></script>
+    </body>
+</html>
