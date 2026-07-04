@@ -252,6 +252,20 @@ mod tests {
     }
 
     #[test]
+    fn tactic_hole_reports_arguments() {
+        // `by ref(?a, ?b)?` solves argument holes against the goal and surfaces
+        // them (with the resulting subgoal) to the editor.
+        let src = "import core(symmetry);\n\nsort T : Sort;\nop a : -> T;\nop b : -> T;\naxiom ab |- a = b;\n\nlemma flip\n  |- b = a;\nproof\n  by symmetry(T, ?x, ?y) then ?g;\nwip;\n";
+        let r = run_check(src, "playground", Vec::new());
+        assert!(!r.ok, "a tactic hole leaves the proof incomplete");
+        assert!(
+            r.diagnostics.iter().any(|d| d.message.contains("found tactic hole")),
+            "tactic-hole report reaches the web UI"
+        );
+        assert!(r.diagnostics.iter().any(|d| d.message.contains("Holes:")));
+    }
+
+    #[test]
     fn unknown_import_reports_error() {
         let r = run_check("import nope(x);\n", "playground", Vec::new());
         assert!(!r.ok);

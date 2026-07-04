@@ -573,7 +573,9 @@ fn elaborate_step(
 ) -> Option<(Step, bool)> {
     // Admit: `by wip` closes the goal without a proof (tainted).
     if stmt.admit {
-        if let Some(name) = &stmt.hole {
+        if stmt.inspect {
+            report_tactic_hole(elab, ctx, goal, stmt, rs);
+        } else if let Some(name) = &stmt.hole {
             report_hole(elab, ctx, goal, name, stmt.span, rs);
         }
         return Some((admit_step(elab, ctx, goal, stmt.span), true));
@@ -784,6 +786,237 @@ fn elaborate_step(
 }
 
 /// An admitted (`by wip`) leaf step: the goal is assumed, not checked.
+/// Render a context (telescope) as `a : T, h := P`, for premise subgoals.
+fn show_ctx_ext(entries: &[CtxEntry], names: &crate::core::name::Interner) -> String {
+    use crate::core::display::show;
+    entries
+        .iter()
+        .map(|e| match e {
+            CtxEntry::Term { name, ty } => format!("{} : {}", names.resolve(*name), show(ty, names)),
+            CtxEntry::Proof { name, prop } => format!("{} := {}", names.resolve(*name), show(prop, names)),
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Report a **tactic-inspect** step (`by ref(…)?`, `?name` arguments, or a
+/// terminal `then ?name`). Argument holes are solved against the current goal
+/// with first-order matching + type inference (no unifier needed), then listed
+/// with their types/values alongside the resulting subgoal(s). A fully concrete
+/// `by ref(…)?` instead applies the tactic and suggests the next step. The step
+/// is admitted, so the proof stays incomplete.
+fn report_tactic_hole(
+    elab: &mut Elab,
+    ctx: &[CtxEntry],
+    goal: &Expr,
+    stmt: &ast::ProofStmt,
+    rs: &RewriteSystem,
+) {
+    use crate::core::display::show;
+    use crate::core::rewrite::match_pattern;
+    use crate::core::tactic::{apply, subst_all};
+
+    let reference = stmt.reference.as_ref().expect("inspect step has a reference");
+    let (tname_sym, rule) = match resolve_tactic(elab, ctx, reference) {
+        Some(r) => r,
+        None => return,
+    };
+    let tname = elab.interner.resolve(tname_sym).to_string();
+    let n = rule.params.len();
+    // `by ref?` with no argument list means "every parameter is a hole".
+    let all_holes = reference.args.is_empty() && n > 0;
+    if !all_holes && reference.args.len() != n {
+        elab.err(
+            format!("tactic `{tname}` expects {n} argument(s), got {}", reference.args.len()),
+            stmt.span,
+        );
+        return;
+    }
+
+    // Classify each parameter: a concrete value (→ `subst`/`args`) or a hole.
+    let mut scope = scope_from_ctx(ctx);
+    let mut subst: Vec<(Sym, Expr)> = Vec::new();
+    let mut args: Vec<Arg> = Vec::new();
+    let mut holes: Vec<(usize, String)> = Vec::new();
+    for (i, p) in rule.params.iter().enumerate() {
+        let arg = if all_holes { None } else { Some(&reference.args[i]) };
+        let hole_name = match arg {
+            None => Some(elab.interner.resolve(param_sym(p)).to_string()),
+            Some(a) => match &a.node {
+                ast::ExprNode::NamedHole(hn) => Some(hn.clone()),
+                _ => None,
+            },
+        };
+        match (p, hole_name) {
+            (_, Some(hn)) => {
+                holes.push((i, hn));
+                args.push(match p {
+                    Param::Term { name, .. } => Arg::Term(Expr::Free(*name)),
+                    Param::Proof { name, .. } => Arg::Proof(Expr::Free(*name)),
+                });
+            }
+            (Param::Term { name, ty }, None) => {
+                let a = arg.unwrap();
+                let e = if expr_has_hole(a) {
+                    match lower_hole_lambda(elab, &mut scope, a, ty, &subst) {
+                        Some(e) => e,
+                        None => return,
+                    }
+                } else {
+                    match elab.lower_expr(&mut scope, a) {
+                        Ok(e) => e,
+                        Err(_) => return,
+                    }
+                };
+                subst.push((*name, e.clone()));
+                args.push(Arg::Term(e));
+            }
+            (Param::Proof { .. }, None) => match resolve_proof_term(elab, ctx, &mut scope, arg.unwrap()) {
+                Some(e) => args.push(Arg::Proof(e)),
+                None => return,
+            },
+        }
+    }
+
+    let mut msg = format!("found tactic hole in `by {tname}`\n\nGoal:\n  {}\n", show(goal, &elab.interner));
+
+    if holes.is_empty() {
+        // Fully concrete: apply for real and suggest the next step.
+        match apply(&rule, &args, goal, ctx, rs) {
+            Ok(next) if next.is_empty() => {
+                msg.push_str("\nThis closes the goal — replace the `?` with `;`.\n");
+            }
+            Ok(next) => {
+                msg.push_str("\nApplying it leaves:\n");
+                for (k, sq) in next.iter().enumerate() {
+                    let tag = if next.len() > 1 { format!(" (goal {})", k + 1) } else { String::new() };
+                    let ext = show_ctx_ext(&sq.ctx[ctx.len().min(sq.ctx.len())..], &elab.interner);
+                    let g = show(&sq.goal, &elab.interner);
+                    if ext.is_empty() {
+                        msg.push_str(&format!("  ⊢ {g}{tag}\n"));
+                    } else {
+                        msg.push_str(&format!("  {ext} ⊢ {g}{tag}\n"));
+                    }
+                }
+                if next.len() == 1 {
+                    let name = stmt.subgoal_name.clone().unwrap_or_else(|| "next".into());
+                    let _ = name;
+                    msg.push_str(&format!(
+                        "\nContinue with:\n  then ⊢ {};\n  by wip?;\n",
+                        show(&next[0].goal, &elab.interner)
+                    ));
+                } else {
+                    msg.push_str("\nContinue with `cases`, one `case` per goal.\n");
+                }
+            }
+            Err(e) => {
+                elab.err(format!("tactic `{tname}`: {e}"), stmt.span);
+                return;
+            }
+        }
+        elab.err(msg.trim_end().to_string(), stmt.span);
+        return;
+    }
+
+    // Solve the term holes: match the (concrete-instantiated) conclusion against
+    // the goal, then recover type parameters from solved values via `infer`.
+    let metas: Vec<Sym> = holes
+        .iter()
+        .filter_map(|(i, _)| match &rule.params[*i] {
+            Param::Term { name, .. } => Some(*name),
+            Param::Proof { .. } => None,
+        })
+        .collect();
+    let frees: std::collections::HashMap<Sym, Expr> = ctx
+        .iter()
+        .filter_map(|e| match e {
+            CtxEntry::Term { name, ty } => Some((*name, ty.clone())),
+            CtxEntry::Proof { .. } => None,
+        })
+        .collect();
+    let mut solved: Vec<(Sym, Expr)> = Vec::new();
+    let concl = subst_all(&rule.conclusion, &subst);
+    match_pattern(&concl, goal, &metas, &mut solved);
+    for _ in 0..=n {
+        let mut changed = false;
+        let cur: Vec<(Sym, Expr)> = subst.iter().chain(solved.iter()).cloned().collect();
+        for (hs, val) in solved.clone() {
+            if let Some(Param::Term { ty, .. }) = rule
+                .params
+                .iter()
+                .find(|p| matches!(p, Param::Term { name, .. } if *name == hs))
+            {
+                if let Ok(t) = elab.infer(&frees, &[], &val) {
+                    let ty_i = subst_all(ty, &cur);
+                    let before = solved.len();
+                    match_pattern(&ty_i, &t, &metas, &mut solved);
+                    changed |= solved.len() > before;
+                }
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    let full: Vec<(Sym, Expr)> = subst.iter().chain(solved.iter()).cloned().collect();
+
+    // List each hole with its (solved) type / required proposition.
+    msg.push_str("\nHoles:\n");
+    for (i, hn) in &holes {
+        match &rule.params[*i] {
+            Param::Term { name, ty } => {
+                let ty_s = show(&subst_all(ty, &full), &elab.interner);
+                match solved.iter().find(|(s, _)| s == name) {
+                    Some((_, v)) => msg.push_str(&format!("  ?{hn} : {ty_s} = {}\n", show(v, &elab.interner))),
+                    None => msg.push_str(&format!("  ?{hn} : {ty_s}\n")),
+                }
+            }
+            Param::Proof { prop, .. } => {
+                msg.push_str(&format!(
+                    "  ?{hn} : ⊢ {}  (needs a proof)\n",
+                    show(&subst_all(prop, &full), &elab.interner)
+                ));
+            }
+        }
+    }
+
+    // The resulting subgoal(s), with everything known substituted in.
+    msg.push_str("\nSubgoal(s):\n");
+    for (k, prem) in rule.premises.iter().enumerate() {
+        let gname = stmt.subgoal_name.clone().unwrap_or_else(|| {
+            if rule.premises.len() > 1 {
+                format!("g{}", k + 1)
+            } else {
+                "g".into()
+            }
+        });
+        let ext_entries: Vec<CtxEntry> = prem
+            .ctx
+            .iter()
+            .map(|e| match e {
+                CtxEntry::Term { name, ty } => CtxEntry::Term { name: *name, ty: rs.nf(&subst_all(ty, &full)) },
+                CtxEntry::Proof { name, prop } => CtxEntry::Proof { name: *name, prop: rs.nf(&subst_all(prop, &full)) },
+            })
+            .collect();
+        let ext = show_ctx_ext(&ext_entries, &elab.interner);
+        let g = show(&rs.nf(&subst_all(&prem.goal, &full)), &elab.interner);
+        if ext.is_empty() {
+            msg.push_str(&format!("  ?{gname} : ⊢ {g}\n"));
+        } else {
+            msg.push_str(&format!("  ?{gname} : {ext} ⊢ {g}\n"));
+        }
+    }
+
+    elab.err(msg.trim_end().to_string(), stmt.span);
+}
+
+/// The name symbol of a rule parameter.
+fn param_sym(p: &Param) -> Sym {
+    match p {
+        Param::Term { name, .. } | Param::Proof { name, .. } => *name,
+    }
+}
+
 /// Emit a hole report for `by wip(?name)`: the goal to prove, the context in
 /// scope, and candidate tactics/assumptions that might discharge it. The proof
 /// is still admitted (the module remains incomplete), but the diagnostic guides
@@ -916,6 +1149,8 @@ fn admit_step(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr, span: Span) -> Ste
 fn expr_has_hole(e: &ast::Expr) -> bool {
     match &e.node {
         ast::ExprNode::Hole => true,
+        // `?name` is a distinct argument hole, not a `_` motive; don't expand it.
+        ast::ExprNode::NamedHole(_) => false,
         ast::ExprNode::Var(_) | ast::ExprNode::Num(_) | ast::ExprNode::Op(_) | ast::ExprNode::False => false,
         ast::ExprNode::App(h, args) => expr_has_hole(h) || args.iter().any(expr_has_hole),
         ast::ExprNode::Infix(a, _, b)
@@ -939,9 +1174,11 @@ fn replace_holes(e: &ast::Expr, name: &ast::Name) -> ast::Expr {
             name: name.clone(),
             span: e.span,
         }),
-        ast::ExprNode::Var(_) | ast::ExprNode::Num(_) | ast::ExprNode::Op(_) | ast::ExprNode::False => {
-            e.node.clone()
-        }
+        ast::ExprNode::Var(_)
+        | ast::ExprNode::Num(_)
+        | ast::ExprNode::Op(_)
+        | ast::ExprNode::False
+        | ast::ExprNode::NamedHole(_) => e.node.clone(),
         ast::ExprNode::App(h, args) => ast::ExprNode::App(
             Box::new(replace_holes(h, name)),
             args.iter().map(|a| replace_holes(a, name)).collect(),
@@ -1145,6 +1382,10 @@ fn collect_expr_frees(elab: &Elab, e: &ast::Expr, out: &mut Vec<String>) {
                 }
             }
         }
-        ast::ExprNode::Op(_) | ast::ExprNode::Num(_) | ast::ExprNode::False | ast::ExprNode::Hole => {}
+        ast::ExprNode::Op(_)
+        | ast::ExprNode::Num(_)
+        | ast::ExprNode::False
+        | ast::ExprNode::Hole
+        | ast::ExprNode::NamedHole(_) => {}
     }
 }

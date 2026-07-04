@@ -250,6 +250,11 @@ pub struct ProofStmt {
     /// For `by wip(?name)`: the hole's name (without the `?`). Triggers a hole
     /// report at the current goal instead of a silent admit.
     pub hole: Option<String>,
+    /// True for a tactic-inspect step: `by ref(…)?`, a `?name` argument, or a
+    /// terminal `then ?name`. Reports argument holes / the next goal, then admits.
+    pub inspect: bool,
+    /// Name for the resulting-subgoal hole, from `then ?name` on an inspect step.
+    pub subgoal_name: Option<String>,
     pub span: Span,
 }
 
@@ -339,6 +344,9 @@ pub enum ExprNode {
     False,
     /// `_` hole: sugar for a unary lambda (expanded during elaboration).
     Hole,
+    /// `?name` hole: a named argument hole, valid only in a tactic-inspect step
+    /// (`by ref(… ?name …)`); reported rather than lowered to a term.
+    NamedHole(String),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

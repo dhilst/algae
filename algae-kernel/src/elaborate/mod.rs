@@ -279,6 +279,13 @@ impl Elab {
                 );
                 Err(())
             }
+            ast::ExprNode::NamedHole(name) => {
+                self.err(
+                    format!("`?{name}` is only allowed as an argument to an inspected tactic (`by ref(…)?`)"),
+                    e.span,
+                );
+                Err(())
+            }
         }
     }
 

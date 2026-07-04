@@ -475,6 +475,16 @@ fn e_atom(input: &mut In) -> ModalResult<Expr> {
             span: s,
         });
     }
+    // `?name` — a named argument hole (only meaningful in a tactic-inspect step;
+    // rejected elsewhere during elaboration).
+    if at(*input, &T::Question) {
+        let s = expect(input, T::Question)?;
+        let name = ident(input)?;
+        return Ok(Expr {
+            node: ExprNode::NamedHole(name.text),
+            span: s.merge(name.span),
+        });
+    }
     if at(*input, &T::LParen) {
         expect(input, T::LParen)?;
         let e = expr(input)?;
@@ -656,6 +666,35 @@ enum Seg {
         cases_close: Close,
         span: Span,
     },
+    /// `by ref(…)? [then ?g];` — a tactic-inspect step (argument holes / next
+    /// goal). Terminal; admits like `wip`.
+    Inspect {
+        reference: ProofRef,
+        subgoal_name: Option<String>,
+        span: Span,
+    },
+}
+
+/// Does any argument (recursively) contain a `?name` hole?
+fn contains_named_hole(args: &[Expr]) -> bool {
+    fn go(e: &Expr) -> bool {
+        match &e.node {
+            ExprNode::NamedHole(_) => true,
+            ExprNode::App(h, a) => go(h) || a.iter().any(go),
+            ExprNode::Infix(a, _, b)
+            | ExprNode::Eq(a, b)
+            | ExprNode::And(a, b)
+            | ExprNode::Or(a, b)
+            | ExprNode::Implies(a, b)
+            | ExprNode::Iff(a, b) => go(a) || go(b),
+            ExprNode::Not(a) => go(a),
+            ExprNode::Lambda(_, b) | ExprNode::Forall(_, b) | ExprNode::Exists(_, b) => go(b),
+            ExprNode::Var(_) | ExprNode::Num(_) | ExprNode::Op(_) | ExprNode::False | ExprNode::Hole => {
+                false
+            }
+        }
+    }
+    args.iter().any(go)
 }
 
 /// Parse `[context] ⊢ goal ;` — the subgoal restated after `then`.
@@ -695,12 +734,39 @@ fn proof_segments(input: &mut In) -> ModalResult<Vec<Seg>> {
             return Ok(segs);
         }
         let reference = proof_ref(input)?;
+        // Trailing `?` marks an inspect step (`by ref?` / `by ref(args)?`).
+        let mut inspect = false;
+        if at(*input, &T::Question) {
+            expect(input, T::Question)?;
+            inspect = true;
+        }
+        inspect |= contains_named_hole(&reference.args);
         if at(*input, &T::KwThen) {
-            // Single-goal continuation: keep collecting steps in this block.
             expect(input, T::KwThen)?;
+            // `then ?name` — a terminal subgoal hole (inspect); otherwise a normal
+            // single-goal continuation.
+            if at(*input, &T::Question) {
+                expect(input, T::Question)?;
+                let name = ident(input)?;
+                let end = semi(input)?;
+                segs.push(Seg::Inspect {
+                    reference,
+                    subgoal_name: Some(name.text),
+                    span: by_span.merge(end),
+                });
+                return Ok(segs);
+            }
             let (context, goal, end_span) = continuation_goal(input)?;
             segs.push(Seg::Then { reference, context, goal, by_span, end_span });
             continue;
+        } else if inspect {
+            let end = semi(input)?;
+            segs.push(Seg::Inspect {
+                reference,
+                subgoal_name: None,
+                span: by_span.merge(end),
+            });
+            return Ok(segs);
         } else if at(*input, &T::KwCases) {
             // Branching: one nested `case` per subgoal, with its own terminator.
             expect(input, T::KwCases)?;
@@ -746,6 +812,8 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close) -> ProofStmt {
             cases_close: close,
             continuation: Cont::Zero,
             hole: None,
+            inspect: false,
+            subgoal_name: None,
             span,
         },
         Seg::Admit { span, hole } => ProofStmt {
@@ -755,6 +823,8 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close) -> ProofStmt {
             cases_close: close,
             continuation: Cont::Zero,
             hole,
+            inspect: false,
+            subgoal_name: None,
             span,
         },
         Seg::Cases {
@@ -769,6 +839,23 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close) -> ProofStmt {
             cases_close,
             continuation: Cont::Cases,
             hole: None,
+            inspect: false,
+            subgoal_name: None,
+            span,
+        },
+        Seg::Inspect {
+            reference,
+            subgoal_name,
+            span,
+        } => ProofStmt {
+            reference: Some(reference),
+            admit: true,
+            cases: Vec::new(),
+            cases_close: close,
+            continuation: Cont::Zero,
+            hole: None,
+            inspect: true,
+            subgoal_name,
             span,
         },
         Seg::Then { .. } => unreachable!("proof chain cannot end in `then`"),
@@ -803,6 +890,8 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close) -> ProofStmt {
             cases_close: close,
             continuation: Cont::Then,
             hole: None,
+            inspect: false,
+            subgoal_name: None,
             span: case_span,
         };
     }
