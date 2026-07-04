@@ -7,7 +7,7 @@ import core(
 
 theory Magma(
   S : Sort,
-  mul : S × S → S
+  mul : S * S → S
 ) laws
   law closure(
     x y : S
@@ -17,7 +17,7 @@ qed;
 
 theory Semigroup(
   S : Sort,
-  mul : S × S → S
+  mul : S * S → S
 ) laws
   include Magma(S, mul);
 
@@ -29,7 +29,7 @@ qed;
 
 theory Monoid(
   S : Sort,
-  mul : S × S → S,
+  mul : S * S → S,
   e : S
 ) laws
   include Semigroup(S, mul);
@@ -47,7 +47,7 @@ qed;
 
 theory CommutativeMonoid(
   S : Sort,
-  mul : S × S → S,
+  mul : S * S → S,
   e : S
 ) laws
   include Monoid(S, mul, e);
@@ -60,7 +60,7 @@ qed;
 
 theory Group(
   S : Sort,
-  mul : S × S → S,
+  mul : S * S → S,
   e : S,
   inv : S → S
 ) laws
@@ -79,7 +79,7 @@ qed;
 
 theory AbelianGroup(
   S : Sort,
-  mul : S × S → S,
+  mul : S * S → S,
   e : S,
   inv : S → S
 ) laws

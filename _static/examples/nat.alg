@@ -10,9 +10,9 @@ op 0 : → Nat;
 
 op s : Nat → Nat;
 
-op + : Nat × Nat → Nat;
+op + : Nat * Nat → Nat;
 
-op × : Nat × Nat → Nat;
+op * : Nat * Nat → Nat;
 
 axiom add_zero_left(
   n : Nat
@@ -27,12 +27,12 @@ axiom add_succ_left(
 axiom mul_zero_left(
   n : Nat
 )
-  ⊢ 0 × n = 0;
+  ⊢ 0 * n = 0;
 
 axiom mul_succ_left(
   n m : Nat
 )
-  ⊢ s(n) × m = m + (n × m);
+  ⊢ s(n) * m = m + (n * m);
 
 rule induction(
   P : Nat → Prop

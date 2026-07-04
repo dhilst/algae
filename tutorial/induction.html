@@ -1,0 +1,480 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Theories, laws, and models" href="theories.html"><link rel="prev" title="Proving with holes" href="holes.html">
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Induction and friends - Algae</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Algae</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">Algae</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Tutorial</a><input aria-label="Toggle navigation of Tutorial" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first-proofs.html">Your first proofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="holes.html">Proving with holes</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Induction and friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theories.html">Theories, laws, and models</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../playground.html">Playground</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/tutorial/induction.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="induction-and-friends">
+<h1>Induction and friends<a class="headerlink" href="#induction-and-friends" title="Link to this heading">¶</a></h1>
+<p>Time for the real thing. <code class="docutils literal notranslate"><span class="pre">nat</span></code> defines addition and an induction rule whose
+conclusion is a <em>universally quantified</em> proposition:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">induction</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>
+  <span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">,</span> <span class="n">ih</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+  <span class="p">──────────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Two premises — the base case <code class="docutils literal notranslate"><span class="pre">P(0)</span></code> and the step case (assume <code class="docutils literal notranslate"><span class="pre">ih</span> <span class="pre">:=</span> <span class="pre">P(n)</span></code>,
+prove <code class="docutils literal notranslate"><span class="pre">P(s(n))</span></code>) — and a conclusion <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">n.</span> <span class="pre">P(n)</span></code>. Two premises means two
+branches, so this is a job for <code class="docutils literal notranslate"><span class="pre">cases</span></code>. Here is the full proof of
+<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">n</span></code>, straight from <code class="docutils literal notranslate"><span class="pre">nat.alg</span></code>:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">rewrite_r</span><span class="p">,</span> <span class="n">transitivity</span><span class="p">);</span>
+
+<span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+
+<span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
+
+<span class="k">rule</span> <span class="n">induction</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>
+  <span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">,</span> <span class="n">ih</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+  <span class="p">──────────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">lemma</span> <span class="n">add_zero_right</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">n</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="n">induction</span><span class="p">(</span><span class="n">_</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span> <span class="k">cases</span>       <span class="c1"># motive P = (λ k. k + 0 = k)</span>
+    <span class="k">case</span>
+      <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>                    <span class="c1"># base: P(0)</span>
+    <span class="k">proof</span>
+      <span class="k">by</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>             <span class="c1"># conclusion 0 + n = n at n = 0 is the goal</span>
+    <span class="k">qed</span><span class="p">;</span>
+
+    <span class="k">case</span>
+      <span class="n">k</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">;</span>
+      <span class="n">ih</span> <span class="o">:=</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">k</span><span class="p">;</span>                 <span class="c1"># step: assume P(k)</span>
+      <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">);</span>             <span class="c1"># prove P(s k)</span>
+    <span class="k">proof</span>
+      <span class="k">by</span> <span class="n">rewrite_r</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">ih</span><span class="p">,</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">_</span><span class="p">))</span>
+      <span class="n">then</span> <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">);</span>      <span class="c1"># goal after rewriting k &lt;- k + 0</span>
+      <span class="k">by</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>          <span class="c1"># conclusion s(k) + 0 = s(k + 0) is the goal</span>
+    <span class="k">qed</span><span class="p">;</span>
+  <span class="k">qed</span><span class="p">;</span>
+<span class="k">qed</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Reading it as a tree:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">induction(_</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">_)</span></code> supplies the <strong>motive</strong> <code class="docutils literal notranslate"><span class="pre">P</span></code> (that <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">_</span></code>
+is a hole — more on it in a second). The goal <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">n.</span> <span class="pre">n</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">n</span></code> matches
+<code class="docutils literal notranslate"><span class="pre">induction</span></code>’s conclusion, producing <strong>two</strong> subgoals, one per <code class="docutils literal notranslate"><span class="pre">case</span></code>.</p></li>
+<li><p>The <strong>base case</strong> <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code> is closed by <code class="docutils literal notranslate"><span class="pre">add_zero_left(0)</span></code>: its
+conclusion <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>, at <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span></code>, is exactly <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p></li>
+<li><p>The <strong>step case</strong> assumes <code class="docutils literal notranslate"><span class="pre">ih</span> <span class="pre">:=</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">k</span></code> and must prove <code class="docutils literal notranslate"><span class="pre">s(k)</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">s(k)</span></code>.
+It uses <code class="docutils literal notranslate"><span class="pre">ih</span></code> to rewrite <code class="docutils literal notranslate"><span class="pre">k</span></code> to <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span></code> under <code class="docutils literal notranslate"><span class="pre">s</span></code>, leaving
+<code class="docutils literal notranslate"><span class="pre">s(k)</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">s(k</span> <span class="pre">+</span> <span class="pre">0)</span></code>, which <code class="docutils literal notranslate"><span class="pre">add_succ_left(k,</span> <span class="pre">0)</span></code> discharges.</p></li>
+</ul>
+<p>Notice <code class="docutils literal notranslate"><span class="pre">ih</span></code> — a <strong>hypothesis</strong> introduced by the step case — being handed to
+<code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> as a proof argument. That’s the proof namespace at work: <code class="docutils literal notranslate"><span class="pre">ih</span></code> is
+not a term, it’s <em>evidence</em>.</p>
+<section id="eigenvariables">
+<h2>Eigenvariables<a class="headerlink" href="#eigenvariables" title="Link to this heading">¶</a></h2>
+<p>In the step case, <code class="docutils literal notranslate"><span class="pre">k</span></code> is an <strong>eigenvariable</strong>: a fresh variable standing for an
+arbitrary <code class="docutils literal notranslate"><span class="pre">Nat</span></code>. Introducing it is the formal version of “let <code class="docutils literal notranslate"><span class="pre">k</span></code> be
+arbitrary.” The kernel insists it’s genuinely fresh (it may not already occur in
+the surrounding context) — and that freshness is exactly what makes “prove
+<code class="docutils literal notranslate"><span class="pre">P(k)</span></code> for arbitrary <code class="docutils literal notranslate"><span class="pre">k</span></code>” sound as “prove <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">k.</span> <span class="pre">P(k)</span></code>”.</p>
+</section>
+<section id="the-shorthand">
+<h2>The <code class="docutils literal notranslate"><span class="pre">_</span></code> shorthand<a class="headerlink" href="#the-shorthand" title="Link to this heading">¶</a></h2>
+<p>Writing motives by hand is tedious, so <code class="docutils literal notranslate"><span class="pre">_</span></code> is sugar for a lambda. In the proof
+above, <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">induction(_</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">_)</span></code> means <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">induction(λ</span> <span class="pre">k.</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">k)</span></code>: each
+<code class="docutils literal notranslate"><span class="pre">_</span></code> becomes the lambda’s bound variable. Reach for <code class="docutils literal notranslate"><span class="pre">_</span></code> whenever a predicate
+argument is obvious from the goal. (This is a different beast from the <code class="docutils literal notranslate"><span class="pre">?name</span></code>
+holes in <a class="reference internal" href="holes.html"><span class="doc">Proving with holes</span></a> — <code class="docutils literal notranslate"><span class="pre">_</span></code> is filled in silently; <code class="docutils literal notranslate"><span class="pre">?</span></code> asks the checker to
+<em>talk to you</em>.)</p>
+</section>
+<section id="parameters-vs-forall">
+<h2>Parameters vs. <code class="docutils literal notranslate"><span class="pre">forall</span></code><a class="headerlink" href="#parameters-vs-forall" title="Link to this heading">¶</a></h2>
+<p>A lemma can bind a variable two ways. They read as the same theorem but behave
+differently in proofs:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">lemma</span> <span class="n">foo</span><span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>                  <span class="c1"># a parameter</span>
+<span class="k">lemma</span> <span class="n">foo</span>         <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>    <span class="c1"># a quantifier in the proposition</span>
+</pre></div>
+</div>
+<p>Both say “P holds for every x.” The difference is representation:</p>
+<ul class="simple">
+<li><p>A <strong>parameter</strong> <code class="docutils literal notranslate"><span class="pre">x</span></code> is a <em>schematic</em> variable — an implicit universal. As a
+proof step, <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">foo(a)</span></code> instantiates it directly, proving <code class="docutils literal notranslate"><span class="pre">P(a)</span></code> for any
+term <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p></li>
+<li><p>A <strong>``forall``</strong> puts the universal <em>inside</em> the proposition, as an object-level
+connective you introduce and eliminate with explicit rules.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">core</span></code> provides the two bridges between them:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">forall_intro</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>      <span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>                                   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>                        <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>                       <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">forall_intro</span></code> turns a proof of <code class="docutils literal notranslate"><span class="pre">P(x)</span></code> for a fresh eigenvariable <code class="docutils literal notranslate"><span class="pre">x</span></code> into
+<code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">x.</span> <span class="pre">P(x)</span></code>; <code class="docutils literal notranslate"><span class="pre">forall_elim</span></code> goes the other way. So proving a <code class="docutils literal notranslate"><span class="pre">forall</span></code> goal
+begins by introducing the variable:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">forall_intro</span><span class="p">);</span>
+
+<span class="k">lemma</span> <span class="n">all_refl</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="n">forall_intro</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="o">λ</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">)</span>
+  <span class="n">then</span> <span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>    <span class="c1"># n introduced as an eigenvariable</span>
+  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+<span class="k">qed</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Here the <code class="docutils literal notranslate"><span class="pre">then</span></code> keeps its context: <code class="docutils literal notranslate"><span class="pre">forall_intro</span></code> introduces the fresh
+eigenvariable <code class="docutils literal notranslate"><span class="pre">n</span></code>, so the continuation names it (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">:</span> <span class="pre">Nat</span> <span class="pre">⊢</span> <span class="pre">…</span></code>). When a step
+introduces no new variables — most <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> steps — you can drop the context
+and just write <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">&lt;goal&gt;;</span></code>.</p>
+<p>This is also why <code class="docutils literal notranslate"><span class="pre">induction</span></code> states its conclusion as <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">(n</span> <span class="pre">:</span> <span class="pre">Nat)</span> <span class="pre">st</span> <span class="pre">P(n)</span></code>
+rather than taking <code class="docutils literal notranslate"><span class="pre">n</span></code> as a parameter: the step case must reason about <code class="docutils literal notranslate"><span class="pre">n</span></code> as
+a bound eigenvariable the premises discharge, which a caller-supplied parameter
+couldn’t express.</p>
+</section>
+<section id="the-two-namespaces-made-concrete">
+<h2>The two namespaces, made concrete<a class="headerlink" href="#the-two-namespaces-made-concrete" title="Link to this heading">¶</a></h2>
+<p>Remember the two worlds from the very first page? Here’s the promised payoff.
+Propositions are elaborated in the <strong>term namespace</strong>; <code class="docutils literal notranslate"><span class="pre">by</span></code> references and proof
+arguments resolve in the <strong>proof namespace</strong>. They never mix.</p>
+<p>The practical consequence: <strong>a proposition cannot mention a proof-former.</strong> Try to
+use an axiom’s name as if it were a term and the checker stops you cold:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="c1"># THIS DOES NOT COMPILE</span>
+<span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
+
+<span class="k">lemma</span> <span class="n">oops</span>
+  <span class="o">⊢</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>   <span class="c1"># error: `add_zero_left` is an axiom, not a term</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>
+<span class="k">qed</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">verify</span></code> rejects it with <code class="docutils literal notranslate"><span class="pre">error:</span> <span class="pre">unbound</span> <span class="pre">name</span> <span class="pre">add_zero_left</span></code>: the
+proposition <code class="docutils literal notranslate"><span class="pre">add_zero_left(0)</span></code> is elaborated in the term namespace, and there’s
+no <em>term</em> called <code class="docutils literal notranslate"><span class="pre">add_zero_left</span></code> — only a proof-namespace axiom. To talk about a
+fact inside a proposition you’d declare an operator, e.g. <code class="docutils literal notranslate"><span class="pre">op</span> <span class="pre">even</span> <span class="pre">:</span> <span class="pre">Nat</span> <span class="pre">→</span> <span class="pre">Prop</span></code>.
+The reverse is blocked too: an operator can’t be applied as a tactic in a <code class="docutils literal notranslate"><span class="pre">by</span></code>.</p>
+<p>That’s why axioms, rules, and lemmas aren’t “first-class values”: you can
+reference them in proofs, apply them, and pass hypotheses as evidence — but you
+can’t put them in a proposition or quantify over them.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="theories.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Theories, laws, and models</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="holes.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Proving with holes</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Algae contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Induction and friends</a><ul>
+<li><a class="reference internal" href="#eigenvariables">Eigenvariables</a></li>
+<li><a class="reference internal" href="#the-shorthand">The <code class="docutils literal notranslate"><span class="pre">_</span></code> shorthand</a></li>
+<li><a class="reference internal" href="#parameters-vs-forall">Parameters vs. <code class="docutils literal notranslate"><span class="pre">forall</span></code></a></li>
+<li><a class="reference internal" href="#the-two-namespaces-made-concrete">The two namespaces, made concrete</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script type="module" src="../_static/algae-init.js?v=292c38a8"></script>
+    </body>
+</html>

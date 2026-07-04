@@ -11,9 +11,9 @@ import core(
   or_elim
 );
 
-sort Pair : Sort × Sort → Sort;
+sort Pair : Sort * Sort → Sort;
 
-op pair : A × B → Pair(A, B);
+op pair : A * B → Pair(A, B);
 
 op fst : Pair(A, B) → A;
 
@@ -68,7 +68,7 @@ rule product_reflect_right(
   ⊢ Q
 end;
 
-sort Sum : Sort × Sort → Sort;
+sort Sum : Sort * Sort → Sort;
 
 op inl : A → Sum(A, B);
 

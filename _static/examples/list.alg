@@ -12,15 +12,15 @@ sort List : Sort → Sort;
 
 op nil : → List(A);
 
-op cons : A × List(A) → List(A);
+op cons : A * List(A) → List(A);
 
-op append : List(A) × List(A) → List(A);
+op append : List(A) * List(A) → List(A);
 
 op singleton : A → List(A);
 
 op return : A → List(A);
 
-op bind : List(A) × (A → List(B)) → List(B);
+op bind : List(A) * (A → List(B)) → List(B);
 
 axiom append_nil_left(
   A : Sort,
