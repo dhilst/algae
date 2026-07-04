@@ -223,6 +223,19 @@ pub struct ProofBlock {
     pub span: Span,
 }
 
+/// Which surface form linked this `by` step to its continuation. Affects
+/// diagnostics only — `Then` and `Cases` both lower to `cases`, and the checker
+/// treats them identically.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Cont {
+    /// `by ref;` — closes the goal (or `by wip`); no continuation.
+    Zero,
+    /// `by ref then <seq> …` — single-goal continuation (one synthetic case).
+    Then,
+    /// `by ref cases case … case …` — multi-goal branching.
+    Cases,
+}
+
 #[derive(Clone, Debug)]
 pub struct ProofStmt {
     /// `None` for an admit (`by wip`).
@@ -232,6 +245,11 @@ pub struct ProofStmt {
     pub cases: Vec<CaseBlock>,
     /// For a multi-case (`cases … qed/wip`) statement: how it is terminated.
     pub cases_close: Close,
+    /// Which surface form produced `cases` (for diagnostics).
+    pub continuation: Cont,
+    /// For `by wip(?name)`: the hole's name (without the `?`). Triggers a hole
+    /// report at the current goal instead of a silent admit.
+    pub hole: Option<String>,
     pub span: Span,
 }
 

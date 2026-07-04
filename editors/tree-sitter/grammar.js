@@ -274,36 +274,40 @@ module.exports = grammar({
     // 3.13 Proof Blocks (closed by `qed`, or `wip` if in progress)
     proof_block: $ => seq(
       'proof',
-      repeat($._proof_stmt),
+      $._proof_body,
       choice('qed', 'wip'),
       ';',
     ),
 
-    _proof_stmt: $ => choice(
+    _proof_body: $ => choice(
       $.by_stmt_wip,
       $.by_stmt_zero,
-      $.by_stmt_one,
+      $.by_stmt_then,
       $.by_stmt_many,
     ),
 
     // by wip ;  — admit the goal (no proof required)
     by_stmt_wip: $ => seq('by', 'wip', ';'),
 
-    // by_stmt_zero = "by" proof_ref ;  (followed by ';')
+    // by_stmt_zero = "by" proof_ref ;  (0 subgoals: closes the goal)
     by_stmt_zero: $ => seq(
       'by',
       field('ref', $.proof_ref),
       ';',
     ),
 
-    // by_stmt_one = "by" proof_ref case_block
-    by_stmt_one: $ => seq(
+    // by_stmt_then = "by" proof_ref "then" continuation proof_body
+    // (1 subgoal: flat continuation in the same block)
+    by_stmt_then: $ => seq(
       'by',
       field('ref', $.proof_ref),
-      $.case_block,
+      'then',
+      field('goal', $.case_body),
+      $._proof_body,
     ),
 
     // by_stmt_many = "by" proof_ref "cases" case_block { case_block } ("qed"|"wip") ;
+    // (2+ subgoals: branching)
     by_stmt_many: $ => seq(
       'by',
       field('ref', $.proof_ref),

@@ -13,6 +13,8 @@ pub enum TokenKind {
     Number(String),
     /// A standalone `_` hole (sugar for a unary lambda).
     Hole,
+    /// `?` — introduces a named proof hole in `by wip(?name)`.
+    Question,
 
     // Keywords
     KwImport,
@@ -28,6 +30,7 @@ pub enum TokenKind {
     KwWip,
     KwCase,
     KwCases,
+    KwThen,
     KwProps,
     KwLaws,
     KwTheory,
@@ -163,6 +166,7 @@ pub fn lex(src: &str) -> Result<Vec<Token>, Vec<Diagnostic>> {
             ',' => { push(TokenKind::Comma, i, 1); i += 1; }
             ';' => { push(TokenKind::Semi, i, 1); i += 1; }
             '.' => { push(TokenKind::Dot, i, 1); i += 1; }
+            '?' => { push(TokenKind::Question, i, 1); i += 1; }
             '+' => { push(TokenKind::Plus, i, 1); i += 1; }
             '~' => { push(TokenKind::Not, i, 1); i += 1; }
             '*' => { push(TokenKind::Star, i, 1); i += 1; }
@@ -328,6 +332,7 @@ fn keyword(s: &str) -> Option<TokenKind> {
         "wip" => TokenKind::KwWip,
         "case" => TokenKind::KwCase,
         "cases" => TokenKind::KwCases,
+        "then" => TokenKind::KwThen,
         "props" => TokenKind::KwProps,
         "laws" => TokenKind::KwLaws,
         "theory" => TokenKind::KwTheory,

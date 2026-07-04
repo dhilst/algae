@@ -8,11 +8,9 @@ lemma e(A B : Sort, p : Pair(A, B))
   |- p = p;
 proof
   by pair_cases(A, B, p, _ = _)
-  case
+  then
     x : A;
     y : B;
     |- pair(x, y) = pair(x, y);
-  proof
     by refl(Pair(A, B), pair(x, y));
-  qed;
 qed;

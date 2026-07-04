@@ -8,10 +8,8 @@ lemma all_self_eq
   |- forall (n : Nat) st n = n;
 proof
   by forall_intro(Nat, lambda (k : Nat) st k = k)
-  case
+  then
     n : Nat;
     |- n = n;
-  proof
     by refl(Nat, n);
-  qed;
 qed;

@@ -67,14 +67,8 @@ model OptionMonad satisfies Monad(
       return_def(A, x),
       λ (o : Option(A)) st bind(o, f) = f(x)
     )
-    case
-      A B : Sort;
-      x : A;
-      f : A → Option(B);
-      ⊢ bind(some(x), f) = f(x);
-    proof
-      by bind_some(A, B, x, f);
-    qed;
+    then ⊢ bind(some(x), f) = f(x);
+    by bind_some(A, B, x, f);
   qed;
 
   law right_identity;
@@ -103,13 +97,8 @@ model OptionMonad satisfies Monad(
           bind_some(A, A, x, return),
           λ (o : Option(A)) st o = some(x)
         )
-        case
-          A : Sort;
-          x : A;
-          ⊢ return(x) = some(x);
-        proof
-          by return_def(A, x);
-        qed;
+        then ⊢ return(x) = some(x);
+        by return_def(A, x);
       qed;
     qed;
   qed;
@@ -151,23 +140,16 @@ model OptionMonad satisfies Monad(
               λ (x : A) st bind(f(x), g)
             )
         )
-        case
-          A B C : Sort;
-          f : A → Option(B);
-          g : B → Option(C);
-          ⊢ bind(none, g)
-             =
-             bind(
-               none,
-               λ (x : A) st bind(f(x), g)
-             );
-        proof
-          by bind_none(
-            A,
-            C,
-            λ (x : A) st bind(f(x), g)
-          );
-        qed;
+        then ⊢ bind(none, g) = bind(none, λ (x : A) st bind(f(x), g));
+        by rewrite_r(
+          Option(C),
+          bind(none, λ (x : A) st bind(f(x), g)),
+          none,
+          bind_none(A, C, λ (x : A) st bind(f(x), g)),
+          λ (r : Option(C)) st bind(none, g) = r
+        )
+        then ⊢ bind(none, g) = none;
+        by bind_none(B, C, g);
       qed;
 
       case
@@ -195,25 +177,18 @@ model OptionMonad satisfies Monad(
               λ (y : A) st bind(f(y), g)
             )
         )
-        case
-          A B C : Sort;
-          x : A;
-          f : A → Option(B);
-          g : B → Option(C);
-          ⊢ bind(f(x), g)
-             =
-             bind(
-               some(x),
-               λ (y : A) st bind(f(y), g)
-             );
-        proof
-          by bind_some(
-            A,
-            C,
-            x,
-            λ (y : A) st bind(f(y), g)
-          );
-        qed;
+        then ⊢ bind(f(x), g) = bind(some(x), λ (y : A) st bind(f(y), g));
+        by rewrite_r(
+          Option(C),
+          bind(some(x), λ (y : A) st bind(f(y), g)),
+          bind(f(x), g),
+          bind_some(A, C, x, λ (y : A) st bind(f(y), g)),
+          λ (r : Option(C)) st
+            r = bind(some(x), λ (y : A) st bind(f(y), g))
+        )
+        then ⊢ bind(some(x), λ (y : A) st bind(f(y), g))
+              = bind(some(x), λ (y : A) st bind(f(y), g));
+        by refl(Option(C), bind(some(x), λ (y : A) st bind(f(y), g)));
       qed;
     qed;
   qed;

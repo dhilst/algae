@@ -11,10 +11,8 @@ lemma imp
   |- (b = b) => (a = a);
 proof
   by implication_intro(b = b, a = a)
-  case
+  then
     hyp := b = b;
     |- a = a;
-  proof
     by refl(T, a);
-  qed;
 qed;

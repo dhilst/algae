@@ -46,9 +46,7 @@ lemma collapse
   |- s(s(z)) = s(z);
 proof
   by rewrite_r(Nat, s(z), z, s_collapses, s(_) = s(z))
-  case
+  then
     |- s(z) = s(z);
-  proof
     by refl(Nat, s(z));
-  qed;
 qed;

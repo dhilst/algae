@@ -55,6 +55,9 @@ pub struct Elab {
     pub interner: Interner,
     pub sig: Signature,
     pub diags: Vec<Diagnostic>,
+    /// Name of the lemma/theorem/law whose proof is currently being elaborated,
+    /// used to keep a proof from suggesting itself as a hole candidate.
+    pub current_proof: Option<String>,
 }
 
 /// Lexical scope used while lowering an expression.
@@ -102,6 +105,7 @@ impl Elab {
             interner: Interner::new(),
             sig: Signature::default(),
             diags: Vec::new(),
+            current_proof: None,
         }
     }
 

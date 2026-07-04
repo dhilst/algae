@@ -12,9 +12,7 @@ lemma right
   |- b = b;
 proof
   by and_right(a = a, b = b)
-  case
+  then
     |- a = a /\ b = b;
-  proof
     by conj;
-  qed;
 qed;

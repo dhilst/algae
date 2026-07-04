@@ -11,9 +11,7 @@ lemma bad
   |- b = b \/ a = a;
 proof
   by or_intro_right(a = a, b = b)
-  case
+  then
     |- b = b;
-  proof
     by refl(T, b);
-  qed;
 qed;

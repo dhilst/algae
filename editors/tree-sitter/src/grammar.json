@@ -928,11 +928,8 @@
           "value": "proof"
         },
         {
-          "type": "REPEAT",
-          "content": {
-            "type": "SYMBOL",
-            "name": "_proof_stmt"
-          }
+          "type": "SYMBOL",
+          "name": "_proof_body"
         },
         {
           "type": "CHOICE",
@@ -953,7 +950,7 @@
         }
       ]
     },
-    "_proof_stmt": {
+    "_proof_body": {
       "type": "CHOICE",
       "members": [
         {
@@ -966,7 +963,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "by_stmt_one"
+          "name": "by_stmt_then"
         },
         {
           "type": "SYMBOL",
@@ -1012,7 +1009,7 @@
         }
       ]
     },
-    "by_stmt_one": {
+    "by_stmt_then": {
       "type": "SEQ",
       "members": [
         {
@@ -1028,8 +1025,20 @@
           }
         },
         {
+          "type": "STRING",
+          "value": "then"
+        },
+        {
+          "type": "FIELD",
+          "name": "goal",
+          "content": {
+            "type": "SYMBOL",
+            "name": "case_body"
+          }
+        },
+        {
           "type": "SYMBOL",
-          "name": "case_block"
+          "name": "_proof_body"
         }
       ]
     },

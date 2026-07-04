@@ -14,10 +14,8 @@ lemma neg
   |- ~(a = b);
 proof
   by negation_intro(a = b)
-  case
+  then
     hyp := a = b;
     |- False;
-  proof
     by absurd;
-  qed;
 qed;

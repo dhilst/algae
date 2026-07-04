@@ -12,9 +12,7 @@ lemma anything
   |- a = b;
 proof
   by false_elim(a = b)
-  case
+  then
     |- False;
-  proof
     by absurd;
-  qed;
 qed;

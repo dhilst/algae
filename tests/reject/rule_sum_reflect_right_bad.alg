@@ -2,7 +2,7 @@
 # Here the single premise case asserts P (`a = a`) instead of Q (`b = b`), so
 # the supplied subproof does not match the rule's premise and the checker must
 # reject.
-#expect: case goal does not match the generated subgoal
+#expect: `then` goal does not match the remaining subgoal
 import adt(sum_reflect_right, refl);
 
 sort T : Sort;
@@ -13,9 +13,7 @@ lemma bad
   |- a = a \/ b = b;
 proof
   by sum_reflect_right(a = a, b = b)
-  case
+  then
     |- a = a;
-  proof
     by refl(T, a);
-  qed;
 qed;

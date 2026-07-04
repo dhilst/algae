@@ -9,9 +9,7 @@ lemma disj
   |- a = a \/ b = b;
 proof
   by or_intro_right(a = a, b = b)
-  case
+  then
     |- b = b;
-  proof
     by refl(T, b);
-  qed;
 qed;

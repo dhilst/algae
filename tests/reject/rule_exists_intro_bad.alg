@@ -11,9 +11,7 @@ lemma bad
   |- a = a;
 proof
   by exists_intro(T, _ = _, a)
-  case
+  then
     |- a = a;
-  proof
     by refl(T, a);
-  qed;
 qed;

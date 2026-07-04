@@ -2,6 +2,7 @@
 //! equality, and sequents.
 
 pub mod check;
+pub mod display;
 pub mod name;
 pub mod normalize;
 pub mod rewrite;

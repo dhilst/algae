@@ -19,7 +19,7 @@ const KW_STRUCT = new Set([
   "theory", "law", "model", "include", "end",
 ]);
 // Proof keywords.
-const KW_PROOF = new Set(["proof", "qed", "by", "case", "cases", "props", "laws"]);
+const KW_PROOF = new Set(["proof", "qed", "by", "case", "cases", "then", "props", "laws"]);
 // Modifier-ish keywords.
 const KW_MOD = new Set(["satisfies", "iff", "as"]);
 // Binder / quantifier keywords (ASCII spellings; Unicode ∀ ∃ λ handled below).

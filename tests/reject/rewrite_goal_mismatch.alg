@@ -20,9 +20,7 @@ lemma bad(
   |- s(a) = s(a);
 proof
   by rewrite_r(Nat, a, b, e, _ = z)
-  case
+  then
     |- b = z;
-  proof
     by refl(Nat, b);
-  qed;
 qed;

@@ -634,62 +634,191 @@ fn case_block(input: &mut In) -> ModalResult<CaseBlock> {
     })
 }
 
-fn proof_stmt(input: &mut In) -> ModalResult<ProofStmt> {
-    let start = kw_by(input)?;
-    // by wip ;  — admit the goal (no proof required).
-    if at(*input, &T::KwWip) {
-        expect(input, T::KwWip)?;
-        let end = semi(input)?;
-        return Ok(ProofStmt {
+/// A single `by` step, parsed before the flat chain is folded into the nested
+/// `ProofStmt`/`CaseBlock` representation the elaborator consumes.
+enum Seg {
+    /// `by ref then <ctx ⊢ goal;>` — single-goal continuation.
+    Then {
+        reference: ProofRef,
+        context: Vec<ContextEntry>,
+        goal: Expr,
+        by_span: Span,
+        end_span: Span,
+    },
+    /// `by ref;` — closes the goal (0 subgoals). Terminal.
+    Zero { reference: ProofRef, span: Span },
+    /// `by wip;` — admits the goal. Terminal. `hole` is the `?name` if present.
+    Admit { span: Span, hole: Option<String> },
+    /// `by ref cases case+ (qed|wip);` — branching. Terminal.
+    Cases {
+        reference: ProofRef,
+        cases: Vec<CaseBlock>,
+        cases_close: Close,
+        span: Span,
+    },
+}
+
+/// Parse `[context] ⊢ goal ;` — the subgoal restated after `then`.
+fn continuation_goal(input: &mut In) -> ModalResult<(Vec<ContextEntry>, Expr, Span)> {
+    let ctx = context(input)?;
+    expect(input, T::Turnstile)?;
+    let goal = expr(input)?;
+    let end = semi(input)?;
+    Ok((ctx, goal, end))
+}
+
+/// Parse the flat body of a proof block: a chain of `by … then …` steps ending
+/// in a terminal `by` (0-goal, `wip`, or `cases`). The trailing block
+/// terminator is read by `proof_block`.
+fn proof_segments(input: &mut In) -> ModalResult<Vec<Seg>> {
+    let mut segs = Vec::new();
+    loop {
+        let by_span = kw_by(input)?;
+        // by wip ; — admit (terminal; `then` is not allowed after it).
+        // by wip(?name) ; — admit and report a hole at the current goal.
+        if at(*input, &T::KwWip) {
+            expect(input, T::KwWip)?;
+            let hole = if at(*input, &T::LParen) {
+                expect(input, T::LParen)?;
+                expect(input, T::Question)?;
+                let name = ident(input)?;
+                expect(input, T::RParen)?;
+                Some(name.text)
+            } else {
+                None
+            };
+            let end = semi(input)?;
+            segs.push(Seg::Admit {
+                span: by_span.merge(end),
+                hole,
+            });
+            return Ok(segs);
+        }
+        let reference = proof_ref(input)?;
+        if at(*input, &T::KwThen) {
+            // Single-goal continuation: keep collecting steps in this block.
+            expect(input, T::KwThen)?;
+            let (context, goal, end_span) = continuation_goal(input)?;
+            segs.push(Seg::Then { reference, context, goal, by_span, end_span });
+            continue;
+        } else if at(*input, &T::KwCases) {
+            // Branching: one nested `case` per subgoal, with its own terminator.
+            expect(input, T::KwCases)?;
+            let cases = repeat_min1(input, case_block)?;
+            let cases_close = if at(*input, &T::KwWip) {
+                expect(input, T::KwWip)?;
+                Close::Wip
+            } else {
+                expect(input, T::KwQed)?;
+                Close::Qed
+            };
+            let end = semi(input)?;
+            segs.push(Seg::Cases {
+                reference,
+                cases,
+                cases_close,
+                span: by_span.merge(end),
+            });
+            return Ok(segs);
+        } else {
+            // by ref ; — closes the goal.
+            let end = semi(input)?;
+            segs.push(Seg::Zero {
+                reference,
+                span: by_span.merge(end),
+            });
+            return Ok(segs);
+        }
+    }
+}
+
+/// Fold a parsed chain into the nested `ProofStmt` shape. Each `then` step
+/// becomes a one-element `cases` whose single case's proof is the rest of the
+/// chain; all synthetic terminators inherit the block's physical `close` (taint
+/// is uniform along a linear chain).
+fn fold_segments(mut segs: Vec<Seg>, close: Close) -> ProofStmt {
+    let terminal = segs.pop().expect("proof body has at least one step");
+    let mut current = match terminal {
+        Seg::Zero { reference, span } => ProofStmt {
+            reference: Some(reference),
+            admit: false,
+            cases: Vec::new(),
+            cases_close: close,
+            continuation: Cont::Zero,
+            hole: None,
+            span,
+        },
+        Seg::Admit { span, hole } => ProofStmt {
             reference: None,
             admit: true,
             cases: Vec::new(),
-            cases_close: Close::Qed,
-            span: start.merge(end),
-        });
+            cases_close: close,
+            continuation: Cont::Zero,
+            hole,
+            span,
+        },
+        Seg::Cases {
+            reference,
+            cases,
+            cases_close,
+            span,
+        } => ProofStmt {
+            reference: Some(reference),
+            admit: false,
+            cases,
+            cases_close,
+            continuation: Cont::Cases,
+            hole: None,
+            span,
+        },
+        Seg::Then { .. } => unreachable!("proof chain cannot end in `then`"),
+    };
+    while let Some(seg) = segs.pop() {
+        let Seg::Then {
+            reference,
+            context,
+            goal,
+            by_span,
+            end_span,
+        } = seg
+        else {
+            unreachable!("only the last proof step is terminal");
+        };
+        let inner = ProofBlock {
+            span: current.span,
+            stmt: current,
+            close,
+        };
+        let case_span = by_span.merge(end_span);
+        let case = CaseBlock {
+            context,
+            goal,
+            proof: inner,
+            span: case_span,
+        };
+        current = ProofStmt {
+            reference: Some(reference),
+            admit: false,
+            cases: vec![case],
+            cases_close: close,
+            continuation: Cont::Then,
+            hole: None,
+            span: case_span,
+        };
     }
-    let reference = proof_ref(input)?;
-    let mut cases = Vec::new();
-    let mut cases_close = Close::Qed;
-    if at(*input, &T::KwCases) {
-        // by_stmt_many: "cases" case_block+ ("qed" | "wip") ";"
-        expect(input, T::KwCases)?;
-        cases = repeat_min1(input, case_block)?;
-        if at(*input, &T::KwWip) {
-            expect(input, T::KwWip)?;
-            cases_close = Close::Wip;
-        } else {
-            expect(input, T::KwQed)?;
-        }
-        semi(input)?;
-    } else if at(*input, &T::KwCase) {
-        // by_stmt_one: single case_block, no trailing ";"
-        cases.push(case_block(input)?);
-    } else {
-        // by_stmt_zero: ";"
-        semi(input)?;
-    }
-    let span = start.merge(cur_span(*input));
-    Ok(ProofStmt {
-        reference: Some(reference),
-        admit: false,
-        cases,
-        cases_close,
-        span,
-    })
+    current
 }
 
 fn proof_block(input: &mut In) -> ModalResult<ProofBlock> {
     let start = expect(input, T::KwProof)?;
-    // A proof block is exactly one `by` statement; a second `by` before the
-    // `qed`/`wip` terminator is a parse error.
-    let stmt = proof_stmt(input)?;
+    let segs = proof_segments(input)?;
     let (close, end) = if at(*input, &T::KwWip) {
         (Close::Wip, expect(input, T::KwWip)?)
     } else {
         (Close::Qed, expect(input, T::KwQed)?)
     };
     semi(input)?;
+    let stmt = fold_segments(segs, close);
     Ok(ProofBlock {
         stmt,
         close,
@@ -998,7 +1127,8 @@ mod tests {
 
     #[test]
     fn parses_lemma_with_proof() {
-        let src = "lemma add_zero_right\n  |- forall (n : Nat) st n + 0 = n;\nproof\n  by induction(lambda (k : Nat) st k + 0 = k) cases\n    case\n      |- 0 + 0 = 0;\n    proof\n      by add_zero_left(0);\n    qed;\n  qed;\nqed;";
+        // Exercises both a `cases` branch and a flat `then` continuation.
+        let src = "lemma add_zero_right\n  |- forall (n : Nat) st n + 0 = n;\nproof\n  by induction(lambda (k : Nat) st k + 0 = k) cases\n    case\n      |- 0 + 0 = 0;\n    proof\n      by add_zero_left(0);\n    qed;\n    case\n      k : Nat;\n      ih := k + 0 = k;\n      |- s(k) + 0 = s(k);\n    proof\n      by rewrite_r(Nat, k + 0, k, ih, s(k) + 0 = s(_))\n      then |- s(k) + 0 = s(k + 0);\n      by add_succ_left(k, 0);\n    qed;\n  qed;\nqed;";
         let m = parse(src);
         assert_eq!(m.decls.len(), 1);
     }

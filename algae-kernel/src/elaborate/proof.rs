@@ -83,45 +83,13 @@ pub fn elaborate_unit(
     })
 }
 
-/// Build the equational rewrite system from 0-premise equational facts in the
-/// signature (sorted for determinism; degenerate bare-metavariable rules such
-/// as refl's `x = x` are skipped).
-fn build_rewrite_system(elab: &Elab) -> RewriteSystem {
-    let mut rs = RewriteSystem::new();
-    let mut entries: Vec<(&Sym, &InlinedRule)> = elab.sig.tactics.iter().collect();
-    entries.sort_by_key(|(s, _)| s.0);
-    let mut seen: HashSet<(String, String)> = HashSet::new();
-    for (key, rule) in entries {
-        if !rule.premises.is_empty() {
-            continue;
-        }
-        // Only axioms are definitional rewrite rules; using a lemma here would
-        // let a lemma's statement justify its own proof.
-        if !elab.sig.axioms.contains(key) {
-            continue;
-        }
-        if let Expr::Eq(l, r) = &rule.conclusion {
-            let metas: Vec<Sym> = rule
-                .params
-                .iter()
-                .filter_map(|p| match p {
-                    Param::Term { name, .. } => Some(*name),
-                    Param::Proof { .. } => None,
-                })
-                .collect();
-            // Skip rules whose LHS is a bare metavariable (matches everything).
-            if let Expr::Free(s) = l.as_ref() {
-                if metas.contains(s) {
-                    continue;
-                }
-            }
-            let key = (format!("{l:?}"), format!("{r:?}"));
-            if seen.insert(key) {
-                rs.push((**l).clone(), (**r).clone(), metas);
-            }
-        }
-    }
-    rs
+/// Definitional equality in the checker is **beta reduction only**: operators
+/// are inert constants and equational axioms are *not* silently applied as
+/// rewrite rules. An equation is used only where the proof explicitly invokes
+/// it via the congruence rules `rewrite_r`/`rewrite_l`. Hence the checker runs
+/// against an empty rewrite system (`nf` = beta normal form).
+fn build_rewrite_system(_elab: &Elab) -> RewriteSystem {
+    RewriteSystem::new()
 }
 
 fn process_decls(
@@ -392,7 +360,10 @@ fn elaborate_lemma_proof(
     };
     let mut ctx = params;
     ctx.extend(ctx_entries);
-    if let Some((root, wip)) = elaborate_proof(elab, &ctx, &goal, &ld.proof, ld.span, rs) {
+    elab.current_proof = Some(ld.name.text.clone());
+    let elaborated = elaborate_proof(elab, &ctx, &goal, &ld.proof, ld.span, rs);
+    elab.current_proof = None;
+    if let Some((root, wip)) = elaborated {
         obligations.push(Obligation {
             label: format!("lemma {}", ld.name.text),
             root,
@@ -602,6 +573,9 @@ fn elaborate_step(
 ) -> Option<(Step, bool)> {
     // Admit: `by wip` closes the goal without a proof (tainted).
     if stmt.admit {
+        if let Some(name) = &stmt.hole {
+            report_hole(elab, ctx, goal, name, stmt.span, rs);
+        }
         return Some((admit_step(elab, ctx, goal, stmt.span), true));
     }
     let reference = stmt.reference.as_ref().expect("non-admit statement has a reference");
@@ -648,16 +622,59 @@ fn elaborate_step(
     // Rename premise eigenvariables to the user's chosen names (per case), and
     // build the per-application rule.
     let n_prem = base_rule.premises.len();
-    if stmt.cases.len() != n_prem {
-        elab.err(
-            format!(
-                "tactic `{}` generates {n_prem} subgoal(s) but {} case(s) were given",
-                reference.name.name.text,
-                stmt.cases.len()
-            ),
-            stmt.span,
-        );
-        return None;
+    let tname = reference.name.name.text.clone();
+    match stmt.continuation {
+        ast::Cont::Zero => {
+            if n_prem != 0 {
+                elab.err(
+                    format!(
+                        "tactic `{tname}` generates {n_prem} subgoal(s); continue with \
+                         `then` (one goal) or `cases` ({n_prem} goals)"
+                    ),
+                    stmt.span,
+                );
+                return None;
+            }
+        }
+        ast::Cont::Then => {
+            if n_prem != 1 {
+                let hint = if n_prem == 0 {
+                    "close it with `by …;` (drop the `then`)"
+                } else {
+                    "use `cases`, one branch per goal"
+                };
+                elab.err(
+                    format!(
+                        "`then` continues a single goal, but tactic `{tname}` generates \
+                         {n_prem} subgoal(s); {hint}"
+                    ),
+                    stmt.span,
+                );
+                return None;
+            }
+        }
+        ast::Cont::Cases => {
+            if n_prem < 2 {
+                elab.err(
+                    format!(
+                        "`cases` is for branching (two or more goals); tactic `{tname}` \
+                         generates {n_prem} subgoal(s) — use `then` for a single goal"
+                    ),
+                    stmt.span,
+                );
+                return None;
+            }
+            if stmt.cases.len() != n_prem {
+                elab.err(
+                    format!(
+                        "tactic `{tname}` generates {n_prem} subgoal(s) but {} case(s) were given",
+                        stmt.cases.len()
+                    ),
+                    stmt.span,
+                );
+                return None;
+            }
+        }
     }
 
     let parent_names: HashSet<Sym> = ctx.iter().map(|e| e.name()).collect();
@@ -731,7 +748,11 @@ fn elaborate_step(
         let mut cscope = scope_from_ctx(&ng.ctx);
         if let Ok(user_goal) = elab.lower_expr(&mut cscope, &case.goal) {
             if !rs.defeq(&user_goal, &ng.goal) {
-                elab.err("case goal does not match the generated subgoal", case.span);
+                let what = match stmt.continuation {
+                    ast::Cont::Then => "`then` goal does not match the remaining subgoal",
+                    _ => "case goal does not match the generated subgoal",
+                };
+                elab.err(what, case.span);
                 return None;
             }
         }
@@ -740,8 +761,10 @@ fn elaborate_step(
         children.push(child);
     }
 
-    // For a multi-case (`cases … qed/wip`) statement, validate its terminator.
-    if !stmt.cases.is_empty() && stmt.cases_close.is_wip() != child_tainted {
+    // For a `cases` branching statement, validate its own terminator. (A `then`
+    // continuation shares the enclosing block's terminator, checked in
+    // `elaborate_proof`, so it is exempt here.)
+    if stmt.continuation == ast::Cont::Cases && stmt.cases_close.is_wip() != child_tainted {
         elab.err(terminator_msg(child_tainted, "`cases` block"), stmt.span);
         return None;
     }
@@ -761,6 +784,113 @@ fn elaborate_step(
 }
 
 /// An admitted (`by wip`) leaf step: the goal is assumed, not checked.
+/// Emit a hole report for `by wip(?name)`: the goal to prove, the context in
+/// scope, and candidate tactics/assumptions that might discharge it. The proof
+/// is still admitted (the module remains incomplete), but the diagnostic guides
+/// the next step of an interactive proof.
+fn report_hole(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr, name: &str, span: Span, rs: &RewriteSystem) {
+    use crate::core::display::show;
+    let g = show(goal, &elab.interner);
+    let mut msg = format!("found hole ?{name} : proof\n\nExpected:\n  {g}\n\nContext:\n");
+    if ctx.is_empty() {
+        msg.push_str("  (empty)\n");
+    } else {
+        for e in ctx {
+            match e {
+                CtxEntry::Term { name, ty } => {
+                    msg.push_str(&format!(
+                        "  {} : {}\n",
+                        elab.interner.resolve(*name),
+                        show(ty, &elab.interner)
+                    ));
+                }
+                CtxEntry::Proof { name, prop } => {
+                    msg.push_str(&format!(
+                        "  {} := {}\n",
+                        elab.interner.resolve(*name),
+                        show(prop, &elab.interner)
+                    ));
+                }
+            }
+        }
+    }
+    msg.push_str(&format!("\nGoal:\n  {g}\n\nCandidates:\n"));
+    let cands = hole_candidates(elab, ctx, goal, rs);
+    if cands.is_empty() {
+        msg.push_str("  (none found — try a rewrite or introduce a variable)\n");
+    } else {
+        for c in &cands {
+            msg.push_str(&format!("  {c}\n"));
+        }
+    }
+    elab.err(msg.trim_end().to_string(), span);
+}
+
+/// Candidate tactics/assumptions for a hole's goal: matching local hypotheses,
+/// signature facts/rules whose conclusion matches the goal shape, and `refl`
+/// when the goal is a reflexive equation.
+fn hole_candidates(elab: &Elab, ctx: &[CtxEntry], goal: &Expr, rs: &RewriteSystem) -> Vec<String> {
+    use crate::core::rewrite::match_pattern;
+    let mut out = Vec::new();
+    // 1. Local proof hypotheses that already prove the goal.
+    for e in ctx {
+        if let CtxEntry::Proof { name, prop } = e {
+            if rs.defeq(prop, goal) {
+                out.push(format!("{} (local assumption)", elab.interner.resolve(*name)));
+            }
+        }
+    }
+    // 2. Signature facts/rules whose conclusion matches the goal shape. Skip
+    //    rules whose conclusion is a bare metavariable (they match every goal),
+    //    and dedup qualified/unqualified aliases by their base name.
+    let mut facts: Vec<String> = Vec::new();
+    let mut rules: Vec<String> = Vec::new();
+    let mut seen: HashSet<String> = HashSet::new();
+    for (sym, rule) in &elab.sig.tactics {
+        let metas: Vec<Sym> = rule
+            .params
+            .iter()
+            .filter_map(|p| match p {
+                Param::Term { name, .. } => Some(*name),
+                Param::Proof { .. } => None,
+            })
+            .collect();
+        if let Expr::Free(s) = &rule.conclusion {
+            if metas.contains(s) {
+                continue; // matches anything — not a useful shape hint
+            }
+        }
+        let mut subst = Vec::new();
+        if match_pattern(&rule.conclusion, goal, &metas, &mut subst) {
+            let full = elab.interner.resolve(*sym);
+            let base = full.rsplit('.').next().unwrap_or(full).to_string();
+            // Don't suggest the proof currently being elaborated (circular).
+            if elab.current_proof.as_deref() == Some(base.as_str()) {
+                continue;
+            }
+            if seen.insert(base.clone()) {
+                if rule.premises.is_empty() {
+                    facts.push(format!("{base} (fact)"));
+                } else {
+                    rules.push(format!("{base} (rule)"));
+                }
+            }
+        }
+    }
+    facts.sort();
+    rules.sort();
+    out.extend(facts);
+    out.extend(rules);
+    // 3. Reflexivity, when the two sides coincide up to α/β.
+    if let Expr::Eq(a, b) = goal {
+        if rs.defeq(a, b) && !out.iter().any(|c| c.starts_with("refl ")) {
+            out.push("refl (both sides are definitionally equal)".to_string());
+        }
+    }
+    out.truncate(12);
+    out
+}
+
 fn admit_step(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr, span: Span) -> Step {
     let name = elab.interner.intern("wip");
     Step {

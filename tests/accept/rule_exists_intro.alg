@@ -9,9 +9,7 @@ lemma ex_intro
   |- exists (x : T) st x = x;
 proof
   by exists_intro(T, _ = _, a)
-  case
+  then
     |- a = a;
-  proof
     by refl(T, a);
-  qed;
 qed;

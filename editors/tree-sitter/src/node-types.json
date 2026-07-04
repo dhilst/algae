@@ -170,9 +170,19 @@
     }
   },
   {
-    "type": "by_stmt_one",
+    "type": "by_stmt_then",
     "named": true,
     "fields": {
+      "goal": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "case_body",
+            "named": true
+          }
+        ]
+      },
       "ref": {
         "multiple": false,
         "required": true,
@@ -189,7 +199,19 @@
       "required": true,
       "types": [
         {
-          "type": "case_block",
+          "type": "by_stmt_many",
+          "named": true
+        },
+        {
+          "type": "by_stmt_then",
+          "named": true
+        },
+        {
+          "type": "by_stmt_wip",
+          "named": true
+        },
+        {
+          "type": "by_stmt_zero",
           "named": true
         }
       ]
@@ -868,15 +890,15 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": true,
-      "required": false,
+      "multiple": false,
+      "required": true,
       "types": [
         {
           "type": "by_stmt_many",
           "named": true
         },
         {
-          "type": "by_stmt_one",
+          "type": "by_stmt_then",
           "named": true
         },
         {
@@ -1772,6 +1794,10 @@
   {
     "type": "sum_op",
     "named": true
+  },
+  {
+    "type": "then",
+    "named": false
   },
   {
     "type": "theorem",

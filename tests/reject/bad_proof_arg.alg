@@ -14,9 +14,7 @@ lemma bad
   |- o = o;
 proof
   by rewrite_r(Nat, z, o, zz, lambda (x : Nat) st o = o)
-  case
+  then
     |- o = o;
-  proof
     by refl(Nat, o);
-  qed;
 qed;

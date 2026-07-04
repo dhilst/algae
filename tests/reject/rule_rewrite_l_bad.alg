@@ -14,9 +14,7 @@ lemma bad
   |- a = a;
 proof
   by rewrite_l(T, a, b, ab, _ = c)
-  case
+  then
     |- b = c;
-  proof
     by refl(T, b);
-  qed;
 qed;

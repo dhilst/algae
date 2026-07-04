@@ -44,6 +44,5 @@ uses.
 :maxdepth: 2
 
 tutorial
-spec
 playground
 ```

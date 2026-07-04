@@ -15,9 +15,7 @@ lemma bad
   |- (a = a) => (b = b);
 proof
   by biconditional_elim_right(a = a, b = b)
-  case
+  then
     |- (a = a) <=> (b = b);
-  proof
     by equiv;
-  qed;
 qed;

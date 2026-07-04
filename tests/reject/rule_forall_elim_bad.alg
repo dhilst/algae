@@ -12,9 +12,7 @@ lemma bad(x : T)
   |- x = x;
 proof
   by forall_elim(T, _ = _, c)
-  case
+  then
     |- forall (y : T) st y = y;
-  proof
     by all_eq;
-  qed;
 qed;

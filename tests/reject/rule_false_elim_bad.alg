@@ -1,7 +1,7 @@
 # Sad path: false_elim's premise must be `False`, but the case discharges a
 # different prop (a = a) and the goal-side premise subgoal is `a = a` not False,
 # so the premise subgoal cannot match `False`.
-#expect: case goal does not match the generated subgoal
+#expect: `then` goal does not match the remaining subgoal
 import core(false_elim, refl);
 
 sort T : Sort;
@@ -12,9 +12,7 @@ lemma bad
   |- a = b;
 proof
   by false_elim(a = b)
-  case
+  then
     |- a = a;
-  proof
     by refl(T, a);
-  qed;
 qed;

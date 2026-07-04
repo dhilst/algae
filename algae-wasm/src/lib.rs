@@ -239,6 +239,19 @@ mod tests {
     }
 
     #[test]
+    fn hole_reports_goal_and_candidates() {
+        // `by wip(?name)` surfaces a structured hole report to the editor.
+        let src = "import core(refl);\n\nsort T : Sort;\nop a : -> T;\n\nlemma h\n  |- a = a;\nproof\n  by wip(?goal);\nwip;\n";
+        let r = run_check(src, "playground", Vec::new());
+        assert!(!r.ok, "a hole leaves the proof incomplete");
+        assert!(
+            r.diagnostics.iter().any(|d| d.message.contains("found hole ?goal")),
+            "hole report reaches the web UI"
+        );
+        assert!(r.diagnostics.iter().any(|d| d.message.contains("Candidates:")));
+    }
+
+    #[test]
     fn unknown_import_reports_error() {
         let r = run_check("import nope(x);\n", "playground", Vec::new());
         assert!(!r.ok);

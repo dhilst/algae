@@ -13,9 +13,7 @@ lemma right
   |- b = b;
 proof
   by product_reflect_right(a = a, b = b)
-  case
+  then
     |- a = a /\ b = b;
-  proof
     by conj;
-  qed;
 qed;

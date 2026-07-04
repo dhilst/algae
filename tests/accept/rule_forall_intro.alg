@@ -8,10 +8,8 @@ lemma gen
   |- forall (x : T) st x = x;
 proof
   by forall_intro(T, _ = _)
-  case
+  then
     x : T;
     |- x = x;
-  proof
     by refl(T, x);
-  qed;
 qed;

@@ -40,6 +40,7 @@
   "by"
   "case"
   "cases"
+  "then"
   "props"
   "laws"
 ] @keyword

@@ -12,9 +12,7 @@ lemma rw
   |- a = a;
 proof
   by rewrite_l(T, a, b, ab, _ = _)
-  case
+  then
     |- b = b;
-  proof
     by refl(T, b);
-  qed;
 qed;

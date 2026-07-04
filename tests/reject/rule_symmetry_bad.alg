@@ -13,9 +13,7 @@ lemma bad
   |- a = b /\ b = a;
 proof
   by symmetry(T, a, b)
-  case
+  then
     |- a = b;
-  proof
     by ab;
-  qed;
 qed;

@@ -85,6 +85,7 @@ qed
 wip
 case
 cases
+then
 props
 laws
 theory
@@ -322,7 +323,7 @@ qed;
 ```
 
 For a non-trivial proof (induction over `nat`), see `add_zero_right` in §11 and
-the tutorial (`tutorial.md`).
+the tutorial (`docs/tutorial.md`).
 
 ---
 
@@ -439,34 +440,46 @@ qed;
 
 ```ebnf
 proof_block =
-  "proof" proof_stmt terminator ";" ;
+  "proof" proof_body terminator ";" ;
 
 terminator =
     "qed"            (* a complete, sound proof *)
   | "wip" ;          (* an in-progress proof (contains an admit) *)
 
-proof_stmt =
+proof_body =
     by_stmt_wip ";"
   | by_stmt_zero ";"
-  | by_stmt_one
+  | by_stmt_then
   | by_stmt_many ";" ;
 
 by_stmt_wip =
   "by" "wip" ;        (* admit the current goal without a proof *)
 
 by_stmt_zero =
-  "by" proof_ref ;
+  "by" proof_ref ;    (* 0 subgoals: closes the goal *)
 
-by_stmt_one =
-  "by" proof_ref case_block ;
+by_stmt_then =
+  "by" proof_ref "then" continuation proof_body ;   (* 1 subgoal: flat chain *)
 
 by_stmt_many =
-  "by" proof_ref "cases" case_block { case_block } terminator ;
+  "by" proof_ref "cases" case_block case_block { case_block } terminator ;
+                                                     (* 2+ subgoals: branching *)
+
+continuation =
+  [ context ] ("|-" | "⊢") prop ";" ;   (* restates the one remaining subgoal *)
 ```
 
-A proof block contains **exactly one** `by` statement; the parser rejects a
-second one. Proofs compose downward through the sub-proofs of `case`s, not by
-sequencing multiple statements in a block.
+A proof step has exactly one of three outcomes, and its surface form must match:
+
+- **0 subgoals** — `by ref;` closes the goal.
+- **1 subgoal** — `by ref then <goal>; …` continues the *same* block with the
+  next `by`, with no nested `proof`/`qed`. The `then` restates the remaining
+  subgoal; its `context` may be omitted when no new eigenvariables are introduced.
+- **2+ subgoals** — `by ref cases case … case …` branches, one `case` per subgoal.
+
+`then` may only follow a `by` that yields exactly one subgoal; `cases` requires
+two or more; a `case` is legal only inside a `cases` block. Proofs compose
+downward through `case` branches and rightward through `then` continuations.
 
 ---
 
@@ -492,6 +505,9 @@ term_list =
 
 ## 3.15 Cases
 
+A `case_block` appears only inside a `cases` branch (§3.13); each has its own
+nested `proof_block`.
+
 ```ebnf
 case_block =
   "case" case_body proof_block ;
@@ -503,7 +519,7 @@ sequent_goal =
   ("|-" | "⊢") prop ";" ;
 ```
 
-Example:
+Example (one branch of a `cases` block):
 
 ```alg
 case
@@ -990,11 +1006,14 @@ A rule has premises and a conclusion.
 
 Applying a rule to prove its conclusion generates proof obligations for its premises.
 
+The conclusion is matched against the current goal up to **α/β-equivalence only**. Operators are inert constants: the checker never evaluates them, and equational axioms are **not** applied automatically. An equation is used only where a proof invokes it explicitly — for example, through the congruence rules `rewrite_r` / `rewrite_l`.
+
 If a rule has zero premises, it closes the current goal.
 
-If a rule has one premise, the proof uses one `case`.
+If a rule has one premise, the proof continues with `then` (§3.13).
 
-If a rule has multiple premises, the proof uses `{ case ... case ... }`.
+If a rule has multiple premises, the proof uses a `cases` block with one `case`
+per premise.
 
 ## 4.9 Lemma and Theorem Semantics
 
@@ -1299,15 +1318,14 @@ rule forall_elim(
 )
   |- forall (y : T) st P(y)
   ------------------------
-  |- P(x)
+  x : T |- P(x)
 end;
 
 rule forall_intro(
   T : Sort,
-  x : T,
   P : T -> Prop
 )
-  |- P(x)
+  x : T |- P(x)
   ------------------------
   |- forall (x : T) st P(x)
 end;
@@ -1645,14 +1663,8 @@ model OptionMonad satisfies Monad(
       return_def(A, x),
       lambda (o : Option(A)) st bind(o, f) = f(x)
     )
-    case
-      A B : Sort;
-      x : A;
-      f : A -> Option(B);
-      |- bind(some(x), f) = f(x);
-    proof
-      by bind_some(A, B, x, f);
-    qed;
+    then |- bind(some(x), f) = f(x);
+    by bind_some(A, B, x, f);
   qed;
 
   law right_identity;
@@ -1681,13 +1693,8 @@ model OptionMonad satisfies Monad(
           bind_some(A, A, x, return),
           lambda (o : Option(A)) st o = some(x)
         )
-        case
-          A : Sort;
-          x : A;
-          |- return(x) = some(x);
-        proof
-          by return_def(A, x);
-        qed;
+        then |- return(x) = some(x);
+        by return_def(A, x);
       qed;
     qed;
   qed;
@@ -1729,23 +1736,16 @@ model OptionMonad satisfies Monad(
               lambda (x : A) st bind(f(x), g)
             )
         )
-        case
-          A B C : Sort;
-          f : A -> Option(B);
-          g : B -> Option(C);
-          |- bind(none, g)
-             =
-             bind(
-               none,
-               lambda (x : A) st bind(f(x), g)
-             );
-        proof
-          by bind_none(
-            A,
-            C,
-            lambda (x : A) st bind(f(x), g)
-          );
-        qed;
+        then |- bind(none, g) = bind(none, lambda (x : A) st bind(f(x), g));
+        by rewrite_r(
+          Option(C),
+          bind(none, lambda (x : A) st bind(f(x), g)),
+          none,
+          bind_none(A, C, lambda (x : A) st bind(f(x), g)),
+          lambda (r : Option(C)) st bind(none, g) = r
+        )
+        then |- bind(none, g) = none;
+        by bind_none(B, C, g);
       qed;
 
       case
@@ -1773,25 +1773,18 @@ model OptionMonad satisfies Monad(
               lambda (y : A) st bind(f(y), g)
             )
         )
-        case
-          A B C : Sort;
-          x : A;
-          f : A -> Option(B);
-          g : B -> Option(C);
-          |- bind(f(x), g)
-             =
-             bind(
-               some(x),
-               lambda (y : A) st bind(f(y), g)
-             );
-        proof
-          by bind_some(
-            A,
-            C,
-            x,
-            lambda (y : A) st bind(f(y), g)
-          );
-        qed;
+        then |- bind(f(x), g) = bind(some(x), lambda (y : A) st bind(f(y), g));
+        by rewrite_r(
+          Option(C),
+          bind(some(x), lambda (y : A) st bind(f(y), g)),
+          bind(f(x), g),
+          bind_some(A, C, x, lambda (y : A) st bind(f(y), g)),
+          lambda (r : Option(C)) st
+            r = bind(some(x), lambda (y : A) st bind(f(y), g))
+        )
+        then |- bind(some(x), lambda (y : A) st bind(f(y), g))
+              = bind(some(x), lambda (y : A) st bind(f(y), g));
+        by refl(Option(C), bind(some(x), lambda (y : A) st bind(f(y), g)));
       qed;
     qed;
   qed;
@@ -1870,14 +1863,8 @@ model ResultMonad satisfies Monad(
       return_def(A, E, x),
       lambda (r : Result(A, E)) st bind(r, f) = f(x)
     )
-    case
-      A B E : Sort;
-      x : A;
-      f : A -> Result(B, E);
-      |- bind(ok(x), f) = f(x);
-    proof
-      by bind_ok(A, B, E, x, f);
-    qed;
+    then |- bind(ok(x), f) = f(x);
+    by bind_ok(A, B, E, x, f);
   qed;
 
   law right_identity;
@@ -1900,13 +1887,8 @@ model ResultMonad satisfies Monad(
           bind_ok(A, A, E, x, return),
           lambda (r : Result(A, E)) st r = ok(x)
         )
-        case
-          A E : Sort;
-          x : A;
-          |- return(x) = ok(x);
-        proof
-          by return_def(A, E, x);
-        qed;
+        then |- return(x) = ok(x);
+        by return_def(A, E, x);
       qed;
 
       case
@@ -1958,26 +1940,18 @@ model ResultMonad satisfies Monad(
               lambda (y : A) st bind(f(y), g)
             )
         )
-        case
-          A B C E : Sort;
-          x : A;
-          f : A -> Result(B, E);
-          g : B -> Result(C, E);
-          |- bind(f(x), g)
-             =
-             bind(
-               ok(x),
-               lambda (y : A) st bind(f(y), g)
-             );
-        proof
-          by bind_ok(
-            A,
-            C,
-            E,
-            x,
-            lambda (y : A) st bind(f(y), g)
-          );
-        qed;
+        then |- bind(f(x), g) = bind(ok(x), lambda (y : A) st bind(f(y), g));
+        by rewrite_r(
+          Result(C, E),
+          bind(ok(x), lambda (y : A) st bind(f(y), g)),
+          bind(f(x), g),
+          bind_ok(A, C, E, x, lambda (y : A) st bind(f(y), g)),
+          lambda (r : Result(C, E)) st
+            r = bind(ok(x), lambda (y : A) st bind(f(y), g))
+        )
+        then |- bind(ok(x), lambda (y : A) st bind(f(y), g))
+              = bind(ok(x), lambda (y : A) st bind(f(y), g));
+        by refl(Result(C, E), bind(ok(x), lambda (y : A) st bind(f(y), g)));
       qed;
 
       case
@@ -2005,26 +1979,16 @@ model ResultMonad satisfies Monad(
               lambda (x : A) st bind(f(x), g)
             )
         )
-        case
-          A B C E : Sort;
-          e : E;
-          f : A -> Result(B, E);
-          g : B -> Result(C, E);
-          |- bind(err(e), g)
-             =
-             bind(
-               err(e),
-               lambda (x : A) st bind(f(x), g)
-             );
-        proof
-          by bind_err(
-            A,
-            C,
-            E,
-            e,
-            lambda (x : A) st bind(f(x), g)
-          );
-        qed;
+        then |- bind(err(e), g) = bind(err(e), lambda (x : A) st bind(f(x), g));
+        by rewrite_r(
+          Result(C, E),
+          bind(err(e), lambda (x : A) st bind(f(x), g)),
+          err(e),
+          bind_err(A, C, E, e, lambda (x : A) st bind(f(x), g)),
+          lambda (r : Result(C, E)) st bind(err(e), g) = r
+        )
+        then |- bind(err(e), g) = err(e);
+        by bind_err(B, C, E, e, g);
       qed;
     qed;
   qed;
@@ -2153,14 +2117,8 @@ model ListMonad satisfies Monad(
       return_def(A, x),
       lambda (xs : List(A)) st bind(xs, f) = f(x)
     )
-    case
-      A B : Sort;
-      x : A;
-      f : A -> List(B);
-      |- bind(singleton(x), f) = f(x);
-    proof
-      by bind_singleton(A, B, x, f);
-    qed;
+    then |- bind(singleton(x), f) = f(x);
+    by bind_singleton(A, B, x, f);
   qed;
 
   law right_identity;
@@ -2191,44 +2149,48 @@ model ListMonad satisfies Monad(
           bind_cons(A, A, x, rest, return),
           lambda (ys : List(A)) st ys = cons(x, rest)
         )
-        case
-          A : Sort;
-          x : A;
-          rest : List(A);
-          ih := bind(rest, return) = rest;
-          |- append(return(x), bind(rest, return)) = cons(x, rest);
-        proof
-          by rewrite_r(
-            List(A),
-            return(x),
-            singleton(x),
-            return_def(A, x),
-            lambda (ys : List(A)) st append(ys, bind(rest, return)) = cons(x, rest)
-          )
-          case
-            A : Sort;
-            x : A;
-            rest : List(A);
-            ih := bind(rest, return) = rest;
-            |- append(singleton(x), bind(rest, return)) = cons(x, rest);
-          proof
-            by rewrite_r(
-              List(A),
-              bind(rest, return),
-              rest,
-              ih,
-              lambda (ys : List(A)) st append(singleton(x), ys) = cons(x, rest)
-            )
-            case
-              A : Sort;
-              x : A;
-              rest : List(A);
-              |- append(singleton(x), rest) = cons(x, rest);
-            proof
-              by refl(List(A), cons(x, rest));
-            qed;
-          qed;
-        qed;
+        then |- append(return(x), bind(rest, return)) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          return(x),
+          singleton(x),
+          return_def(A, x),
+          lambda (ys : List(A)) st append(ys, bind(rest, return)) = cons(x, rest)
+        )
+        then |- append(singleton(x), bind(rest, return)) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          bind(rest, return),
+          rest,
+          ih,
+          lambda (ys : List(A)) st append(singleton(x), ys) = cons(x, rest)
+        )
+        then |- append(singleton(x), rest) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          singleton(x),
+          cons(x, nil),
+          singleton_def(A, x),
+          lambda (ys : List(A)) st append(ys, rest) = cons(x, rest)
+        )
+        then |- append(cons(x, nil), rest) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          append(cons(x, nil), rest),
+          cons(x, append(nil, rest)),
+          append_cons_left(A, x, nil, rest),
+          lambda (ys : List(A)) st ys = cons(x, rest)
+        )
+        then |- cons(x, append(nil, rest)) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          append(nil, rest),
+          rest,
+          append_nil_left(A, rest),
+          lambda (ys : List(A)) st cons(x, ys) = cons(x, rest)
+        )
+        then |- cons(x, rest) = cons(x, rest);
+        by refl(List(A), cons(x, rest));
       qed;
     qed;
   qed;
@@ -2270,23 +2232,16 @@ model ListMonad satisfies Monad(
               lambda (x : A) st bind(f(x), g)
             )
         )
-        case
-          A B C : Sort;
-          f : A -> List(B);
-          g : B -> List(C);
-          |- bind(nil, g)
-             =
-             bind(
-               nil,
-               lambda (x : A) st bind(f(x), g)
-             );
-        proof
-          by bind_nil(
-            A,
-            C,
-            lambda (x : A) st bind(f(x), g)
-          );
-        qed;
+        then |- bind(nil, g) = bind(nil, lambda (x : A) st bind(f(x), g));
+        by rewrite_r(
+          List(C),
+          bind(nil, lambda (x : A) st bind(f(x), g)),
+          nil,
+          bind_nil(A, C, lambda (x : A) st bind(f(x), g)),
+          lambda (ys : List(C)) st bind(nil, g) = ys
+        )
+        then |- bind(nil, g) = nil;
+        by bind_nil(B, C, g);
       qed;
 
       case
@@ -2316,86 +2271,52 @@ model ListMonad satisfies Monad(
               lambda (y : A) st bind(f(y), g)
             )
         )
-        case
-          A B C : Sort;
-          x : A;
-          rest : List(A);
-          ih := bind(bind(rest, f), g) = bind(rest, lambda (x : A) st bind(f(x), g));
-          f : A -> List(B);
-          g : B -> List(C);
-          |- bind(append(f(x), bind(rest, f)), g)
-             =
-             bind(
-               cons(x, rest),
-               lambda (y : A) st bind(f(y), g)
-             );
-        proof
-          by rewrite_r(
-            List(C),
-            bind(append(f(x), bind(rest, f)), g),
-            append(bind(f(x), g), bind(bind(rest, f), g)),
-            bind_append(B, C, f(x), bind(rest, f), g),
-            lambda (zs : List(C)) st
-              zs
-              =
-              bind(
-                cons(x, rest),
-                lambda (y : A) st bind(f(y), g)
-              )
-          )
-          case
-            A B C : Sort;
-            x : A;
-            rest : List(A);
-            ih := bind(bind(rest, f), g) = bind(rest, lambda (x : A) st bind(f(x), g));
-            f : A -> List(B);
-            g : B -> List(C);
-            |- append(bind(f(x), g), bind(bind(rest, f), g))
-               =
-               bind(
-                 cons(x, rest),
-                 lambda (y : A) st bind(f(y), g)
-               );
-          proof
-            by rewrite_r(
-              List(C),
-              bind(bind(rest, f), g),
-              bind(rest, lambda (x : A) st bind(f(x), g)),
-              ih,
-              lambda (zs : List(C)) st
-                append(bind(f(x), g), zs)
-                =
-                bind(
-                  cons(x, rest),
-                  lambda (y : A) st bind(f(y), g)
-                )
+        then |- bind(append(f(x), bind(rest, f)), g)
+              = bind(cons(x, rest), lambda (y : A) st bind(f(y), g));
+        by rewrite_r(
+          List(C),
+          bind(append(f(x), bind(rest, f)), g),
+          append(bind(f(x), g), bind(bind(rest, f), g)),
+          bind_append(B, C, f(x), bind(rest, f), g),
+          lambda (zs : List(C)) st
+            zs
+            =
+            bind(
+              cons(x, rest),
+              lambda (y : A) st bind(f(y), g)
             )
-            case
-              A B C : Sort;
-              x : A;
-              rest : List(A);
-              f : A -> List(B);
-              g : B -> List(C);
-              |- append(
-                   bind(f(x), g),
-                   bind(rest, lambda (x : A) st bind(f(x), g))
-                 )
-                 =
-                 bind(
-                   cons(x, rest),
-                   lambda (y : A) st bind(f(y), g)
-                 );
-            proof
-              by bind_cons(
-                A,
-                C,
-                x,
-                rest,
-                lambda (y : A) st bind(f(y), g)
-              );
-            qed;
-          qed;
-        qed;
+        )
+        then |- append(bind(f(x), g), bind(bind(rest, f), g))
+              = bind(cons(x, rest), lambda (y : A) st bind(f(y), g));
+        by rewrite_r(
+          List(C),
+          bind(bind(rest, f), g),
+          bind(rest, lambda (x : A) st bind(f(x), g)),
+          ih,
+          lambda (zs : List(C)) st
+            append(bind(f(x), g), zs)
+            =
+            bind(
+              cons(x, rest),
+              lambda (y : A) st bind(f(y), g)
+            )
+        )
+        then |- append(bind(f(x), g), bind(rest, lambda (x : A) st bind(f(x), g)))
+              = bind(cons(x, rest), lambda (y : A) st bind(f(y), g));
+        by rewrite_r(
+          List(C),
+          bind(cons(x, rest), lambda (y : A) st bind(f(y), g)),
+          append(bind(f(x), g), bind(rest, lambda (y : A) st bind(f(y), g))),
+          bind_cons(A, C, x, rest, lambda (y : A) st bind(f(y), g)),
+          lambda (zs : List(C)) st
+            append(bind(f(x), g), bind(rest, lambda (y : A) st bind(f(y), g))) = zs
+        )
+        then |- append(bind(f(x), g), bind(rest, lambda (y : A) st bind(f(y), g)))
+              = append(bind(f(x), g), bind(rest, lambda (y : A) st bind(f(y), g)));
+        by refl(
+          List(C),
+          append(bind(f(x), g), bind(rest, lambda (y : A) st bind(f(y), g)))
+        );
       qed;
     qed;
   qed;
@@ -2447,44 +2368,38 @@ rule induction(
   P : Nat -> Prop
 )
   |- P(0);
-  n : Nat;
-  ih := P(n);
-  |- P(s(n))
-  ------------------------
+  n : Nat, ih := P(n) |- P(s(n))
+  ------------------------------
   |- forall (n : Nat) st P(n)
 end;
 
 lemma add_zero_right
-  |- forall (n : Nat) st n + 0 = n;
+  |- forall (n : Nat) st n + 0 = n;     # what we want to prove
 proof
   by induction(
-    lambda (k : Nat) st k + 0 = k
+    _ + 0 = _                     # start by doing induction at n
   ) cases
+    # The base case
     case
-      |- 0 + 0 = 0;
+      |- 0 + 0 = 0;                # the current goal
     proof
-      by add_zero_left(0);
+      by add_zero_left(0);        # by def of add_zero_left(n) := 0 + n = n;
     qed;
 
+    # The step case
     case
-      k : Nat;
-      ih := k + 0 = k;
-      |- s(k) + 0 = s(k);
+      k : Nat;                    # the context
+      ih := k + 0 = k;            # induction hypothesis
+      |- s(k) + 0 = s(k);          # the current goal
     proof
-      by rewrite_r(
-        Nat,
-        k + 0,
-        k,
-        ih,
-        lambda (x : Nat) st s(k) + 0 = s(x)
+      by rewrite_r(               # rewrite at right
+        Nat,                      # the type of each side
+        k + 0, k,                 # replace `k + 0` → `k`
+        ih,                       # by the induction hypothesis (k + 0 = k)
+        s(k) + 0 = s(_)           # at _, i.e. `s(k) + 0 = s(k)` → `s(k) + 0 = s(k + 0)`
       )
-      case
-        k : Nat;
-        ih := k + 0 = k;
-        |- s(k) + 0 = s(k + 0);
-      proof
-        by add_succ_left(k, 0);
-      qed;
+      then |- s(k) + 0 = s(k + 0);   # new goal after the rewrite
+      by add_succ_left(k, 0);       # by def: add_succ_left(n, m) := s(n) + m = s(n + m);
     qed;
   qed;
 qed;
@@ -2504,88 +2419,88 @@ import core(
 
 theory Magma(
   S : Sort,
-  op : S * S -> S
+  mul : S * S -> S
 ) laws
   law closure(
     x y : S
   )
-    |- op(x, y) = op(x, y);
+    |- mul(x, y) = mul(x, y);
 qed;
 
 theory Semigroup(
   S : Sort,
-  op : S * S -> S
+  mul : S * S -> S
 ) laws
-  include Magma(S, op);
+  include Magma(S, mul);
 
   law associativity(
     x y z : S
   )
-    |- op(op(x, y), z) = op(x, op(y, z));
+    |- mul(mul(x, y), z) = mul(x, mul(y, z));
 qed;
 
 theory Monoid(
   S : Sort,
-  op : S * S -> S,
+  mul : S * S -> S,
   e : S
 ) laws
-  include Semigroup(S, op);
+  include Semigroup(S, mul);
 
   law left_identity(
     x : S
   )
-    |- op(e, x) = x;
+    |- mul(e, x) = x;
 
   law right_identity(
     x : S
   )
-    |- op(x, e) = x;
+    |- mul(x, e) = x;
 qed;
 
 theory CommutativeMonoid(
   S : Sort,
-  op : S * S -> S,
+  mul : S * S -> S,
   e : S
 ) laws
-  include Monoid(S, op, e);
+  include Monoid(S, mul, e);
 
   law commutativity(
     x y : S
   )
-    |- op(x, y) = op(y, x);
+    |- mul(x, y) = mul(y, x);
 qed;
 
 theory Group(
   S : Sort,
-  op : S * S -> S,
+  mul : S * S -> S,
   e : S,
   inv : S -> S
 ) laws
-  include Monoid(S, op, e);
+  include Monoid(S, mul, e);
 
   law left_inverse(
     x : S
   )
-    |- op(inv(x), x) = e;
+    |- mul(inv(x), x) = e;
 
   law right_inverse(
     x : S
   )
-    |- op(x, inv(x)) = e;
+    |- mul(x, inv(x)) = e;
 qed;
 
 theory AbelianGroup(
   S : Sort,
-  op : S * S -> S,
+  mul : S * S -> S,
   e : S,
   inv : S -> S
 ) laws
-  include Group(S, op, e, inv);
+  include Group(S, mul, e, inv);
 
   law commutativity(
     x y : S
   )
-    |- op(x, y) = op(y, x);
+    |- mul(x, y) = mul(y, x);
 qed;
 ```
 
@@ -2637,7 +2552,12 @@ Applies an axiom, lemma, theorem, local proof binding, or rule.
 
 ## `case`
 
-Provides a proof for one generated premise.
+Provides a proof for one branch of a `cases` block.
+
+## `then`
+
+Continues a proof after a step that leaves a single subgoal, restating that
+subgoal and flowing into the next `by` without a nested `proof`/`qed`.
 
 ## `theory`
 

@@ -13,9 +13,7 @@ lemma inst(x : T)
   |- x = x;
 proof
   by forall_elim(T, _ = _, x)
-  case
+  then
     |- forall (y : T) st y = y;
-  proof
     by all_eq;
-  qed;
 qed;

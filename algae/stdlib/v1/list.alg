@@ -115,14 +115,8 @@ model ListMonad satisfies Monad(
       return_def(A, x),
       λ (xs : List(A)) st bind(xs, f) = f(x)
     )
-    case
-      A B : Sort;
-      x : A;
-      f : A → List(B);
-      ⊢ bind(singleton(x), f) = f(x);
-    proof
-      by bind_singleton(A, B, x, f);
-    qed;
+    then ⊢ bind(singleton(x), f) = f(x);
+    by bind_singleton(A, B, x, f);
   qed;
 
   law right_identity;
@@ -153,44 +147,48 @@ model ListMonad satisfies Monad(
           bind_cons(A, A, x, rest, return),
           λ (ys : List(A)) st ys = cons(x, rest)
         )
-        case
-          A : Sort;
-          x : A;
-          rest : List(A);
-          ih := bind(rest, return) = rest;
-          ⊢ append(return(x), bind(rest, return)) = cons(x, rest);
-        proof
-          by rewrite_r(
-            List(A),
-            return(x),
-            singleton(x),
-            return_def(A, x),
-            λ (ys : List(A)) st append(ys, bind(rest, return)) = cons(x, rest)
-          )
-          case
-            A : Sort;
-            x : A;
-            rest : List(A);
-            ih := bind(rest, return) = rest;
-            ⊢ append(singleton(x), bind(rest, return)) = cons(x, rest);
-          proof
-            by rewrite_r(
-              List(A),
-              bind(rest, return),
-              rest,
-              ih,
-              λ (ys : List(A)) st append(singleton(x), ys) = cons(x, rest)
-            )
-            case
-              A : Sort;
-              x : A;
-              rest : List(A);
-              ⊢ append(singleton(x), rest) = cons(x, rest);
-            proof
-              by refl(List(A), cons(x, rest));
-            qed;
-          qed;
-        qed;
+        then ⊢ append(return(x), bind(rest, return)) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          return(x),
+          singleton(x),
+          return_def(A, x),
+          λ (ys : List(A)) st append(ys, bind(rest, return)) = cons(x, rest)
+        )
+        then ⊢ append(singleton(x), bind(rest, return)) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          bind(rest, return),
+          rest,
+          ih,
+          λ (ys : List(A)) st append(singleton(x), ys) = cons(x, rest)
+        )
+        then ⊢ append(singleton(x), rest) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          singleton(x),
+          cons(x, nil),
+          singleton_def(A, x),
+          λ (ys : List(A)) st append(ys, rest) = cons(x, rest)
+        )
+        then ⊢ append(cons(x, nil), rest) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          append(cons(x, nil), rest),
+          cons(x, append(nil, rest)),
+          append_cons_left(A, x, nil, rest),
+          λ (ys : List(A)) st ys = cons(x, rest)
+        )
+        then ⊢ cons(x, append(nil, rest)) = cons(x, rest);
+        by rewrite_r(
+          List(A),
+          append(nil, rest),
+          rest,
+          append_nil_left(A, rest),
+          λ (ys : List(A)) st cons(x, ys) = cons(x, rest)
+        )
+        then ⊢ cons(x, rest) = cons(x, rest);
+        by refl(List(A), cons(x, rest));
       qed;
     qed;
   qed;
@@ -232,23 +230,16 @@ model ListMonad satisfies Monad(
               λ (x : A) st bind(f(x), g)
             )
         )
-        case
-          A B C : Sort;
-          f : A → List(B);
-          g : B → List(C);
-          ⊢ bind(nil, g)
-             =
-             bind(
-               nil,
-               λ (x : A) st bind(f(x), g)
-             );
-        proof
-          by bind_nil(
-            A,
-            C,
-            λ (x : A) st bind(f(x), g)
-          );
-        qed;
+        then ⊢ bind(nil, g) = bind(nil, λ (x : A) st bind(f(x), g));
+        by rewrite_r(
+          List(C),
+          bind(nil, λ (x : A) st bind(f(x), g)),
+          nil,
+          bind_nil(A, C, λ (x : A) st bind(f(x), g)),
+          λ (ys : List(C)) st bind(nil, g) = ys
+        )
+        then ⊢ bind(nil, g) = nil;
+        by bind_nil(B, C, g);
       qed;
 
       case
@@ -278,86 +269,52 @@ model ListMonad satisfies Monad(
               λ (y : A) st bind(f(y), g)
             )
         )
-        case
-          A B C : Sort;
-          x : A;
-          rest : List(A);
-          ih := bind(bind(rest, f), g) = bind(rest, λ (x : A) st bind(f(x), g));
-          f : A → List(B);
-          g : B → List(C);
-          ⊢ bind(append(f(x), bind(rest, f)), g)
-             =
-             bind(
-               cons(x, rest),
-               λ (y : A) st bind(f(y), g)
-             );
-        proof
-          by rewrite_r(
-            List(C),
-            bind(append(f(x), bind(rest, f)), g),
-            append(bind(f(x), g), bind(bind(rest, f), g)),
-            bind_append(B, C, f(x), bind(rest, f), g),
-            λ (zs : List(C)) st
-              zs
-              =
-              bind(
-                cons(x, rest),
-                λ (y : A) st bind(f(y), g)
-              )
-          )
-          case
-            A B C : Sort;
-            x : A;
-            rest : List(A);
-            ih := bind(bind(rest, f), g) = bind(rest, λ (x : A) st bind(f(x), g));
-            f : A → List(B);
-            g : B → List(C);
-            ⊢ append(bind(f(x), g), bind(bind(rest, f), g))
-               =
-               bind(
-                 cons(x, rest),
-                 λ (y : A) st bind(f(y), g)
-               );
-          proof
-            by rewrite_r(
-              List(C),
-              bind(bind(rest, f), g),
-              bind(rest, λ (x : A) st bind(f(x), g)),
-              ih,
-              λ (zs : List(C)) st
-                append(bind(f(x), g), zs)
-                =
-                bind(
-                  cons(x, rest),
-                  λ (y : A) st bind(f(y), g)
-                )
+        then ⊢ bind(append(f(x), bind(rest, f)), g)
+              = bind(cons(x, rest), λ (y : A) st bind(f(y), g));
+        by rewrite_r(
+          List(C),
+          bind(append(f(x), bind(rest, f)), g),
+          append(bind(f(x), g), bind(bind(rest, f), g)),
+          bind_append(B, C, f(x), bind(rest, f), g),
+          λ (zs : List(C)) st
+            zs
+            =
+            bind(
+              cons(x, rest),
+              λ (y : A) st bind(f(y), g)
             )
-            case
-              A B C : Sort;
-              x : A;
-              rest : List(A);
-              f : A → List(B);
-              g : B → List(C);
-              ⊢ append(
-                   bind(f(x), g),
-                   bind(rest, λ (x : A) st bind(f(x), g))
-                 )
-                 =
-                 bind(
-                   cons(x, rest),
-                   λ (y : A) st bind(f(y), g)
-                 );
-            proof
-              by bind_cons(
-                A,
-                C,
-                x,
-                rest,
-                λ (y : A) st bind(f(y), g)
-              );
-            qed;
-          qed;
-        qed;
+        )
+        then ⊢ append(bind(f(x), g), bind(bind(rest, f), g))
+              = bind(cons(x, rest), λ (y : A) st bind(f(y), g));
+        by rewrite_r(
+          List(C),
+          bind(bind(rest, f), g),
+          bind(rest, λ (x : A) st bind(f(x), g)),
+          ih,
+          λ (zs : List(C)) st
+            append(bind(f(x), g), zs)
+            =
+            bind(
+              cons(x, rest),
+              λ (y : A) st bind(f(y), g)
+            )
+        )
+        then ⊢ append(bind(f(x), g), bind(rest, λ (x : A) st bind(f(x), g)))
+              = bind(cons(x, rest), λ (y : A) st bind(f(y), g));
+        by rewrite_r(
+          List(C),
+          bind(cons(x, rest), λ (y : A) st bind(f(y), g)),
+          append(bind(f(x), g), bind(rest, λ (y : A) st bind(f(y), g))),
+          bind_cons(A, C, x, rest, λ (y : A) st bind(f(y), g)),
+          λ (zs : List(C)) st
+            append(bind(f(x), g), bind(rest, λ (y : A) st bind(f(y), g))) = zs
+        )
+        then ⊢ append(bind(f(x), g), bind(rest, λ (y : A) st bind(f(y), g)))
+              = append(bind(f(x), g), bind(rest, λ (y : A) st bind(f(y), g)));
+        by refl(
+          List(C),
+          append(bind(f(x), g), bind(rest, λ (y : A) st bind(f(y), g)))
+        );
       qed;
     qed;
   qed;

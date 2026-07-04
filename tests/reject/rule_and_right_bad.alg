@@ -14,9 +14,7 @@ lemma bad
   |- a = a;
 proof
   by and_right(a = a, b = b)
-  case
+  then
     |- a = a /\ b = b;
-  proof
     by conj;
-  qed;
 qed;
