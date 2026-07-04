@@ -596,25 +596,19 @@ fn actual_args(input: &mut In) -> ModalResult<Vec<Expr>> {
 // ---- proofs ---------------------------------------------------------------
 
 fn kw_by(input: &mut In) -> ModalResult<Span> {
-    match input.first() {
-        Some(Token {
-            kind: T::Ident(s),
-            span,
-        }) if s == "by" => {
-            let sp = *span;
-            *input = &input[1..];
-            Ok(sp)
-        }
-        _ => backtrack(),
+    if at(*input, &T::KwBy) {
+        expect(input, T::KwBy)
+    } else {
+        backtrack()
     }
 }
 
 fn proof_ref(input: &mut In) -> ModalResult<ProofRef> {
     let q = qname(input)?;
     let args = if at(*input, &T::LParen) {
-        Some(actual_args(input)?)
+        actual_args(input)?
     } else {
-        None
+        Vec::new()
     };
     let span = q.span;
     Ok(ProofRef {
@@ -650,20 +644,20 @@ fn proof_stmt(input: &mut In) -> ModalResult<ProofStmt> {
             reference: None,
             admit: true,
             cases: Vec::new(),
-            cases_wip: false,
+            cases_close: Close::Qed,
             span: start.merge(end),
         });
     }
     let reference = proof_ref(input)?;
     let mut cases = Vec::new();
-    let mut cases_wip = false;
+    let mut cases_close = Close::Qed;
     if at(*input, &T::KwCases) {
         // by_stmt_many: "cases" case_block+ ("qed" | "wip") ";"
         expect(input, T::KwCases)?;
         cases = repeat_min1(input, case_block)?;
-        cases_wip = at(*input, &T::KwWip);
-        if cases_wip {
+        if at(*input, &T::KwWip) {
             expect(input, T::KwWip)?;
+            cases_close = Close::Wip;
         } else {
             expect(input, T::KwQed)?;
         }
@@ -680,27 +674,25 @@ fn proof_stmt(input: &mut In) -> ModalResult<ProofStmt> {
         reference: Some(reference),
         admit: false,
         cases,
-        cases_wip,
+        cases_close,
         span,
     })
 }
 
 fn proof_block(input: &mut In) -> ModalResult<ProofBlock> {
     let start = expect(input, T::KwProof)?;
-    let mut stmts = Vec::new();
-    while !at(*input, &T::KwQed) && !at(*input, &T::KwWip) {
-        stmts.push(proof_stmt(input)?);
-    }
-    let wip = at(*input, &T::KwWip);
-    let end = if wip {
-        expect(input, T::KwWip)?
+    // A proof block is exactly one `by` statement; a second `by` before the
+    // `qed`/`wip` terminator is a parse error.
+    let stmt = proof_stmt(input)?;
+    let (close, end) = if at(*input, &T::KwWip) {
+        (Close::Wip, expect(input, T::KwWip)?)
     } else {
-        expect(input, T::KwQed)?
+        (Close::Qed, expect(input, T::KwQed)?)
     };
     semi(input)?;
     Ok(ProofBlock {
-        stmts,
-        wip,
+        stmt,
+        close,
         span: start.merge(end),
     })
 }
@@ -906,19 +898,20 @@ fn model_decl(input: &mut In) -> ModalResult<ModelDecl> {
     while !at(*input, &T::KwQed) && !at(*input, &T::KwWip) {
         laws.push(model_law(input)?);
     }
-    let wip = at(*input, &T::KwWip);
-    if wip {
+    let close = if at(*input, &T::KwWip) {
         expect(input, T::KwWip)?;
+        Close::Wip
     } else {
         expect(input, T::KwQed)?;
-    }
+        Close::Qed
+    };
     let end = semi(input)?;
     Ok(ModelDecl {
         name,
         theory,
         args,
         laws,
-        wip,
+        close,
         span: start.merge(end),
     })
 }

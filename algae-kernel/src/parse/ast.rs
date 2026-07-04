@@ -48,6 +48,21 @@ pub struct Module {
     pub decls: Vec<Decl>,
 }
 
+/// How a block terminates: `qed` (claimed complete) or `wip` (declared
+/// incomplete). The declaration is checked against the block's actual taint
+/// during elaboration.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Close {
+    Qed,
+    Wip,
+}
+
+impl Close {
+    pub fn is_wip(self) -> bool {
+        matches!(self, Close::Wip)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Decl {
     Import(ImportDecl),
@@ -160,8 +175,8 @@ pub struct ModelDecl {
     pub theory: Name,
     pub args: Vec<Expr>,
     pub laws: Vec<ModelLaw>,
-    /// True if the `props` block is closed by `wip` instead of `qed`.
-    pub wip: bool,
+    /// How the `props` block is terminated.
+    pub close: Close,
     pub span: Span,
 }
 
@@ -201,9 +216,10 @@ pub type ContextEntry = FormalParam;
 
 #[derive(Clone, Debug)]
 pub struct ProofBlock {
-    pub stmts: Vec<ProofStmt>,
-    /// True if this block is closed by `wip` instead of `qed`.
-    pub wip: bool,
+    /// A proof block contains exactly one `by` statement.
+    pub stmt: ProofStmt,
+    /// How this proof block is terminated.
+    pub close: Close,
     pub span: Span,
 }
 
@@ -214,15 +230,15 @@ pub struct ProofStmt {
     /// True for `by wip` (admits the goal).
     pub admit: bool,
     pub cases: Vec<CaseBlock>,
-    /// For a multi-case (`cases … qed/wip`) statement: true if closed by `wip`.
-    pub cases_wip: bool,
+    /// For a multi-case (`cases … qed/wip`) statement: how it is terminated.
+    pub cases_close: Close,
     pub span: Span,
 }
 
 #[derive(Clone, Debug)]
 pub struct ProofRef {
     pub name: QName,
-    pub args: Option<Vec<Expr>>,
+    pub args: Vec<Expr>,
     pub span: Span,
 }
 

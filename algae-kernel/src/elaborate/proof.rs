@@ -491,7 +491,7 @@ fn elaborate_model(
         }
     }
     // The model's `props` terminator must match whether any law is `wip`.
-    if md.wip != any_wip {
+    if md.close.is_wip() != any_wip {
         elab.err(terminator_msg(any_wip, "model"), md.span);
     }
     let unproven: Vec<String> = obligations_by_name
@@ -575,13 +575,8 @@ fn elaborate_proof(
     span: Span,
     rs: &RewriteSystem,
 ) -> Option<(Step, bool)> {
-    if block.stmts.len() != 1 {
-        elab.err("a proof block must contain exactly one `by` statement", block.span);
-        return None;
-    }
-    let stmt = &block.stmts[0];
-    let (step, tainted) = elaborate_step(elab, ctx, goal, stmt, span, rs)?;
-    if tainted != block.wip {
+    let (step, tainted) = elaborate_step(elab, ctx, goal, &block.stmt, span, rs)?;
+    if tainted != block.close.is_wip() {
         elab.err(terminator_msg(tainted, "proof"), block.span);
         return None;
     }
@@ -616,7 +611,7 @@ fn elaborate_step(
 
     // Build arguments aligned with the rule parameters, expanding `_` holes
     // against the (instantiated) parameter type.
-    let surface_args = reference.args.clone().unwrap_or_default();
+    let surface_args = reference.args.clone();
     if surface_args.len() != base_rule.params.len() {
         elab.err(
             format!(
@@ -746,7 +741,7 @@ fn elaborate_step(
     }
 
     // For a multi-case (`cases … qed/wip`) statement, validate its terminator.
-    if !stmt.cases.is_empty() && stmt.cases_wip != child_tainted {
+    if !stmt.cases.is_empty() && stmt.cases_close.is_wip() != child_tainted {
         elab.err(terminator_msg(child_tainted, "`cases` block"), stmt.span);
         return None;
     }
@@ -955,7 +950,7 @@ fn resolve_proof_term(
     };
     let pref = ast::ProofRef {
         name: qname.clone(),
-        args: None,
+        args: Vec::new(),
         span: e.span,
     };
     let (_name, rule) = resolve_tactic(elab, ctx, &pref)?;
