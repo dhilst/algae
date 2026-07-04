@@ -29,5 +29,6 @@ We work through the real standard library — ``core``, ``nat``, ``option``,
    worlds
    first-proofs
    holes
+   rewrite
    induction
    theories
