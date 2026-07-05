@@ -603,8 +603,9 @@ function winScreen() {
   const wrap = el("div", "screen message-screen win-screen");
   wrap.appendChild(el("div", "big-emoji", "🌅"));
   wrap.appendChild(el("h1", null, "You wake"));
-  wrap.appendChild(el("p", "message-body", "Dawn — the wedding morning. Miriam sleeps beside you, calm as still water. There was never any dungeon: only a nightmare, and the long, ordinary fear of a man on the eve of his wedding. On the nightstand the drawer hangs open, and the ring is inside, exactly where you left it, catching the first light."));
-  wrap.appendChild(el("p", "message-body dim", "She stirs, sees your face, and smiles as though she has never once doubted you. You close your hand around the ring — and for the first time in a long while, you believe her."));
+  wrap.appendChild(el("p", "message-body", "Dawn — the wedding morning. Miriam sleeps beside you, calm as still water, her black hair spilled across the pillow. There was never any dungeon: only a nightmare, spun from the last doubt of a man about to be married. On the nightstand the drawer hangs open, and the ring is inside, exactly where it always was, catching the first light."));
+  wrap.appendChild(el("p", "message-body", "But you are not the man who fell asleep. Down in the dark you met the thing that kept whispering you were not enough for her — and you answered it, step by patient step, until it had nothing left to say. The doubt is gone, and it is not coming back."));
+  wrap.appendChild(el("p", "message-body dim", "You would go down a thousand dungeons for this woman and climb back up smiling. You take the ring, and you wait for her to wake — certain, for the first time and for good, that you are exactly the man she chose. Whatever the morning asks of you, the answer is already yes."));
   const b = el("button", "btn btn-primary", "Wake again");
   b.addEventListener("click", () => titleScreen());
   wrap.appendChild(b);
