@@ -1,11 +1,10 @@
 # One witness is all existence asks for.
-import core(refl, exists_intro);
+import core(exists_intro);
 
 sort T : Sort;
-op a : -> T;
 
-lemma banish
-  |- exists (x : T) st x = x;
+lemma banish(P : T -> Prop, a : T, pa := P(a))
+  |- exists (x : T) st P(x);
 proof
   by wip;
 wip;

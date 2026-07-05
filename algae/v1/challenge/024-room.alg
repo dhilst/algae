@@ -1,22 +1,16 @@
 # Both directions, and the gate swings free.
 import core(biconditional_intro);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-axiom fwd |- (a = a) => (b = b);
-axiom bwd |- (b = b) => (a = a);
-
-lemma banish
-  |- (a = a) <=> (b = b);
+lemma banish(A B : Prop, fwd := A => B, bwd := B => A)
+  |- A <=> B;
 proof
-  by biconditional_intro(a = a, b = b) cases
+  by biconditional_intro(A, B) cases
     case
-      |- (a = a) => (b = b);
+      |- A => B;
       by wip;
     wip;
     case
-      |- (b = b) => (a = a);
+      |- B => A;
       by wip;
     wip;
   wip;

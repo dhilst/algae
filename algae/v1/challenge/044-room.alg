@@ -1,13 +1,8 @@
-# Whichever branch is true, the same truth waits at the end.
-import core(or_elim, refl);
+# Whichever branch is true, swap the sides.
+import core(or_elim, or_intro_left, or_intro_right);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-axiom disj |- a = b \/ b = a;
-
-lemma banish
-  |- a = a;
+lemma banish(A B : Prop, d := A \/ B)
+  |- B \/ A;
 proof
   by wip;
 wip;

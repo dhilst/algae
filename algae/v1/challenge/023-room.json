@@ -6,5 +6,5 @@
   "module": "room023",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
-  "help": "A universal fact can be instantiated at any term. `forall_elim(T, P, x)` turns `forall (y:T) st P(y)` into `P(x)`; supply the universal with `by all_eq;`."
+  "help": "A universal `forall y. P(y)` can be instantiated at any point. `forall_elim(T, P, a)` turns it into `P(a)`; supply the universal you were handed with `by all;`."
 }

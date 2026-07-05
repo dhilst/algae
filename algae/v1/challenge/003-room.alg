@@ -1,16 +1,11 @@
 # It offers you a pair and asks only for its right hand.
 import core(and_right);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-axiom conj |- a = a /\ b = b;
-
-lemma banish
-  |- b = b;
+lemma banish(A B : Prop, both := A /\ B)
+  |- B;
 proof
-  by and_right(a = a, b = b)
+  by and_right(A, B)
   then
-    |- a = a /\ b = b;
+    |- A /\ B;
     by wip;
 wip;

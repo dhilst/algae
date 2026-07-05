@@ -46,6 +46,12 @@ const GENERAL_HTML = `
     <li><b>Named holes <code>by wip(?name);</code>:</b> these admit the goal <i>and</i>
       print it (with candidate rules), so you can see exactly what's left to prove.
       Stuck? Drop in <code>by wip(?here);</code>, check, and read what it asks for.</li>
+    <li><b>Tactic holes — <code>by rule?;</code>:</b> not sure which arguments a rule
+      needs, or what it leaves behind? Apply it with a trailing <code>?</code> and no
+      (or partial) arguments — say <code>by or_intro_left?;</code>. The kernel replies
+      with the arguments it <i>inferred</i> (<code>?P = …</code>, <code>?Q = …</code>)
+      and the subgoal(s) the rule produces, then admits so the rest still checks. It's
+      the fastest way to learn a step — the tour calls it “let the checker tell you.”</li>
     <li><b>Hover for details:</b> after checking, hover the underlined spot — a hole
       shows the goal it still expects; an error shows what went wrong.</li>
   </ul>

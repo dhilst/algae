@@ -1,15 +1,11 @@
 # The right side will do.
-import core(or_intro_right, refl);
+import core(or_intro_right);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-
-lemma banish
-  |- a = a \/ b = b;
+lemma banish(A B : Prop, y := B)
+  |- A \/ B;
 proof
-  by or_intro_right(a = a, b = b)
+  by or_intro_right(A, B)
   then
-    |- b = b;
+    |- B;
     by wip;
 wip;

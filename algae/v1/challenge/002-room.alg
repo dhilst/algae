@@ -1,15 +1,11 @@
 # One truth is enough to tip the balance.
-import core(or_intro_left, refl);
+import core(or_intro_left);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-
-lemma banish
-  |- a = a \/ b = b;
+lemma banish(A B : Prop, x := A)
+  |- A \/ B;
 proof
-  by or_intro_left(a = a, b = b)
+  by or_intro_left(A, B)
   then
-    |- a = a;
+    |- A;
     by wip;
 wip;
