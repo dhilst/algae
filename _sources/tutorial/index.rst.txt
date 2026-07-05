@@ -35,3 +35,4 @@ We work through the real standard library — ``core``, ``nat``, ``option``,
    errors
    theories
    tour/index
+   auxiliary-lemmas
