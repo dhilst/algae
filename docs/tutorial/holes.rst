@@ -35,9 +35,6 @@ Check it, and the kernel tells you where you are and where to look next:
 
    found hole ?goal : proof
 
-   Expected:
-     n = 0 + n
-
    Context:
      n : Nat
 

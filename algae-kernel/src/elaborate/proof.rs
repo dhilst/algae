@@ -1040,7 +1040,7 @@ fn param_sym(p: &Param) -> Sym {
 fn report_hole(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr, name: &str, span: Span, rs: &RewriteSystem) {
     use crate::core::display::show;
     let g = show(goal, &elab.interner);
-    let mut msg = format!("found hole ?{name} : proof\n\nExpected:\n  {g}\n\nContext:\n");
+    let mut msg = format!("found hole ?{name} : proof\n\nContext:\n");
     if ctx.is_empty() {
         msg.push_str("  (empty)\n");
     } else {
