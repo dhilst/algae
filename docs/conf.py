@@ -28,6 +28,15 @@ myst_heading_anchors = 3
 source_suffix = {".md": "markdown", ".rst": "restructuredtext"}
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "README.md"]
 
+# Substitutions for new-tab GitHub links to the stdlib sources, e.g. |core.alg|.
+_STDLIB_URL = "https://github.com/dhilst/algae/blob/main/algae/stdlib/v1"
+rst_prolog = "\n".join(
+    f".. |{_m}.alg| raw:: html\n\n"
+    f'   <a href="{_STDLIB_URL}/{_m}.alg" target="_blank" rel="noopener">'
+    f'<code class="docutils literal notranslate"><span class="pre">{_m}.alg</span></code></a>\n'
+    for _m in ("core", "nat", "adt", "option", "result", "list", "monad", "group")
+)
+
 # --- HTML output ------------------------------------------------------------
 html_theme = "furo"
 html_title = "Algae"

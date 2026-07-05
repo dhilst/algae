@@ -34,3 +34,4 @@ We work through the real standard library — ``core``, ``nat``, ``option``,
    stack
    errors
    theories
+   tour/index
