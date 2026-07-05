@@ -315,6 +315,19 @@ button.chip:disabled { opacity: 0.5; }
 .combat-message { min-height: 20px; font-size: 14px; line-height: 1.5; }
 .combat-message.good { color: var(--moss); }
 .combat-message.bad { color: var(--blood-bright); }
+.combat-diag-head { font-weight: bold; margin-bottom: 6px; }
+.combat-diag {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: var(--stone-0);
+  border-left: 3px solid var(--blood);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
 .combat-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .combat-noflee { color: var(--ink-dim); font-style: italic; font-size: 13px; }
 

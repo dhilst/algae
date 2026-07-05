@@ -87,12 +87,19 @@ export function startCombat(host, opts) {
     }
 
     message.className = "combat-message bad";
+    message.textContent = "";
     if (result.ok && result.wip > 0) {
-      message.textContent = "The proof is unfinished — " + result.wip + " goal still admitted (wip). Replace every `wip` and close with `qed`.";
+      message.appendChild(el("div", null, "The proof is unfinished — " + result.wip + " goal still admitted (wip). Replace every `wip` and close with `qed`."));
     } else {
       const n = result.diagnostics.length;
-      const first = result.diagnostics[0];
-      message.textContent = "The proof falters (" + n + " error" + (n === 1 ? "" : "s") + ")" + (first ? ": " + first.message : ".");
+      message.appendChild(el("div", "combat-diag-head", "✗ The proof doesn't hold yet — " + n + " message" + (n === 1 ? "" : "s") + ":"));
+      // Diagnostics can be multi-line (a tactic-hole report lists the goal, the
+      // inferred holes and the subgoals). Render each in a block that preserves
+      // its line breaks instead of collapsing them onto one run-on line.
+      for (const d of result.diagnostics) {
+        const where = d.has_span ? d.line + ":" + d.col + "  " : "";
+        message.appendChild(el("pre", "combat-diag", where + d.message));
+      }
     }
   };
 
