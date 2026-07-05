@@ -12,7 +12,6 @@ import {
   highlightActiveLineGutter, drawSelection, highlightSpecialChars,
 } from "@codemirror/view";
 import { history, defaultKeymap, historyKeymap, indentWithTab } from "@codemirror/commands";
-import { emacs } from "@replit/codemirror-emacs";
 import { bracketMatching } from "@codemirror/language";
 import { lintGutter, lintKeymap } from "@codemirror/lint";
 import { algae } from "./algae-lang.js";
@@ -153,14 +152,10 @@ export function mountAlgaeEditor(parent, opts = {}) {
     drawSelection(),
     highlightActiveLine(),
     bracketMatching(),
-    // Ctrl-Enter / Cmd-Enter runs the checker (same as the Check button). Kept
-    // ahead of the Emacs keymap so it always wins.
+    // Ctrl-Enter / Cmd-Enter runs the checker (same as the Check button).
     keymap.of([
       { key: "Mod-Enter", run: (v) => { doCheck(v); return true; } },
     ]),
-    // Emacs-style keybindings (C-a, C-e, C-k, C-w, M-w, C-y, C-s, …) plus the
-    // mark/kill-ring behavior. Installs its own high-precedence keymap.
-    emacs(),
     keymap.of([...defaultKeymap, ...historyKeymap, ...lintKeymap, indentWithTab]),
     algae(),
     baseTheme,
