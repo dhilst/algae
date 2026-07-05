@@ -128,7 +128,7 @@ function generateFloor(floor, rng, manifest, letters) {
     r.type = "surface";
     r.isExitDown = true;
     r.isEntryUp = true; // "up" from the surface = the world / win exit
-    return { index: floor.index, rooms: [r], byId: new Map([[0, r]]), entryId: 0, exitId: 0 };
+    return meta(floor, { index: floor.index, rooms: [r], byId: new Map([[0, r]]), entryId: 0, exitId: 0 });
   }
 
   const count = floor.final ? 5 : 12;
@@ -181,7 +181,19 @@ function generateFloor(floor, rng, manifest, letters) {
     if (exit.type !== "chest") exit.type = "monster";
   }
 
-  return { index: floor.index, rooms, byId, entryId, exitId };
+  return meta(floor, { index: floor.index, rooms, byId, entryId, exitId });
+}
+
+// Carry the floor's config metadata (tier, boss/final/surface flags, label)
+// onto the generated floor object, so the game can read floor.final etc. from
+// curFloor() without reaching back into the FLOORS table.
+function meta(floor, gen) {
+  gen.tier = floor.tier ?? null;
+  gen.label = floor.label;
+  gen.boss = !!floor.boss;
+  gen.final = !!floor.final;
+  gen.surface = !!floor.surface;
+  return gen;
 }
 
 const LETTERS = [
