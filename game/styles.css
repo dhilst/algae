@@ -1,0 +1,352 @@
+/* Dungeon Proof Crawler — pixel-art dungeon theme. Self-contained: no external
+   fonts or assets (works under a strict CSP). Dark stone, torchlight amber, and
+   a little blood. */
+
+:root {
+  --stone-0: #0a0908;
+  --stone-1: #14110f;
+  --stone-2: #201a16;
+  --stone-3: #2e2620;
+  --stone-4: #3d332a;
+  --ink: #e8dcc4;
+  --ink-dim: #a89b82;
+  --amber: #e8a33d;
+  --amber-bright: #ffc76b;
+  --blood: #b5322e;
+  --blood-bright: #e0564f;
+  --moss: #7fae52;
+  --gold: #e8c96b;
+  --tile: 46px;
+  --edge: 3px solid var(--stone-0);
+  --font: "Courier New", "DejaVu Sans Mono", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(120% 80% at 50% -10%, #2a211a 0%, var(--stone-0) 60%),
+    var(--stone-0);
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+  overflow-x: hidden;
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ---- Boot / errors ---- */
+.boot {
+  margin: auto;
+  padding: 40px;
+  color: var(--amber);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 14px;
+  animation: flicker 2.2s infinite;
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  48% { opacity: 0.72; }
+  50% { opacity: 0.95; }
+}
+.boot-error {
+  max-width: 620px;
+  text-align: left;
+  color: var(--ink);
+  border: 3px solid var(--blood);
+  background: var(--stone-1);
+  animation: none;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.boot-error h1 { color: var(--blood-bright); margin-top: 0; }
+.boot-error pre {
+  background: var(--stone-0);
+  padding: 10px;
+  overflow-x: auto;
+  color: var(--ink-dim);
+  font-size: 12px;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--ink);
+  background: var(--stone-3);
+  border: 3px solid var(--stone-0);
+  box-shadow: inset -3px -3px 0 rgba(0, 0, 0, 0.45), inset 3px 3px 0 rgba(255, 255, 255, 0.06);
+  padding: 10px 14px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: transform 0.05s, background 0.1s;
+}
+.btn:hover:not(:disabled) { background: var(--stone-4); }
+.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.45); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary {
+  color: #241706;
+  background: var(--amber);
+  border-color: #6b4413;
+}
+.btn-primary:hover:not(:disabled) { background: var(--amber-bright); }
+.btn-wide { width: 100%; }
+
+/* ---- Title ---- */
+.title {
+  max-width: 720px;
+  text-align: center;
+  justify-content: center;
+  gap: 14px;
+}
+.title-emblem { font-size: 64px; filter: drop-shadow(0 0 12px rgba(232, 163, 61, 0.5)); }
+.title-name {
+  font-size: clamp(28px, 6vw, 48px);
+  margin: 0;
+  color: var(--amber-bright);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: 4px 4px 0 var(--stone-0);
+}
+.title-tag { color: var(--blood-bright); margin: 0; font-style: italic; }
+.title-story {
+  text-align: left;
+  background: var(--stone-1);
+  border: 3px solid var(--stone-3);
+  padding: 16px 18px;
+  color: var(--ink-dim);
+  line-height: 1.6;
+  font-size: 14px;
+}
+.title-story p { margin: 0 0 10px; }
+.title-story p:last-child { margin-bottom: 0; }
+.title-form { display: flex; flex-direction: column; gap: 10px; }
+.seed-row { display: flex; gap: 8px; }
+.seed-input {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--stone-0);
+  border: 3px solid var(--stone-3);
+  padding: 10px 12px;
+}
+.seed-input:focus { outline: none; border-color: var(--amber); }
+.title-foot { color: var(--ink-dim); font-size: 11px; margin: 4px 0 0; }
+
+/* ---- HUD ---- */
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--stone-1);
+  border: 3px solid var(--stone-3);
+  padding: 10px 12px;
+}
+.hud-stats { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.hud-hp { display: flex; align-items: center; gap: 8px; }
+.hud-label { color: var(--blood-bright); }
+.hp-bar {
+  width: 160px;
+  height: 16px;
+  background: var(--stone-0);
+  border: 2px solid var(--stone-4);
+  padding: 2px;
+}
+.hp-fill {
+  height: 100%;
+  background: linear-gradient(var(--blood-bright), var(--blood));
+  transition: width 0.3s;
+}
+.hp-fill.low { background: linear-gradient(#e0a24f, #b5322e); animation: flicker 1s infinite; }
+.hud-num { font-size: 13px; color: var(--ink-dim); }
+.hud-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--stone-3);
+  border: 2px solid var(--stone-0);
+  padding: 5px 9px;
+  cursor: default;
+}
+button.chip { cursor: pointer; }
+button.chip:disabled { opacity: 0.5; }
+.chip-food:not(:disabled):hover { background: var(--stone-4); }
+.chip-ring { color: var(--gold); border-color: var(--gold); }
+.hud-right { display: flex; align-items: center; gap: 10px; text-align: right; }
+.hud-floor { color: var(--amber); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
+.hud-seed { color: var(--ink-dim); font-size: 11px; }
+
+/* ---- Dungeon layout ---- */
+.dungeon-main {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .dungeon-main { grid-template-columns: 1fr; }
+}
+
+.map-frame {
+  background: var(--stone-1);
+  border: 3px solid var(--stone-3);
+  padding: 14px;
+  display: flex;
+  justify-content: center;
+}
+.map {
+  display: grid;
+  gap: 4px;
+}
+.tile {
+  width: var(--tile);
+  height: var(--tile);
+  position: relative;
+  background: var(--stone-2);
+  border: 2px solid var(--stone-0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-dim);
+}
+/* Doors: a small notch of torchlight on the connected edge. */
+.tile.door-n::before,
+.tile.door-s::after,
+.tile.door-e > .noop,
+.tile.door-w::after { content: ""; }
+.tile.door-n { box-shadow: inset 0 4px 0 -1px var(--stone-4); }
+.tile.door-s { box-shadow: inset 0 -4px 0 -1px var(--stone-4); }
+.tile.door-n.door-s { box-shadow: inset 0 4px 0 -1px var(--stone-4), inset 0 -4px 0 -1px var(--stone-4); }
+.tile.door-e { border-right-color: var(--stone-4); }
+.tile.door-w { border-left-color: var(--stone-4); }
+.tile-glyph { font-size: 22px; line-height: 1; }
+.tile.here {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px var(--amber), 0 0 12px rgba(232, 163, 61, 0.6);
+  background: var(--stone-3);
+  animation: herepulse 1.4s infinite;
+}
+@keyframes herepulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--amber), 0 0 8px rgba(232, 163, 61, 0.4); }
+  50% { box-shadow: 0 0 0 2px var(--amber-bright), 0 0 16px rgba(232, 163, 61, 0.8); }
+}
+.tile-stair {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 11px;
+}
+.tile-stair.up { left: 2px; right: auto; top: 1px; bottom: auto; }
+.tile-stair.down { color: var(--amber-bright); }
+
+/* ---- Room panel ---- */
+.room-panel {
+  background: var(--stone-1);
+  border: 3px solid var(--stone-3);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.compass {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "n n" "w e" "s s";
+  gap: 6px;
+  max-width: 260px;
+}
+.compass-n { grid-area: n; }
+.compass-w { grid-area: w; }
+.compass-e { grid-area: e; }
+.compass-s { grid-area: s; }
+.room-title { margin: 0; color: var(--amber-bright); text-transform: uppercase; letter-spacing: 1px; font-size: 18px; }
+.room-desc { margin: 0; color: var(--ink-dim); line-height: 1.6; }
+.room-actions { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---- Combat ---- */
+.combat-screen { gap: 14px; }
+.combat-host { flex: 1; }
+.combat {
+  background: var(--stone-1);
+  border: 3px solid var(--stone-3);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.combat-head { display: flex; align-items: center; gap: 14px; }
+.combat-face { font-size: 44px; filter: drop-shadow(0 0 8px rgba(181, 50, 46, 0.5)); }
+.combat-title { color: var(--amber-bright); font-size: 20px; text-transform: uppercase; letter-spacing: 1px; }
+.combat-sub { color: var(--blood-bright); font-size: 13px; font-style: italic; }
+.combat-prompt { margin: 0; color: var(--ink); line-height: 1.5; }
+.combat-editor { border: 3px solid var(--stone-0); background: var(--stone-0); min-height: 240px; }
+.combat-message { min-height: 20px; font-size: 14px; line-height: 1.5; }
+.combat-message.good { color: var(--moss); }
+.combat-message.bad { color: var(--blood-bright); }
+.combat-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.combat-noflee { color: var(--ink-dim); font-style: italic; font-size: 13px; }
+
+/* ---- Message / ending screens ---- */
+.message-screen {
+  max-width: 640px;
+  text-align: center;
+  justify-content: center;
+  gap: 16px;
+}
+.message-screen h1 {
+  color: var(--amber-bright);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: clamp(22px, 5vw, 34px);
+  margin: 0;
+  text-shadow: 3px 3px 0 var(--stone-0);
+}
+.big-emoji { font-size: 72px; }
+.message-body { color: var(--ink); line-height: 1.7; margin: 0; }
+.message-body.dim { color: var(--ink-dim); font-size: 14px; }
+.letter {
+  margin: 0;
+  padding: 16px 20px;
+  background: #d9c7a0;
+  color: #2a2015;
+  border: 3px solid #8a734a;
+  font-style: italic;
+  line-height: 1.6;
+  text-align: left;
+  box-shadow: 4px 4px 0 var(--stone-0);
+}
+.win-screen h1 { color: var(--gold); }
+.over-screen h1 { color: var(--blood-bright); }
+.ring-screen .big-emoji { filter: drop-shadow(0 0 16px rgba(232, 201, 107, 0.7)); }

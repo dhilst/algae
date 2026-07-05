@@ -1,0 +1,9 @@
+{
+  "id": "040",
+  "tier": "medium",
+  "title": "For An Arbitrary One",
+  "monster": "sphinx",
+  "module": "room040",
+  "prompt": "A sphinx bars the room. Complete its proof to banish it.",
+  "food": true
+}

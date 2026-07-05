@@ -1,0 +1,10 @@
+{
+  "id": "081",
+  "tier": "veryhard",
+  "title": "Zero On The Right",
+  "monster": "dragon",
+  "module": "room081",
+  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "food": false,
+  "lore": "The deeper you go, the quieter her voice becomes, and the louder your doubt."
+}

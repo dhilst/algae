@@ -45,4 +45,5 @@ uses.
 
 tutorial/index
 playground
+game
 ```

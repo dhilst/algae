@@ -1,0 +1,10 @@
+{
+  "id": "060",
+  "tier": "hard",
+  "title": "The Coiled Successor",
+  "monster": "dragon",
+  "module": "room060",
+  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "food": true,
+  "lore": "The dragon breathes, and in the fire you hear only your own voice, listing everything you fear you lack."
+}

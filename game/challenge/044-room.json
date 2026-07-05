@@ -1,0 +1,10 @@
+{
+  "id": "044",
+  "tier": "medium",
+  "title": "Whichever Branch",
+  "monster": "sphinx",
+  "module": "room044",
+  "prompt": "A sphinx bars the room. Complete its proof to banish it.",
+  "food": true,
+  "lore": "'On the morning of the wedding,' it murmurs, 'what if you are not the man she believes you are?'"
+}

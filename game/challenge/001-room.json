@@ -1,0 +1,10 @@
+{
+  "id": "001",
+  "tier": "trivial",
+  "title": "The Mirrored Word",
+  "monster": "sphinx",
+  "module": "room001",
+  "prompt": "A sphinx bars the room. Complete its proof to banish it.",
+  "food": false,
+  "lore": "'You are not ready for her,' it whispers. 'You never were.' The voice sounds strangely like your own."
+}
