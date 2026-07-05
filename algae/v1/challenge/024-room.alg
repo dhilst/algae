@@ -13,8 +13,8 @@ proof
   by biconditional_intro(a = a, b = b) cases
     case
       |- (a = a) => (b = b);
-      by fwd;
-    qed;
+      by wip;
+    wip;
     case
       |- (b = b) => (a = a);
       by wip;

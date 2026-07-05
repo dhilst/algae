@@ -185,11 +185,11 @@ function generateFloor(floor, rng, manifest, letters) {
 }
 
 const LETTERS = [
-  "My love — if you are reading this, you took the same stair I did. She is worth it. That is the trap. — G.",
-  "The ring was never lost. Count the bands in the chests. Count the grooms. — a friend who failed",
-  "Miriam does not wait at the altar. She waits at the bottom. Do not mistake the two.",
-  "I asked the sphinx what she is. It only wept and said: 'queen, and cage, and the door of both.'",
-  "Sunrise is her word, not the sun's. There is no sun down here. There never was.",
+  "The night you proposed she said yes before you could finish asking. You still lie awake certain you imagined it.",
+  "She tucked a note into your coat pocket once: 'Stop worrying. I already chose you.' You have read it a thousand times.",
+  "They all said she was too good for you. She only ever said that she was the lucky one.",
+  "On bad nights she holds your face and tells you what she sees. You have never quite been able to believe her.",
+  "You have loved her far longer than you have believed yourself worthy of her. Tonight, one of those finally ends.",
 ];
 
 export function generateDungeon(seed, manifest) {

@@ -7,8 +7,5 @@ op a : -> T;
 lemma banish
   |- exists (x : T) st x = x;
 proof
-  by exists_intro(T, _ = _, a)
-  then
-    |- a = a;
-    by wip;
+  by wip;
 wip;

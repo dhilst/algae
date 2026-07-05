@@ -60,8 +60,8 @@ function titleScreen() {
 
   const story = el("div", "title-story");
   story.appendChild(el("p", null,
-    "On the eve of your wedding a demon stole your ring while you slept. Miriam — the most beautiful goth in the kingdom — looked at you and said only: “Bring my ring back before sunrise.” Everyone knows Miriam keeps her promises."));
-  story.appendChild(el("p", null, "Descend the seven levels. Defeat each monster by completing its Algae proof. Recover the ring. Return before the sun rises. Do not return empty-handed."));
+    "On the eve of your wedding you lie awake beside Miriam — the purest, most luminous soul in the kingdom — certain in your bones that you are not good enough for the morning to come. Sleep takes you at last, and with it a nightmare: a demon steals into the house and carries off the wedding ring."));
+  story.appendChild(el("p", null, "You go down after it, into an underworld that somehow seems to remember you. Defeat each monster by completing the unfinished proof it guards. Recover the ring. Return before sunrise."));
   wrap.appendChild(story);
 
   const form = el("div", "title-form");
@@ -368,7 +368,7 @@ function roomDesc(room, floor) {
     return run.openedChests.has(rk(floor.index, room.id)) ? "The chest lies open and empty." : "A heavy chest rests against the wall, its lid still shut.";
   }
   if (room.isBoss) {
-    return isCleared(room) ? "Only scorch marks and settling dust remain where the dragon coiled." : "A dragon guards the hatch, its breath whispering your name in her voice.";
+    return isCleared(room) ? "Only scorch marks and settling dust remain where the dragon coiled." : "A dragon guards the hatch, its breath heavy with every doubt you have ever swallowed.";
   }
   return isCleared(room) ? "The sphinx is gone; its riddle answered. The room is quiet." : "A sphinx blocks the way, a half-finished proof glowing in the air before it.";
 }
@@ -378,6 +378,14 @@ function roomDesc(room, floor) {
 function moveTo(roomId) {
   run.roomId = roomId;
   persist();
+  // Wandering the maze, an unresolved insecurity may seize you on its own: a
+  // sphinx has a 1-in-3 chance of engaging as you step into its room, so you
+  // cannot simply slip past them to the stairs. (Dragons are faced by choice.)
+  const room = curRoom();
+  if (room.type === "monster" && !room.isBoss && !isCleared(room) && Math.random() < 0.33) {
+    enterCombat(room);
+    return;
+  }
   dungeonScreen();
 }
 
@@ -537,9 +545,9 @@ function guardScreen() {
   currentScreen = "guard";
   app.innerHTML = "";
   const wrap = el("div", "screen message-screen");
-  wrap.appendChild(el("div", "big-emoji", "💀"));
+  wrap.appendChild(el("div", "big-emoji", "🚪"));
   wrap.appendChild(el("h1", null, "You stop at the threshold"));
-  wrap.appendChild(el("p", "message-body", "She would kill me if I do not recover that ring."));
+  wrap.appendChild(el("p", "message-body", "Not without it. I can't stand before her empty-handed — not while I still fear I am not enough for her."));
   const b = el("button", "btn btn-primary", "Turn back into the dark");
   b.addEventListener("click", () => dungeonScreen());
   wrap.appendChild(b);
@@ -551,9 +559,9 @@ function ringScreen() {
   app.innerHTML = "";
   const wrap = el("div", "screen message-screen ring-screen");
   wrap.appendChild(el("div", "big-emoji", "💍"));
-  wrap.appendChild(el("h1", null, "The demon opens its hand"));
-  wrap.appendChild(el("p", "message-body", "The ring is already on your finger. It has been, the whole descent. “Now,” it says with her voice, “come home.”"));
-  wrap.appendChild(el("p", "message-body dim", "Climb back to the surface with the ring to end the night."));
+  wrap.appendChild(el("h1", null, "The demon lowers its head"));
+  wrap.appendChild(el("p", "message-body", "As the fire dies the ring is there in its open hand — and its face, you see now, was only ever your own. It presses the ring into your palm. “Take it,” it says, in a voice you know too well. “Go up to her.”"));
+  wrap.appendChild(el("p", "message-body dim", "Climb back to the surface with the ring."));
   const b = el("button", "btn btn-primary", "Begin the long climb");
   b.addEventListener("click", () => dungeonScreen());
   wrap.appendChild(b);
@@ -572,8 +580,8 @@ function gameOver(cause) {
   wrap.appendChild(el("h1", null, cause === "hunger" ? "You starved in the dark" : "You fell in the dark"));
   wrap.appendChild(el("p", "message-body",
     cause === "hunger"
-      ? "The hunger took you before the ring did. Somewhere far above, a fire burns low, and Miriam does not cry."
-      : "Your strength gave out. The dungeon keeps what it takes. Miriam keeps her promises."));
+      ? "Nothing in the dark could feed what you were truly hungry for. Far above, a candle burns beside the bed, and Miriam sleeps on, trusting the morning."
+      : "The fear grew heavier than you could carry, and the dark closed over you. Far above, in the last hour before dawn, Miriam sleeps on, certain you will be beside her when she wakes."));
   const b = el("button", "btn btn-primary", "Descend again");
   b.addEventListener("click", () => titleScreen());
   wrap.appendChild(b);
@@ -587,10 +595,10 @@ function winScreen() {
   app.innerHTML = "";
   const wrap = el("div", "screen message-screen win-screen");
   wrap.appendChild(el("div", "big-emoji", "🌅"));
-  wrap.appendChild(el("h1", null, "You climb into the dawn"));
-  wrap.appendChild(el("p", "message-body", "The ring is on your finger. Sunrise breaks over the kingdom exactly as she said it would — as if she had arranged it. Miriam is waiting at the door, in black, smiling the way a door smiles when it closes behind you."));
-  wrap.appendChild(el("p", "message-body dim", "You brought the ring back before sunrise. Whether you ever truly chose to descend is a question for another night."));
-  const b = el("button", "btn btn-primary", "New run");
+  wrap.appendChild(el("h1", null, "You wake"));
+  wrap.appendChild(el("p", "message-body", "Dawn — the wedding morning. Miriam sleeps beside you, calm as still water. There was never any dungeon: only a nightmare, and the long, ordinary fear of a man on the eve of his wedding. On the nightstand the drawer hangs open, and the ring is inside, exactly where you left it, catching the first light."));
+  wrap.appendChild(el("p", "message-body dim", "She stirs, sees your face, and smiles as though she has never once doubted you. You close your hand around the ring — and for the first time in a long while, you believe her."));
+  const b = el("button", "btn btn-primary", "Wake again");
   b.addEventListener("click", () => titleScreen());
   wrap.appendChild(b);
   app.appendChild(wrap);

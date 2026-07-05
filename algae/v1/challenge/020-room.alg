@@ -11,8 +11,8 @@ proof
   by and_intro(a = a, b = b) cases
     case
       |- a = a;
-      by refl(T, a);
-    qed;
+      by wip;
+    wip;
     case
       |- b = b;
       by wip;

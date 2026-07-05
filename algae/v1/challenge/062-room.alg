@@ -9,8 +9,5 @@ axiom ab |- a = b;
 lemma banish
   |- b = b;
 proof
-  by rewrite_r(T, a, b, ab, _ = _)
-  then
-    |- a = a;
-    by wip;
+  by wip;
 wip;

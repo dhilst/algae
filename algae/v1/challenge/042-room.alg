@@ -10,14 +10,5 @@ axiom ante |- a = a;
 lemma banish
   |- b = b;
 proof
-  by implication_elim(a = a, b = b) cases
-    case
-      |- (a = a) => (b = b);
-      by imp;
-    qed;
-    case
-      |- a = a;
-      by wip;
-    wip;
-  wip;
+  by wip;
 wip;

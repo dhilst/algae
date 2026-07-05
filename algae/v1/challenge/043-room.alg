@@ -9,9 +9,5 @@ axiom absurd |- False;
 lemma banish
   |- ~(a = b);
 proof
-  by negation_intro(a = b)
-  then
-    hyp := a = b;
-    |- False;
-    by wip;
+  by wip;
 wip;

@@ -6,9 +6,5 @@ sort T : Sort;
 lemma banish
   |- forall (x : T) st x = x;
 proof
-  by forall_intro(T, _ = _)
-  then
-    x : T;
-    |- x = x;
-    by wip;
+  by wip;
 wip;

@@ -8,16 +8,5 @@ axiom ex |- exists (x : T) st x = x;
 lemma banish
   |- a = a;
 proof
-  by exists_elim(T, _ = _, a = a) cases
-    case
-      |- exists (x : T) st x = x;
-      by ex;
-    qed;
-    case
-      x : T;
-      witness := x = x;
-      |- a = a;
-      by wip;
-    wip;
-  wip;
+  by wip;
 wip;
