@@ -1,0 +1,9 @@
+{
+  "id": "061",
+  "tier": "hard",
+  "title": "Name It, Then Forget",
+  "monster": "dragon",
+  "module": "room061",
+  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "food": false
+}

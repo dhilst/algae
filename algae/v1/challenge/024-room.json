@@ -1,0 +1,10 @@
+{
+  "id": "024",
+  "tier": "easy",
+  "title": "The Gate That Swings Both Ways",
+  "monster": "sphinx",
+  "module": "room024",
+  "prompt": "A sphinx bars the room. Complete its proof to banish it.",
+  "food": true,
+  "lore": "Miriam's ring was not stolen. It was returned. The demon is a courier, not a thief."
+}

@@ -1,0 +1,9 @@
+{
+  "id": "004",
+  "tier": "trivial",
+  "title": "The Broken Chain",
+  "monster": "sphinx",
+  "module": "room004",
+  "prompt": "A sphinx bars the room. Complete its proof to banish it.",
+  "food": false
+}

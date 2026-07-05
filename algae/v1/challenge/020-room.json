@@ -1,0 +1,9 @@
+{
+  "id": "020",
+  "tier": "easy",
+  "title": "Both Halves Spoken",
+  "monster": "sphinx",
+  "module": "room020",
+  "prompt": "A sphinx bars the room. Complete its proof to banish it.",
+  "food": true
+}

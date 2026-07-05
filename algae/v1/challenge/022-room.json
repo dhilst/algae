@@ -1,0 +1,9 @@
+{
+  "id": "022",
+  "tier": "easy",
+  "title": "A Granted Assumption",
+  "monster": "sphinx",
+  "module": "room022",
+  "prompt": "A sphinx bars the room. Complete its proof to banish it.",
+  "food": true
+}

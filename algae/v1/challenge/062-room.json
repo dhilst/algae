@@ -1,0 +1,9 @@
+{
+  "id": "062",
+  "tier": "hard",
+  "title": "Rewrite The World",
+  "monster": "dragon",
+  "module": "room062",
+  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "food": true
+}

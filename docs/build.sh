@@ -26,4 +26,11 @@ cp "$ROOT"/algae/stdlib/v1/*.alg "$STATIC/examples/"
 echo "==> Running Sphinx"
 python3 -m sphinx -b html "$HERE" "$HERE/_build/html"
 
+# Sphinx rewrites _build/html, so the standalone game is staged *after* it: the
+# full-screen app plus its proof challenges are copied into the published tree.
+echo "==> Staging the Dungeon Proof Crawler"
+cp -r "$ROOT/game" "$HERE/_build/html/game"
+mkdir -p "$HERE/_build/html/game/challenge"
+cp "$ROOT"/algae/v1/challenge/* "$HERE/_build/html/game/challenge/"
+
 echo "==> Done: $HERE/_build/html/index.html"

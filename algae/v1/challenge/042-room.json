@@ -1,0 +1,9 @@
+{
+  "id": "042",
+  "tier": "medium",
+  "title": "Feed The Implication",
+  "monster": "sphinx",
+  "module": "room042",
+  "prompt": "A sphinx bars the room. Complete its proof to banish it.",
+  "food": true
+}

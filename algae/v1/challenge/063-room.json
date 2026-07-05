@@ -1,0 +1,10 @@
+{
+  "id": "063",
+  "tier": "hard",
+  "title": "The Other Cut",
+  "monster": "dragon",
+  "module": "room063",
+  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "food": false,
+  "lore": "You are not the first groom to descend. You are the seventh. None returned to a wedding."
+}

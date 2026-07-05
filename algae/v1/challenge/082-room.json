@@ -1,0 +1,9 @@
+{
+  "id": "082",
+  "tier": "veryhard",
+  "title": "No Scaffold",
+  "monster": "dragon",
+  "module": "room082",
+  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "food": false
+}

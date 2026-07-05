@@ -1,0 +1,10 @@
+{
+  "id": "083",
+  "tier": "veryhard",
+  "title": "The Bare Induction",
+  "monster": "dragon",
+  "module": "room083",
+  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "food": true,
+  "lore": "Sunrise is a mercy she invented so you would run downward instead of away."
+}

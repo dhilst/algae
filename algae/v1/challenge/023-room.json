@@ -1,0 +1,9 @@
+{
+  "id": "023",
+  "tier": "easy",
+  "title": "What Holds For All",
+  "monster": "sphinx",
+  "module": "room023",
+  "prompt": "A sphinx bars the room. Complete its proof to banish it.",
+  "food": false
+}

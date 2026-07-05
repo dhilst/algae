@@ -1,0 +1,10 @@
+{
+  "id": "100",
+  "tier": "boss",
+  "title": "The Demon's Arithmetic",
+  "monster": "dragon",
+  "module": "room100",
+  "prompt": "The final demon holds the ring. Complete the proof to end the descent.",
+  "food": false,
+  "lore": "The demon opens its hand. The ring is already on your finger. It has been the whole descent. 'Now,' it says with her voice, 'come home.'"
+}
