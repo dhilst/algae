@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Playground" href="../playground.html"><link rel="prev" title="Specifying error behavior" href="errors.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="A tour of the standard library" href="tour/index.html"><link rel="prev" title="Specifying error behavior" href="errors.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
         <title>Theories, laws, and models - Algae</title>
@@ -200,6 +200,12 @@
 <li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Theories, laws, and models</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><input aria-label="Toggle navigation of A tour of the standard library" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tour/logic.html">The logical toolkit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tour/quantifiers.html">Quantifiers and <code class="docutils literal notranslate"><span class="pre">⇔</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../playground.html">Playground</a></li>
@@ -257,7 +263,7 @@ on laws:</p>
 
   <span class="k">law</span> <span class="n">left_identity</span><span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">S</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">mul</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
   <span class="k">law</span> <span class="n">right_identity</span><span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">S</span><span class="p">)</span>  <span class="o">⊢</span> <span class="n">mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
-<span class="k">qed</span><span class="p">;</span>
+<span class="k">end</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>A <strong>model</strong> claims specific operators satisfy a theory, and must prove every law
@@ -272,7 +278,7 @@ as an obligation. Here’s the <code class="docutils literal notranslate"><span 
   <span class="k">law</span> <span class="n">right_identity</span><span class="p">(</span><span class="n">m</span> <span class="p">:</span> <span class="n">M</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>            <span class="o">⊢</span> <span class="n">bind</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">return</span><span class="p">)</span> <span class="o">=</span> <span class="n">m</span><span class="p">;</span>
   <span class="k">law</span> <span class="n">associativity</span><span class="p">(</span><span class="n">m</span> <span class="p">:</span> <span class="n">M</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">f</span> <span class="p">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">M</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">g</span> <span class="p">:</span> <span class="n">B</span> <span class="o">→</span> <span class="n">M</span><span class="p">(</span><span class="n">C</span><span class="p">))</span>
     <span class="o">⊢</span> <span class="n">bind</span><span class="p">(</span><span class="n">bind</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">f</span><span class="p">),</span> <span class="n">g</span><span class="p">)</span> <span class="o">=</span> <span class="n">bind</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="o">λ</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">)</span> <span class="k">st</span> <span class="n">bind</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">g</span><span class="p">));</span>
-<span class="k">qed</span><span class="p">;</span>
+<span class="k">end</span><span class="p">;</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">option.alg</span></code>, <code class="docutils literal notranslate"><span class="pre">list.alg</span></code>, and <code class="docutils literal notranslate"><span class="pre">result.alg</span></code> each ship a verified <code class="docutils literal notranslate"><span class="pre">model</span></code>
@@ -303,10 +309,10 @@ theory, then prove our concrete stack is a <strong>model</strong> of it:</p>
 <span class="p">)</span> <span class="k">laws</span>
   <span class="k">law</span> <span class="n">top_law</span><span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">S</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>  <span class="o">⊢</span> <span class="n">tp</span><span class="p">(</span><span class="n">psh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
   <span class="k">law</span> <span class="n">pop_law</span><span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">S</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>  <span class="o">⊢</span> <span class="n">pp</span><span class="p">(</span><span class="n">psh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="o">=</span> <span class="n">s</span><span class="p">;</span>
-<span class="k">qed</span><span class="p">;</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="c1"># the claim: our concrete operations are a stack</span>
-<span class="k">model</span> <span class="n">ConcreteStack</span> <span class="k">satisfies</span> <span class="n">StackSpec</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Stack</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">push</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span> <span class="k">iff</span> <span class="k">props</span>
+<span class="k">model</span> <span class="n">ConcreteStack</span> <span class="k">satisfies</span> <span class="n">StackSpec</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Stack</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">push</span><span class="p">,</span> <span class="n">pop</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span> <span class="k">iff</span> <span class="k">laws</span>
   <span class="k">law</span> <span class="n">top_law</span><span class="p">;</span>
   <span class="k">proof</span>
     <span class="k">by</span> <span class="n">top_ax</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">);</span>
@@ -321,7 +327,7 @@ theory, then prove our concrete stack is a <strong>model</strong> of it:</p>
 </div>
 <p>Read the <code class="docutils literal notranslate"><span class="pre">model</span></code> header as <em>binding</em> each theory parameter to something concrete:
 the constructor <code class="docutils literal notranslate"><span class="pre">S</span></code> becomes <code class="docutils literal notranslate"><span class="pre">Stack</span></code>, <code class="docutils literal notranslate"><span class="pre">psh</span></code> becomes <code class="docutils literal notranslate"><span class="pre">push</span></code>, and so on. Then
-<code class="docutils literal notranslate"><span class="pre">iff</span> <span class="pre">props</span></code> opens the obligations — one <code class="docutils literal notranslate"><span class="pre">law</span> <span class="pre">&lt;name&gt;;</span> <span class="pre">proof</span> <span class="pre">…</span> <span class="pre">qed;</span></code> per law in
+<code class="docutils literal notranslate"><span class="pre">iff</span> <span class="pre">laws</span></code> opens the obligations — one <code class="docutils literal notranslate"><span class="pre">law</span> <span class="pre">&lt;name&gt;;</span> <span class="pre">proof</span> <span class="pre">…</span> <span class="pre">qed;</span></code> per law in
 the theory — and each is proved just like a lemma. Here every proof is a one-liner,
 because <code class="docutils literal notranslate"><span class="pre">StackSpec</span></code>’s laws are exactly our two axioms. Press <strong>Check ▶</strong>: two
 obligations discharged, and <code class="docutils literal notranslate"><span class="pre">ConcreteStack</span></code> is certified a stack.</p>
@@ -391,12 +397,12 @@ examples bite-sized.</p></li>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../playground.html">
+          <a class="next-page" href="tour/index.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Playground</div>
+                <div class="title">A tour of the standard library</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

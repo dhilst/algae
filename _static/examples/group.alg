@@ -13,7 +13,7 @@ theory Magma(
     x y : S
   )
     ⊢ mul(x, y) = mul(x, y);
-qed;
+end;
 
 theory Semigroup(
   S : Sort,
@@ -25,7 +25,7 @@ theory Semigroup(
     x y z : S
   )
     ⊢ mul(mul(x, y), z) = mul(x, mul(y, z));
-qed;
+end;
 
 theory Monoid(
   S : Sort,
@@ -43,7 +43,7 @@ theory Monoid(
     x : S
   )
     ⊢ mul(x, e) = x;
-qed;
+end;
 
 theory CommutativeMonoid(
   S : Sort,
@@ -56,7 +56,7 @@ theory CommutativeMonoid(
     x y : S
   )
     ⊢ mul(x, y) = mul(y, x);
-qed;
+end;
 
 theory Group(
   S : Sort,
@@ -75,7 +75,7 @@ theory Group(
     x : S
   )
     ⊢ mul(x, inv(x)) = e;
-qed;
+end;
 
 theory AbelianGroup(
   S : Sort,
@@ -89,4 +89,4 @@ theory AbelianGroup(
     x y : S
   )
     ⊢ mul(x, y) = mul(y, x);
-qed;
+end;
