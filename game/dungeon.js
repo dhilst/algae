@@ -142,7 +142,8 @@ function generateFloor(floor, rng, manifest, letters) {
   const exitId = bfsFar(rooms, byId, entryId);
   byId.get(entryId).isEntryUp = true;
   const exit = byId.get(exitId);
-  exit.isExitDown = true;
+  // The final floor has no hatch down — after the demon falls you climb back up.
+  if (!floor.final) exit.isExitDown = true;
 
   // Pool of challenge ids, shuffled per floor+seed. The exit / boss room draws
   // the first one; the rest fan out round-robin over the monster rooms. On the

@@ -386,6 +386,7 @@ function descend() {
   const room = curRoom();
   if (!room.isExitDown) return;
   if (floor.index !== 0 && !isCleared(room)) return;
+  if (run.floorIndex >= run.dungeon.floors.length - 1) return; // no floor below the last
   run.floorIndex += 1;
   run.roomId = run.dungeon.floors[run.floorIndex].entryId;
   persist();
