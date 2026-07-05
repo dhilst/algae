@@ -737,7 +737,8 @@ fn elaborate_step(
     let next_goals = match crate::core::tactic::apply(&rule, &args, goal, ctx, rs) {
         Ok(g) => g,
         Err(e) => {
-            elab.err(format!("tactic `{}`: {e}", reference.name.name.text), stmt.span);
+            let rendered = e.render(&elab.interner);
+            elab.err(format!("tactic `{}`: {rendered}", reference.name.name.text), stmt.span);
             return None;
         }
     };
@@ -924,7 +925,8 @@ fn report_tactic_hole(
                 }
             }
             Err(e) => {
-                elab.err(format!("tactic `{tname}`: {e}"), stmt.span);
+                let rendered = e.render(&elab.interner);
+                elab.err(format!("tactic `{tname}`: {rendered}"), stmt.span);
                 return;
             }
         }

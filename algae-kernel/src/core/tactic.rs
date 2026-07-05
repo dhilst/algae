@@ -1,11 +1,66 @@
 //! Applying an inlined rule to a goal: the soundness-critical computation
 //! `next_goals = tactic(current_goal, args)`, modulo the equational theory.
 
-use crate::core::name::Sym;
+use crate::core::name::{Interner, Sym};
 use crate::core::rewrite::RewriteSystem;
 use crate::core::rule::{Arg, InlinedRule, Param};
 use crate::core::sequent::{CtxEntry, Sequent};
 use crate::core::term::Expr;
+
+/// Why `apply` rejected a step. Most variants are terse, already-readable
+/// strings; the conclusion mismatch carries both propositions so a caller with
+/// a name table can render them (`render`), while a caller without one still
+/// gets a sensible one-line `Display`.
+#[derive(Debug)]
+pub enum ApplyError {
+    /// The instantiated rule conclusion did not match the current goal.
+    Mismatch { concluded: Expr, goal: Expr },
+    /// Any other failure, already human-readable.
+    Msg(String),
+}
+
+impl std::fmt::Display for ApplyError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ApplyError::Mismatch { .. } => {
+                f.write_str("rule conclusion does not match the current goal")
+            }
+            ApplyError::Msg(s) => f.write_str(s),
+        }
+    }
+}
+
+impl From<String> for ApplyError {
+    fn from(s: String) -> Self {
+        ApplyError::Msg(s)
+    }
+}
+
+impl From<&str> for ApplyError {
+    fn from(s: &str) -> Self {
+        ApplyError::Msg(s.to_string())
+    }
+}
+
+impl ApplyError {
+    /// Render the error with expression names resolved via `names`. Falls back
+    /// to `Display` for variants that carry no expressions.
+    pub fn render(&self, names: &Interner) -> String {
+        match self {
+            ApplyError::Mismatch { concluded, goal } => {
+                use crate::core::display::show;
+                format!(
+                    "rule conclusion does not match the current goal\n  \
+                     the rule concludes:  {}\n  \
+                     but the goal is:     {}",
+                    show(concluded, names),
+                    show(goal, names),
+                )
+            }
+            ApplyError::Msg(s) => s.clone(),
+        }
+    }
+}
 
 /// Apply `rule` with `args` against `current_goal` in context `parent_ctx`,
 /// using the equational system `rs` for definitional equality. Returns the
@@ -19,13 +74,14 @@ pub fn apply(
     current_goal: &Expr,
     parent_ctx: &[CtxEntry],
     rs: &RewriteSystem,
-) -> Result<Vec<Sequent>, String> {
+) -> Result<Vec<Sequent>, ApplyError> {
     if args.len() != rule.params.len() {
         return Err(format!(
             "tactic expects {} argument(s), got {}",
             rule.params.len(),
             args.len()
-        ));
+        )
+        .into());
     }
 
     // Term-parameter substitution and argument-kind check.
@@ -67,7 +123,10 @@ pub fn apply(
                 }]);
             }
         }
-        return Err("rule conclusion does not match the current goal".into());
+        return Err(ApplyError::Mismatch {
+            concluded: concl,
+            goal: current_goal.clone(),
+        });
     }
 
     check_forall_intro(rule, args, parent_ctx)?;

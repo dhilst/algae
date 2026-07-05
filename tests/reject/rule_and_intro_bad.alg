@@ -1,6 +1,7 @@
 # Sad path: and_intro concludes `P /\ Q`, but the goal is the bare `a = a`, so
-# the rule conclusion cannot match the goal and the checker must reject.
-#expect: rule conclusion does not match the current goal
+# the rule conclusion cannot match the goal and the checker must reject. The
+# diagnostic shows both propositions (the rule's conclusion and the goal).
+#expect: the rule concludes:  (a = a) ∧ (b = b)
 import core(and_intro, refl);
 
 sort T : Sort;
