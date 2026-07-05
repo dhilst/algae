@@ -311,7 +311,8 @@ function buildRoomPanel() {
 
   // Encounter.
   if ((room.type === "monster") && !isCleared(room)) {
-    const b = el("button", "btn btn-primary", room.isBoss ? "🐉 Face the dragon" : "🦁 Face the sphinx");
+    const label = room.isBoss && floor.final ? "😈 Face the demon" : room.isBoss ? "🐉 Face the dragon" : "🦁 Face the sphinx";
+    const b = el("button", "btn btn-primary", label);
     b.addEventListener("click", () => enterCombat(room));
     actions.appendChild(b);
   }
@@ -358,6 +359,7 @@ function buildRoomPanel() {
 function roomTitle(room) {
   if (room.type === "surface") return "The Mouth of the Dungeon";
   if (room.type === "chest") return "Treasure Room";
+  if (room.isBoss && curFloor().final) return isCleared(room) ? "The Demon's Ashes" : "The Demon's Throne";
   if (room.isBoss) return isCleared(room) ? "The Dragon's Ashes" : "The Dragon's Lair";
   return isCleared(room) ? "A Silent Room" : "A Sphinx's Chamber";
 }
@@ -366,6 +368,11 @@ function roomDesc(room, floor) {
   if (room.type === "surface") return "Cold air rises from the stair below. Somewhere above, Miriam waits by the fire.";
   if (room.type === "chest") {
     return run.openedChests.has(rk(floor.index, room.id)) ? "The chest lies open and empty." : "A heavy chest rests against the wall, its lid still shut.";
+  }
+  if (room.isBoss && floor.final) {
+    return isCleared(room)
+      ? "Where the demon stood there is only quiet now, and the ring warm in your hand."
+      : "The demon waits at the end of everything, the wedding ring glinting between its claws.";
   }
   if (room.isBoss) {
     return isCleared(room) ? "Only scorch marks and settling dust remain where the dragon coiled." : "A dragon guards the hatch, its breath heavy with every doubt you have ever swallowed.";
