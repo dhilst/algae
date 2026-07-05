@@ -5,5 +5,6 @@
   "monster": "sphinx",
   "module": "room040",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
-  "food": true
+  "food": true,
+  "help": "To prove a `forall`, introduce a fresh variable and prove the body for it — then a leaf finishes the job.\n✦ Secret: press Ctrl-Enter instead of the button. The dungeon respects those who never reach for the mouse."
 }

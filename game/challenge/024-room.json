@@ -6,5 +6,6 @@
   "module": "room024",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
-  "lore": "For a heartbeat you remember her laugh, and how sure you once were that you deserved it."
+  "lore": "For a heartbeat you remember her laugh, and how sure you once were that you deserved it.",
+  "help": "A biconditional is two implications. `biconditional_intro(P, Q)` opens a case for each direction — discharge them with the axioms `fwd` and `bwd`."
 }

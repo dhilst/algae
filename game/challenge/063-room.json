@@ -6,5 +6,6 @@
   "module": "room063",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": false,
-  "lore": "Grooves worn into the stone, as if others came this way before you \u2014 each of them, it seems, alone."
+  "lore": "Grooves worn into the stone, as if others came this way before you — each of them, it seems, alone.",
+  "help": "Good luck!"
 }

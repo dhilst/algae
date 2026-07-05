@@ -6,5 +6,6 @@
   "module": "room083",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": true,
-  "lore": "'Turn back,' something pleads from the dark, in a tone almost tender, almost familiar."
+  "lore": "'Turn back,' something pleads from the dark, in a tone almost tender, almost familiar.",
+  "help": "Good luck!"
 }

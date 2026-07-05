@@ -350,3 +350,103 @@ button.chip:disabled { opacity: 0.5; }
 .win-screen h1 { color: var(--gold); }
 .over-screen h1 { color: var(--blood-bright); }
 .ring-screen .big-emoji { filter: drop-shadow(0 0 16px rgba(232, 201, 107, 0.7)); }
+
+/* ---- Help modal (full-screen, scrollable) ---- */
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(5, 4, 3, 0.86);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(8px, 3vw, 40px);
+  overflow-y: auto;
+}
+.help-modal {
+  width: 100%;
+  max-width: 780px;
+  max-height: calc(100vh - clamp(16px, 6vw, 80px));
+  display: flex;
+  flex-direction: column;
+  background: var(--stone-1);
+  border: 3px solid var(--amber);
+  box-shadow: 0 0 0 3px var(--stone-0), 0 12px 40px rgba(0, 0, 0, 0.6);
+  outline: none;
+}
+.help-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--stone-2);
+  border-bottom: 3px solid var(--stone-0);
+}
+.help-title {
+  margin: 0;
+  color: var(--amber-bright);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 16px;
+}
+.help-close {
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--ink);
+  background: var(--stone-3);
+  border: 3px solid var(--stone-0);
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.help-close:hover { background: var(--blood); }
+.help-body {
+  padding: 16px 20px 24px;
+  overflow-y: auto;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.help-body h3 {
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 14px;
+  margin: 22px 0 8px;
+  border-bottom: 1px solid var(--stone-3);
+  padding-bottom: 4px;
+}
+.help-body h3:first-child { margin-top: 0; }
+.help-body ul { margin: 0; padding-left: 20px; }
+.help-body li { margin: 7px 0; }
+.help-body p { margin: 8px 0; }
+.help-body code {
+  background: var(--stone-0);
+  color: var(--amber-bright);
+  padding: 1px 5px;
+  border: 1px solid var(--stone-3);
+  font-size: 0.92em;
+}
+.help-body kbd {
+  background: var(--stone-3);
+  color: var(--ink);
+  border: 2px solid var(--stone-0);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: var(--font);
+  font-size: 0.85em;
+}
+.help-room {
+  background: var(--stone-2);
+  border-left: 4px solid var(--amber);
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+.help-room h3 { margin-top: 0; border: none; color: var(--amber-bright); }
+.help-dim { color: var(--ink-dim); font-size: 13px; }
+.help-rulelist { list-style: none; padding-left: 0; }
+.help-rulelist li { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.help-link { color: var(--amber-bright); text-decoration: underline; }
+.help-link:hover { color: var(--gold); }

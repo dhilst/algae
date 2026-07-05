@@ -6,5 +6,6 @@
   "module": "room021",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
-  "lore": "'She could have anyone,' the sphinx sighs. 'Why would she choose you?'"
+  "lore": "'She could have anyone,' the sphinx sighs. 'Why would she choose you?'",
+  "help": "The mirror of the left rule: `or_intro_right(P, Q)` reduces `P \\/ Q` to its right side `Q`, closed with `refl`."
 }

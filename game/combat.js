@@ -3,6 +3,8 @@
 // button that runs the WebAssembly kernel. A proof defeats the monster only when
 // it checks with no errors AND nothing left admitted (result.ok && result.wip === 0).
 
+import { openHelp } from "./help.js";
+
 function el(tag, cls, text) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -38,6 +40,9 @@ export function startCombat(host, opts) {
   const buttons = el("div", "combat-buttons");
   const castBtn = el("button", "btn btn-primary", "⚔ Cast Proof");
   buttons.appendChild(castBtn);
+  const helpBtn = el("button", "btn", "❓ Help");
+  helpBtn.addEventListener("click", () => openHelp(challenge));
+  buttons.appendChild(helpBtn);
   let fleeBtn = null;
   if (canFlee) {
     fleeBtn = el("button", "btn", `🏃 Flee (${Math.round(fleeFail * 100)}% risk)`);

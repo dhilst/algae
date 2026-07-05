@@ -6,5 +6,6 @@
   "module": "room041",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
-  "lore": "The sphinx recites every promise you have ever broken, small as dust, and asks if she knows."
+  "lore": "The sphinx recites every promise you have ever broken, small as dust, and asks if she knows.",
+  "help": "Good luck!"
 }
