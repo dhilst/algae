@@ -129,7 +129,6 @@ model ListMonad satisfies Monad(
       case
         A : Sort;
         ⊢ bind(nil, return) = nil;
-      proof
         by bind_nil(A, A, return);
       qed;
 
@@ -139,7 +138,6 @@ model ListMonad satisfies Monad(
         rest : List(A);
         ih := bind(rest, return) = rest;
         ⊢ bind(cons(x, rest), return) = cons(x, rest);
-      proof
         by rewrite_r(
           List(A),
           bind(cons(x, rest), return),
@@ -216,7 +214,6 @@ model ListMonad satisfies Monad(
              nil,
              λ (x : A) st bind(f(x), g)
            );
-      proof
         by rewrite_r(
           List(B),
           bind(nil, f),
@@ -255,7 +252,6 @@ model ListMonad satisfies Monad(
              cons(x, rest),
              λ (y : A) st bind(f(y), g)
            );
-      proof
         by rewrite_r(
           List(B),
           bind(cons(x, rest), f),

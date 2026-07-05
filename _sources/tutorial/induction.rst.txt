@@ -44,7 +44,6 @@ branches, so this is a job for ``cases``. Here is the full proof of
      by induction(_ + 0 = _) cases       # motive P = (λ k. k + 0 = k)
        case
          ⊢ 0 + 0 = 0;                    # base: P(0)
-       proof
          by add_zero_left(0);             # conclusion 0 + n = n at n = 0 is the goal
        qed;
 
@@ -52,7 +51,6 @@ branches, so this is a job for ``cases``. Here is the full proof of
          k : Nat;
          ih := k + 0 = k;                 # step: assume P(k)
          ⊢ s(k) + 0 = s(k);             # prove P(s k)
-       proof
          by rewrite_r(Nat, k + 0, k, ih, s(k) + 0 = s(_))
          then ⊢ s(k) + 0 = s(k + 0);      # goal after rewriting k <- k + 0
          by add_succ_left(k, 0);          # conclusion s(k) + 0 = s(k + 0) is the goal

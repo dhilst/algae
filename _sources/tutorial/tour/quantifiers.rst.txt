@@ -89,9 +89,8 @@ unpack an existential and immediately *repack* it:
      ⊢ ∃ (x : T) st P(x);
    proof
      by exists_elim(T, P, ∃ (x : T) st P(x)) cases
-       case ⊢ ∃ (x : T) st P(x); proof by ex; qed;
+       case ⊢ ∃ (x : T) st P(x); by ex; qed;
        case x : T; witness := P(x) ⊢ ∃ (x : T) st P(x);
-       proof
          by exists_intro(T, P, x) then ⊢ P(x); by witness;
        qed;
      qed;
@@ -140,8 +139,8 @@ exactly that. ``biconditional_intro`` asks for both directions — ``A ⇒ B`` a
      ⊢ A ⇔ B;
    proof
      by biconditional_intro(A, B) cases
-       case ⊢ A ⇒ B; proof by fwd; qed;
-       case ⊢ B ⇒ A; proof by bwd; qed;
+       case ⊢ A ⇒ B; by fwd; qed;
+       case ⊢ B ⇒ A; by bwd; qed;
      qed;
    qed;
 

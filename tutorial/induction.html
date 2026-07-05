@@ -286,7 +286,6 @@ branches, so this is a job for <code class="docutils literal notranslate"><span 
   <span class="k">by</span> <span class="n">induction</span><span class="p">(</span><span class="n">_</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span> <span class="k">cases</span>       <span class="c1"># motive P = (λ k. k + 0 = k)</span>
     <span class="k">case</span>
       <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>                    <span class="c1"># base: P(0)</span>
-    <span class="k">proof</span>
       <span class="k">by</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>             <span class="c1"># conclusion 0 + n = n at n = 0 is the goal</span>
     <span class="k">qed</span><span class="p">;</span>
 
@@ -294,7 +293,6 @@ branches, so this is a job for <code class="docutils literal notranslate"><span 
       <span class="n">k</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">;</span>
       <span class="n">ih</span> <span class="o">:=</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">k</span><span class="p">;</span>                 <span class="c1"># step: assume P(k)</span>
       <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">);</span>             <span class="c1"># prove P(s k)</span>
-    <span class="k">proof</span>
       <span class="k">by</span> <span class="n">rewrite_r</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">ih</span><span class="p">,</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">_</span><span class="p">))</span>
       <span class="n">then</span> <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">);</span>      <span class="c1"># goal after rewriting k &lt;- k + 0</span>
       <span class="k">by</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>          <span class="c1"># conclusion s(k) + 0 = s(k + 0) is the goal</span>
