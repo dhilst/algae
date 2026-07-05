@@ -253,75 +253,51 @@
 little library of natural deduction: one pair of rules for each connective, one to
 <strong>build</strong> it and one (or more) to <strong>use</strong> it. Learn to spot that pattern and the
 whole module falls into place.</p>
-<p>We’ll prove tiny facts about a two-element world so the logic stays in focus:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-</pre></div>
-</div>
+<p>We’ll state each fact about <em>abstract</em> propositions <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span></code>, <code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">:</span> <span class="pre">Prop</span></code> — so
+the logic stays in focus, with no equations to distract us. When a proof needs to
+<em>start</em> from some assumption, we take it as a <strong>lemma parameter</strong>: writing
+<code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">:=</span> <span class="pre">A</span></code> in a lemma’s parameter list means “<code class="docutils literal notranslate"><span class="pre">x</span></code> is a proof of <code class="docutils literal notranslate"><span class="pre">A</span></code>,” and you
+discharge a goal that matches it with <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">x</span></code>. Keep that reading in mind — half the
+tour is just plugging assumptions into holes.</p>
 <section id="conjunction">
 <h2>Conjunction: <code class="docutils literal notranslate"><span class="pre">∧</span></code><a class="headerlink" href="#conjunction" title="Link to this heading">¶</a></h2>
-<p>To <em>build</em> a conjunction you need both halves. <code class="docutils literal notranslate"><span class="pre">and_intro</span></code> takes a proof of <code class="docutils literal notranslate"><span class="pre">P</span></code>
-and a proof of <code class="docutils literal notranslate"><span class="pre">Q</span></code> and hands back <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">∧</span> <span class="pre">Q</span></code> — two premises, so we branch with
-<code class="docutils literal notranslate"><span class="pre">cases</span></code>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_intro</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
+<p>To <em>build</em> a conjunction you need both halves. <code class="docutils literal notranslate"><span class="pre">and_intro</span></code> takes a proof of <code class="docutils literal notranslate"><span class="pre">A</span></code>
+and a proof of <code class="docutils literal notranslate"><span class="pre">B</span></code> and hands back <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code> — two premises, so we branch with
+<code class="docutils literal notranslate"><span class="pre">cases</span></code> and close each with the matching assumption:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_intro</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">both</span>
-  <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">∧</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">both</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">,</span> <span class="n">y</span> <span class="o">:=</span> <span class="n">B</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">and_intro</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span> <span class="k">cases</span>
-    <span class="k">case</span>
-      <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
-    <span class="k">qed</span><span class="p">;</span>
-    <span class="k">case</span>
-      <span class="o">⊢</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">b</span><span class="p">);</span>
-    <span class="k">qed</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">and_intro</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="k">cases</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">x</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="n">B</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">y</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
   <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>To <em>use</em> a conjunction, take it apart. <code class="docutils literal notranslate"><span class="pre">and_left</span></code> turns <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">∧</span> <span class="pre">Q</span></code> back into
-<code class="docutils literal notranslate"><span class="pre">P</span></code> (and <code class="docutils literal notranslate"><span class="pre">and_right</span></code> into <code class="docutils literal notranslate"><span class="pre">Q</span></code>). One premise — the conjunction — so we
-continue with <code class="docutils literal notranslate"><span class="pre">then</span></code>:</p>
+<p>To <em>use</em> a conjunction, take it apart. <code class="docutils literal notranslate"><span class="pre">and_left</span></code> turns <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code> back into <code class="docutils literal notranslate"><span class="pre">A</span></code>
+(and <code class="docutils literal notranslate"><span class="pre">and_right</span></code> into <code class="docutils literal notranslate"><span class="pre">B</span></code>). One premise — the conjunction — so we continue with
+<code class="docutils literal notranslate"><span class="pre">then</span></code>, and discharge it with the <code class="docutils literal notranslate"><span class="pre">both</span></code> we were handed:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_left</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">both</span> <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">∧</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">just_the_left</span>
-  <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">just_left</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">both</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">and_left</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">∧</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">both</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">and_left</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="n">then</span> <span class="o">⊢</span> <span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">;</span> <span class="k">by</span> <span class="n">both</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Notice the rhythm: <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">and_left(a</span> <span class="pre">=</span> <span class="pre">a,</span> <span class="pre">b</span> <span class="pre">=</span> <span class="pre">b)</span></code> says “I’m going to get <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">a</span></code>
-out of the conjunction <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">∧</span> <span class="pre">b</span> <span class="pre">=</span> <span class="pre">b</span></code>,” and the <code class="docutils literal notranslate"><span class="pre">then</span></code> goal is the whole
-conjunction you now owe a proof of.</p>
+<p>Notice the rhythm: <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">and_left(A,</span> <span class="pre">B)</span></code> says “I’m going to get <code class="docutils literal notranslate"><span class="pre">A</span></code> out of the
+conjunction <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code>,” and the <code class="docutils literal notranslate"><span class="pre">then</span></code> goal is the whole conjunction you now owe a
+proof of — which <code class="docutils literal notranslate"><span class="pre">both</span></code> supplies.</p>
 <div class="tip admonition">
 <p class="admonition-title">Your turn</p>
-<p>Prove the same conjunction, but flipped. Replace the hole with a real proof and
-press <strong>Check ▶</strong>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_intro</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
+<p>Conjunction doesn’t care about order. Given a proof of <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code>, prove <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">∧</span> <span class="pre">A</span></code>.</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_intro</span><span class="p">,</span> <span class="n">and_left</span><span class="p">,</span> <span class="n">and_right</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">flipped</span>
-  <span class="o">⊢</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">∧</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">and_comm</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">both</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">B</span> <span class="o">∧</span> <span class="n">A</span><span class="p">;</span>
 <span class="k">proof</span>
   <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
 <span class="kp">wip</span><span class="p">;</span>
@@ -329,81 +305,55 @@ press <strong>Check ▶</strong>.</p>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p><code class="docutils literal notranslate"><span class="pre">and_intro</span></code> splits <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">P</span> <span class="pre">∧</span> <span class="pre">Q</span></code> into <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">P</span></code> and <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">Q</span></code> — two goals, so use
-<code class="docutils literal notranslate"><span class="pre">cases</span></code>. Here both halves are reflexive equations; close each with
-<code class="docutils literal notranslate"><span class="pre">refl(T,</span> <span class="pre">b)</span></code> and <code class="docutils literal notranslate"><span class="pre">refl(T,</span> <span class="pre">a)</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">and_intro(B,</span> <span class="pre">A)</span></code> splits the goal into <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span></code> — two goals, so
+<code class="docutils literal notranslate"><span class="pre">cases</span></code>. Get the <code class="docutils literal notranslate"><span class="pre">B</span></code> half with <code class="docutils literal notranslate"><span class="pre">and_right(A,</span> <span class="pre">B)</span></code> and the <code class="docutils literal notranslate"><span class="pre">A</span></code> half with
+<code class="docutils literal notranslate"><span class="pre">and_left(A,</span> <span class="pre">B)</span></code>, each <code class="docutils literal notranslate"><span class="pre">then</span></code>-ing on <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code> and closing <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">both</span></code>.</p>
 </div>
 </div>
 </section>
 <section id="disjunction">
 <h2>Disjunction: <code class="docutils literal notranslate"><span class="pre">∨</span></code><a class="headerlink" href="#disjunction" title="Link to this heading">¶</a></h2>
-<p>Building a disjunction only needs <em>one</em> side. <code class="docutils literal notranslate"><span class="pre">or_intro_left</span></code> proves <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">∨</span> <span class="pre">Q</span></code>
-from <code class="docutils literal notranslate"><span class="pre">P</span></code> (and <code class="docutils literal notranslate"><span class="pre">or_intro_right</span></code> from <code class="docutils literal notranslate"><span class="pre">Q</span></code>) — a single premise, so <code class="docutils literal notranslate"><span class="pre">then</span></code>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_intro_left</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
+<p>Building a disjunction only needs <em>one</em> side. <code class="docutils literal notranslate"><span class="pre">or_intro_left</span></code> proves <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code>
+from <code class="docutils literal notranslate"><span class="pre">A</span></code> (and <code class="docutils literal notranslate"><span class="pre">or_intro_right</span></code> from <code class="docutils literal notranslate"><span class="pre">B</span></code>) — a single premise, so <code class="docutils literal notranslate"><span class="pre">then</span></code>:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_intro_left</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">pick_a_side</span>
-  <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">∨</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">pick_left</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">B</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">or_intro_left</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">or_intro_left</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="n">then</span> <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span> <span class="k">by</span> <span class="n">x</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
 <p><em>Using</em> a disjunction is the interesting one, because you don’t know which side
-holds. <code class="docutils literal notranslate"><span class="pre">or_elim</span></code> makes you prove your goal <strong>both ways</strong> — once assuming <code class="docutils literal notranslate"><span class="pre">P</span></code>,
-once assuming <code class="docutils literal notranslate"><span class="pre">Q</span></code>. Three premises (the disjunction plus the two cases), so three
-<code class="docutils literal notranslate"><span class="pre">case</span></code> branches:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_elim</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
+holds. <code class="docutils literal notranslate"><span class="pre">or_elim</span></code> makes you prove your goal <strong>both ways</strong> — once assuming <code class="docutils literal notranslate"><span class="pre">A</span></code>,
+once assuming <code class="docutils literal notranslate"><span class="pre">B</span></code>. Three premises (the disjunction plus the two branches), so
+three <code class="docutils literal notranslate"><span class="pre">case</span></code> s. Here’s disjunction’s own commutativity:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_elim</span><span class="p">,</span> <span class="n">or_intro_left</span><span class="p">,</span> <span class="n">or_intro_right</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">either</span> <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">∨</span> <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">reach_a_a</span>
-  <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">or_comm</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">d</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">B</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">B</span> <span class="o">∨</span> <span class="n">A</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">or_elim</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">)</span> <span class="k">cases</span>
-    <span class="k">case</span>
-      <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">∨</span> <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">either</span><span class="p">;</span>
-    <span class="k">qed</span><span class="p">;</span>
-    <span class="k">case</span>
-      <span class="n">h</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
-      <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
-    <span class="k">qed</span><span class="p">;</span>
-    <span class="k">case</span>
-      <span class="n">h</span> <span class="o">:=</span> <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-      <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
-    <span class="k">qed</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">or_elim</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">B</span> <span class="o">∨</span> <span class="n">A</span><span class="p">)</span> <span class="k">cases</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">B</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">d</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
+    <span class="k">case</span> <span class="n">P</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">⊢</span> <span class="n">B</span> <span class="o">∨</span> <span class="n">A</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">or_intro_right</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span> <span class="n">then</span> <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span> <span class="k">by</span> <span class="n">P</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
+    <span class="k">case</span> <span class="n">Q</span> <span class="o">:=</span> <span class="n">B</span> <span class="o">⊢</span> <span class="n">B</span> <span class="o">∨</span> <span class="n">A</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">or_intro_left</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span> <span class="n">then</span> <span class="o">⊢</span> <span class="n">B</span><span class="p">;</span> <span class="k">by</span> <span class="n">Q</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
   <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Each branch introduces a hypothesis (<code class="docutils literal notranslate"><span class="pre">h</span> <span class="pre">:=</span> <span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code>) you may lean on — here we
-don’t need it, since <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">a</span></code> is true regardless. That’s the shape of every
-elimination: assume, then discharge.</p>
+<p>Two new things here. First, where do <code class="docutils literal notranslate"><span class="pre">P</span></code> and <code class="docutils literal notranslate"><span class="pre">Q</span></code> come from? <strong>A rule that lets
+you assume something names the assumption after its own premise.</strong> In <a href="https://github.com/dhilst/algae/blob/main/algae/stdlib/v1/core.alg" target="_blank" rel="noopener"><code class="docutils literal notranslate"><span class="pre">core.alg</span></code></a>,
+<code class="docutils literal notranslate"><span class="pre">or_elim</span></code> ‘s branches are written <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">:=</span> <span class="pre">P</span> <span class="pre">⊢</span> <span class="pre">R</span></code> and <code class="docutils literal notranslate"><span class="pre">Q</span> <span class="pre">:=</span> <span class="pre">Q</span> <span class="pre">⊢</span> <span class="pre">R</span></code>, so inside the
+left branch your new hypothesis is called <code class="docutils literal notranslate"><span class="pre">P</span></code> and in the right branch it’s <code class="docutils literal notranslate"><span class="pre">Q</span></code>.
+You discharge it exactly like a lemma parameter — <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">P</span></code>. Second, the branches
+<em>build</em> the flipped disjunction with the intro rules we just met.</p>
 <div class="tip admonition">
 <p class="admonition-title">Your turn</p>
 <p>Build the <em>right</em>-hand disjunct this time.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_intro_right</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_intro_right</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">other_side</span>
-  <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">∨</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">pick_right</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">y</span> <span class="o">:=</span> <span class="n">B</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">B</span><span class="p">;</span>
 <span class="k">proof</span>
   <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
 <span class="kp">wip</span><span class="p">;</span>
@@ -411,55 +361,37 @@ elimination: assume, then discharge.</p>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p><code class="docutils literal notranslate"><span class="pre">or_intro_right(P,</span> <span class="pre">Q)</span></code> proves <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">∨</span> <span class="pre">Q</span></code> from <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">Q</span></code> — the <em>right</em> side. So
-here you only owe <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">b</span> <span class="pre">=</span> <span class="pre">b</span></code>. One premise means <code class="docutils literal notranslate"><span class="pre">then</span></code>, then <code class="docutils literal notranslate"><span class="pre">refl(T,</span> <span class="pre">b)</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">or_intro_right(A,</span> <span class="pre">B)</span></code> proves <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code> from <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">B</span></code> — the <em>right</em> side. One
+premise means <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">B;</span></code>, and you already hold a proof of <code class="docutils literal notranslate"><span class="pre">B</span></code>: <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">y</span></code>.</p>
 </div>
 </div>
 </section>
 <section id="implication">
 <h2>Implication: <code class="docutils literal notranslate"><span class="pre">⇒</span></code><a class="headerlink" href="#implication" title="Link to this heading">¶</a></h2>
-<p>To <em>build</em> an implication <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code> you assume <code class="docutils literal notranslate"><span class="pre">P</span></code> and prove <code class="docutils literal notranslate"><span class="pre">Q</span></code>.
-<code class="docutils literal notranslate"><span class="pre">implication_intro</span></code> introduces the antecedent as a hypothesis — one premise, so
-<code class="docutils literal notranslate"><span class="pre">then</span></code> (and the <code class="docutils literal notranslate"><span class="pre">then</span></code> carries the new hypothesis in its context):</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">implication_intro</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
+<p>To <em>build</em> an implication <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">B</span></code> you assume <code class="docutils literal notranslate"><span class="pre">A</span></code> and prove <code class="docutils literal notranslate"><span class="pre">B</span></code>.
+<code class="docutils literal notranslate"><span class="pre">implication_intro</span></code> introduces the antecedent as a hypothesis — named <code class="docutils literal notranslate"><span class="pre">P</span></code>, after
+its premise <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">:=</span> <span class="pre">P</span> <span class="pre">⊢</span> <span class="pre">Q</span></code> — and asks you to reach <code class="docutils literal notranslate"><span class="pre">B</span></code>. The smallest example is
+the identity <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">A</span></code>, where the assumption <em>is</em> the goal:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">implication_intro</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">weaken</span>
-  <span class="o">⊢</span> <span class="p">(</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span> <span class="o">⇒</span> <span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">);</span>
+<span class="k">lemma</span> <span class="n">id</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">A</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">implication_intro</span><span class="p">(</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">)</span>
-  <span class="n">then</span> <span class="n">h</span> <span class="o">:=</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">implication_intro</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span> <span class="n">then</span> <span class="n">P</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span> <span class="k">by</span> <span class="n">P</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>To <em>use</em> an implication, feed it its antecedent. <code class="docutils literal notranslate"><span class="pre">implication_elim</span></code> is plain
-modus ponens: from <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code> and <code class="docutils literal notranslate"><span class="pre">P</span></code>, conclude <code class="docutils literal notranslate"><span class="pre">Q</span></code>. Two premises, <code class="docutils literal notranslate"><span class="pre">cases</span></code>:</p>
+<p>To <em>use</em> an implication, feed it its antecedent. <code class="docutils literal notranslate"><span class="pre">implication_elim</span></code> is plain modus
+ponens: from <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">A</span></code>, conclude <code class="docutils literal notranslate"><span class="pre">B</span></code>. Two premises, <code class="docutils literal notranslate"><span class="pre">cases</span></code>, both
+discharged from assumptions we were handed:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">implication_elim</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">rule_ab</span> <span class="o">⊢</span> <span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">)</span> <span class="o">⇒</span> <span class="p">(</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">);</span>
-<span class="k">axiom</span> <span class="n">have_a</span>  <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">modus_ponens</span>
-  <span class="o">⊢</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">mp</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">f</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">B</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">implication_elim</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span> <span class="k">cases</span>
-    <span class="k">case</span>
-      <span class="o">⊢</span> <span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">)</span> <span class="o">⇒</span> <span class="p">(</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">);</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">rule_ab</span><span class="p">;</span>
-    <span class="k">qed</span><span class="p">;</span>
-    <span class="k">case</span>
-      <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">have_a</span><span class="p">;</span>
-    <span class="k">qed</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">implication_elim</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="k">cases</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">B</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">f</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">x</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
   <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
@@ -467,22 +399,20 @@ modus ponens: from <code class="docutils literal notranslate"><span class="pre">
 </section>
 <section id="negation-and-falsehood">
 <h2>Negation and falsehood<a class="headerlink" href="#negation-and-falsehood" title="Link to this heading">¶</a></h2>
-<p>Negation is really implication in disguise: <code class="docutils literal notranslate"><span class="pre">¬P</span></code> means “<code class="docutils literal notranslate"><span class="pre">P</span></code> leads to
-absurdity.” <code class="docutils literal notranslate"><span class="pre">negation_intro</span></code> asks you to assume <code class="docutils literal notranslate"><span class="pre">P</span></code> and derive <code class="docutils literal notranslate"><span class="pre">False</span></code>; here
-we lean on an (intentionally inconsistent) axiom so we can watch the mechanics:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">negation_intro</span><span class="p">);</span>
+<p>Negation is really implication in disguise: <code class="docutils literal notranslate"><span class="pre">¬A</span></code> means “<code class="docutils literal notranslate"><span class="pre">A</span></code> leads to
+absurdity.” So proving <code class="docutils literal notranslate"><span class="pre">¬A</span></code> from a proof that <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">False</span></code> is almost a
+tautology — <code class="docutils literal notranslate"><span class="pre">negation_intro</span></code> assumes <code class="docutils literal notranslate"><span class="pre">A</span></code> (as <code class="docutils literal notranslate"><span class="pre">P</span></code>), and we run the implication
+to reach <code class="docutils literal notranslate"><span class="pre">False</span></code>:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">negation_intro</span><span class="p">,</span> <span class="n">implication_elim</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">absurd</span> <span class="o">⊢</span> <span class="no">False</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">not_ab</span>
-  <span class="o">⊢</span> <span class="o">¬</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">);</span>
+<span class="k">lemma</span> <span class="n">neg_from_imp</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">f</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">⇒</span> <span class="no">False</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">¬</span><span class="n">A</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">negation_intro</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span>
-  <span class="n">then</span> <span class="n">h</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">⊢</span> <span class="no">False</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">absurd</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">negation_intro</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="n">then</span> <span class="n">P</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">⊢</span> <span class="no">False</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">implication_elim</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="no">False</span><span class="p">)</span> <span class="k">cases</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="n">A</span> <span class="o">⇒</span> <span class="no">False</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">f</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">P</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
+  <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -490,35 +420,24 @@ we lean on an (intentionally inconsistent) axiom so we can watch the mechanics:<
 proposition at all (the principle of explosion):</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">false_elim</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">absurd</span> <span class="o">⊢</span> <span class="no">False</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">anything</span>
-  <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">explosion</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">bad</span> <span class="o">:=</span> <span class="no">False</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">false_elim</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="no">False</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">absurd</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">false_elim</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="n">then</span> <span class="o">⊢</span> <span class="no">False</span><span class="p">;</span> <span class="k">by</span> <span class="n">bad</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>The missing partner, <code class="docutils literal notranslate"><span class="pre">negation_elim</span></code>, closes the loop: from <code class="docutils literal notranslate"><span class="pre">P</span></code> and <code class="docutils literal notranslate"><span class="pre">¬P</span></code> it
-derives <code class="docutils literal notranslate"><span class="pre">False</span></code> (two premises, <code class="docutils literal notranslate"><span class="pre">cases</span></code>) — the collision that <code class="docutils literal notranslate"><span class="pre">false_elim</span></code>
-then turns into anything.</p>
+<p>The rule that <em>produces</em> <code class="docutils literal notranslate"><span class="pre">False</span></code> is <code class="docutils literal notranslate"><span class="pre">negation_elim</span></code>: from <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">¬A</span></code> — a
+contradiction — it derives <code class="docutils literal notranslate"><span class="pre">False</span></code> (two premises, <code class="docutils literal notranslate"><span class="pre">cases</span></code>). Chain it into
+<code class="docutils literal notranslate"><span class="pre">false_elim</span></code> and a contradiction proves anything at all.</p>
 <div class="tip admonition">
 <p class="admonition-title">Your turn</p>
-<p>Explosion in action: given <code class="docutils literal notranslate"><span class="pre">False</span></code>, prove a completely unrelated equation.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">false_elim</span><span class="p">);</span>
+<p>Put the last two together: from a proof of <code class="docutils literal notranslate"><span class="pre">A</span></code> and a proof of <code class="docutils literal notranslate"><span class="pre">¬A</span></code>, derive a
+completely unrelated <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">false_elim</span><span class="p">,</span> <span class="n">negation_elim</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">boom</span> <span class="o">⊢</span> <span class="no">False</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">out_of_nothing</span>
-  <span class="o">⊢</span> <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">clash</span><span class="p">(</span><span class="n">A</span> <span class="n">C</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">,</span> <span class="n">nx</span> <span class="o">:=</span> <span class="o">¬</span><span class="n">A</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">C</span><span class="p">;</span>
 <span class="k">proof</span>
   <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
 <span class="kp">wip</span><span class="p">;</span>
@@ -526,9 +445,9 @@ then turns into anything.</p>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p><code class="docutils literal notranslate"><span class="pre">false_elim(P)</span></code> proves <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">P</span></code> from a single premise <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">False</span></code>. Point the
-goal at <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">a</span></code>, continue with <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">False;</span></code>, and discharge it with
-<code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">boom;</span></code>.</p>
+<p>Start with <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">false_elim(C)</span> <span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">False;</span></code> — now you only owe <code class="docutils literal notranslate"><span class="pre">False</span></code>.
+Reach it with <code class="docutils literal notranslate"><span class="pre">negation_elim(A)</span></code>, whose two <code class="docutils literal notranslate"><span class="pre">cases</span></code> are <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span></code> (close
+<code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">x</span></code>) and <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">¬A</span></code> (close <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">nx</span></code>).</p>
 </div>
 </div>
 <p>With the connectives in hand, the only thing left in <code class="docutils literal notranslate"><span class="pre">core</span></code> is the quantifiers —

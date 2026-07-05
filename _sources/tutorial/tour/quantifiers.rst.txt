@@ -1,177 +1,153 @@
-=======================
+=====================
 Quantifiers and ``⇔``
-=======================
+=====================
 
 The last stretch of |core.alg| is the quantifiers, ``∀`` and ``∃``. They follow the
 same *build one / use one* pattern as the connectives, with one twist: their rules
-carry a **motive** — a predicate ``T → Prop`` you write with the ``_`` sugar from
-:doc:`../induction`, marking the spot the bound variable goes.
+carry a **motive** — a predicate ``T → Prop`` naming the property you're quantifying.
+We'll work over an abstract sort ``T`` and an abstract predicate ``P : T → Prop``, so
+nothing is hidden.
 
 For all: ``∀``
 ==============
 
 To prove ``∀ x. P(x)``, prove ``P(x)`` for a *fresh, arbitrary* ``x``.
 ``forall_intro`` hands you that eigenvariable — one premise, so ``then``, and the
-``then`` carries ``x`` into its context:
+``then`` carries ``x`` into its context. The one property we can prove of *every*
+element with no assumptions is that it equals itself:
 
 .. code-block:: alg
 
-   import core(refl, forall_intro);
+   import core(forall_intro, refl);
 
    sort T : Sort;
 
    lemma everything_is_itself
      ⊢ ∀ (x : T) st x = x;
    proof
-     by forall_intro(T, _ = _)
-     then x : T ⊢ x = x;
-     by refl(T, x);
+     by forall_intro(T, _ = _) then x : T ⊢ x = x; by refl(T, x);
    qed;
 
-The ``_ = _`` is the motive ``λ (x : T) st x = x`` — the property we're proving for
-all ``x``. Because ``x`` was introduced fresh, proving ``x = x`` for it counts as
-proving it for everyone (that's the eigenvariable freshness from :doc:`../induction`).
+Here the motive ``_ = _`` is the predicate ``λ (x : T) st x = x`` (that ``_`` sugar
+from :doc:`../induction`). Because ``x`` was introduced fresh, proving ``x = x`` for
+it counts as proving it for everyone.
 
 To *use* a ``∀``, instantiate it at a specific term. ``forall_elim`` takes
-``∀ y. P(y)`` and, given a term ``x``, yields ``P(x)``:
+``∀ y. P(y)`` and a point ``a`` and yields ``P(a)``. This time the motive is the
+abstract ``P`` itself, and the universal fact is a lemma parameter:
 
 .. code-block:: alg
 
    import core(forall_elim);
 
    sort T : Sort;
-   axiom all_eq ⊢ ∀ (y : T) st y = y;
 
-   lemma at_a_point(x : T)
-     ⊢ x = x;
+   lemma at_a_point(P : T → Prop, a : T, all := ∀ (y : T) st P(y))
+     ⊢ P(a);
    proof
-     by forall_elim(T, _ = _, x)
-     then ⊢ ∀ (y : T) st y = y;
-     by all_eq;
+     by forall_elim(T, P, a) then ⊢ ∀ (y : T) st P(y); by all;
    qed;
 
-The third argument, ``x``, is the point you're instantiating at; the ``then`` goal
-is the universal statement you're drawing it from.
+The third argument, ``a``, is the point you're instantiating at; the ``then`` goal
+is the universal statement you're drawing it from, discharged by ``all``.
 
 There exists: ``∃``
 ===================
 
-Building a ``∃`` means producing a **witness**. ``exists_intro`` takes a term and a
-proof that the property holds *of that term*:
+Building a ``∃`` means producing a **witness**. ``exists_intro`` takes a term ``a``
+and a proof that the property holds *of that term*:
 
 .. code-block:: alg
 
-   import core(refl, exists_intro);
+   import core(exists_intro);
 
    sort T : Sort;
-   op a : → T;
 
-   lemma there_is_one
-     ⊢ ∃ (x : T) st x = x;
+   lemma there_is_one(P : T → Prop, a : T, pa := P(a))
+     ⊢ ∃ (x : T) st P(x);
    proof
-     by exists_intro(T, _ = _, a)
-     then ⊢ a = a;
-     by refl(T, a);
+     by exists_intro(T, P, a) then ⊢ P(a); by pa;
    qed;
 
 We offered ``a`` as the witness, so the leftover goal is the property at ``a`` —
-``a = a``.
+``P(a)`` — which our assumption ``pa`` supplies.
 
 *Using* a ``∃`` is the dual of using a ``∨``: you get a witness but you don't get to
 know which one, so whatever you conclude must hold no matter who it is.
-``exists_elim`` gives you a fresh ``x`` and the hypothesis that ``P(x)`` holds, and
-asks you to reach your goal from there — two premises, ``cases``:
+``exists_elim`` hands you a fresh ``x`` and the hypothesis ``witness := P(x)``
+(named, as always, after the rule's premise), and asks you to reach your goal from
+there — two premises, ``cases``. To show it really gives you something usable, we
+unpack an existential and immediately *repack* it:
 
 .. code-block:: alg
 
-   import core(refl, exists_elim);
+   import core(exists_intro, exists_elim);
 
    sort T : Sort;
-   op a : → T;
-   axiom something ⊢ ∃ (x : T) st x = x;
 
-   lemma conclude_a_a
-     ⊢ a = a;
+   lemma repack(P : T → Prop, ex := ∃ (x : T) st P(x))
+     ⊢ ∃ (x : T) st P(x);
    proof
-     by exists_elim(T, _ = _, a = a) cases
-       case
-         ⊢ ∃ (x : T) st x = x;
+     by exists_elim(T, P, ∃ (x : T) st P(x)) cases
+       case ⊢ ∃ (x : T) st P(x); proof by ex; qed;
+       case x : T; witness := P(x) ⊢ ∃ (x : T) st P(x);
        proof
-         by something;
-       qed;
-       case
-         x : T;
-         witness := x = x;
-         ⊢ a = a;
-       proof
-         by refl(T, a);
+         by exists_intro(T, P, x) then ⊢ P(x); by witness;
        qed;
      qed;
    qed;
 
-The second branch introduces both the witness ``x`` and the hypothesis
-``witness := x = x``. Our goal ``a = a`` doesn't need them, but a real proof usually
-would.
+The second branch pulls out the witness ``x`` and the proof ``witness := P(x)``,
+then feeds them straight back into ``exists_intro``. Trivial as a theorem, but it
+shows the exact shape every real ``exists_elim`` proof has.
 
 .. admonition:: Your turn
    :class: tip
 
-   Prove a universal from scratch.
+   Combine the two moves: from ``∀ y. P(y)`` — ``P`` holds *everywhere* — produce a
+   proof that ``∃ x. P(x)``.
 
    .. code-block:: alg
 
-      import core(refl, forall_intro);
+      import core(forall_elim, exists_intro);
 
       sort T : Sort;
 
-      lemma all_reflexive
-        ⊢ ∀ (x : T) st x = x;
+      lemma somewhere(P : T → Prop, a : T, all := ∀ (y : T) st P(y))
+        ⊢ ∃ (x : T) st P(x);
       proof
         by wip(?goal);
       wip;
 
    .. hint::
 
-      Start with ``by forall_intro(T, _ = _)`` — that's a single premise, so
-      continue with ``then x : T ⊢ x = x;`` and finish with ``by refl(T, x);``.
+      Witness the existential at ``a`` first: ``by exists_intro(T, P, a)`` leaves
+      ``then ⊢ P(a);``. Get ``P(a)`` by instantiating the universal —
+      ``by forall_elim(T, P, a) then ⊢ ∀ (y : T) st P(y); by all;``.
 
 If and only if: ``⇔``
 =====================
 
 A biconditional is just two implications bundled together, and its rules say
-exactly that. ``biconditional_intro`` asks for both directions — ``P ⇒ Q`` and
-``Q ⇒ P`` — so two premises, ``cases``:
+exactly that. ``biconditional_intro`` asks for both directions — ``A ⇒ B`` and
+``B ⇒ A`` — so two premises, ``cases``, each closed by an assumed implication:
 
 .. code-block:: alg
 
    import core(biconditional_intro);
 
-   sort T : Sort;
-   op a : → T;
-   op b : → T;
-   axiom forward  ⊢ (a = a) ⇒ (b = b);
-   axiom backward ⊢ (b = b) ⇒ (a = a);
-
-   lemma equivalent
-     ⊢ (a = a) ⇔ (b = b);
+   lemma equivalent(A B : Prop, fwd := A ⇒ B, bwd := B ⇒ A)
+     ⊢ A ⇔ B;
    proof
-     by biconditional_intro(a = a, b = b) cases
-       case
-         ⊢ (a = a) ⇒ (b = b);
-       proof
-         by forward;
-       qed;
-       case
-         ⊢ (b = b) ⇒ (a = a);
-       proof
-         by backward;
-       qed;
+     by biconditional_intro(A, B) cases
+       case ⊢ A ⇒ B; proof by fwd; qed;
+       case ⊢ B ⇒ A; proof by bwd; qed;
      qed;
    qed;
 
-Going the other way, ``biconditional_elim_left`` extracts ``P ⇒ Q`` from
-``P ⇔ Q`` (and ``biconditional_elim_right`` extracts ``Q ⇒ P``) — one premise each,
-so ``then``. Between them you can take a ``⇔`` apart into whichever implication you
+Going the other way, ``biconditional_elim_left`` extracts ``A ⇒ B`` from ``A ⇔ B``
+(and ``biconditional_elim_right`` extracts ``B ⇒ A``) — one premise each, so
+``then``. Between them you can take a ``⇔`` apart into whichever implication you
 need, then finish with ``implication_elim`` from :doc:`logic`.
 
 That's all of ``core``. Next we leave pure logic behind and start reasoning about

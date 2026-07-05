@@ -251,110 +251,99 @@
 <h1>Quantifiers and <code class="docutils literal notranslate"><span class="pre">⇔</span></code><a class="headerlink" href="#quantifiers-and" title="Link to this heading">¶</a></h1>
 <p>The last stretch of <a href="https://github.com/dhilst/algae/blob/main/algae/stdlib/v1/core.alg" target="_blank" rel="noopener"><code class="docutils literal notranslate"><span class="pre">core.alg</span></code></a> is the quantifiers, <code class="docutils literal notranslate"><span class="pre">∀</span></code> and <code class="docutils literal notranslate"><span class="pre">∃</span></code>. They follow the
 same <em>build one / use one</em> pattern as the connectives, with one twist: their rules
-carry a <strong>motive</strong> — a predicate <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">→</span> <span class="pre">Prop</span></code> you write with the <code class="docutils literal notranslate"><span class="pre">_</span></code> sugar from
-<a class="reference internal" href="../induction.html"><span class="doc">Induction and friends</span></a>, marking the spot the bound variable goes.</p>
+carry a <strong>motive</strong> — a predicate <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">→</span> <span class="pre">Prop</span></code> naming the property you’re quantifying.
+We’ll work over an abstract sort <code class="docutils literal notranslate"><span class="pre">T</span></code> and an abstract predicate <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">:</span> <span class="pre">T</span> <span class="pre">→</span> <span class="pre">Prop</span></code>, so
+nothing is hidden.</p>
 <section id="for-all">
 <h2>For all: <code class="docutils literal notranslate"><span class="pre">∀</span></code><a class="headerlink" href="#for-all" title="Link to this heading">¶</a></h2>
 <p>To prove <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">x.</span> <span class="pre">P(x)</span></code>, prove <code class="docutils literal notranslate"><span class="pre">P(x)</span></code> for a <em>fresh, arbitrary</em> <code class="docutils literal notranslate"><span class="pre">x</span></code>.
 <code class="docutils literal notranslate"><span class="pre">forall_intro</span></code> hands you that eigenvariable — one premise, so <code class="docutils literal notranslate"><span class="pre">then</span></code>, and the
-<code class="docutils literal notranslate"><span class="pre">then</span></code> carries <code class="docutils literal notranslate"><span class="pre">x</span></code> into its context:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">forall_intro</span><span class="p">);</span>
+<code class="docutils literal notranslate"><span class="pre">then</span></code> carries <code class="docutils literal notranslate"><span class="pre">x</span></code> into its context. The one property we can prove of <em>every</em>
+element with no assumptions is that it equals itself:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">forall_intro</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">everything_is_itself</span>
   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">forall_intro</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span>
-  <span class="n">then</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">forall_intro</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span> <span class="n">then</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span> <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">=</span> <span class="pre">_</span></code> is the motive <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code> — the property we’re proving for
-all <code class="docutils literal notranslate"><span class="pre">x</span></code>. Because <code class="docutils literal notranslate"><span class="pre">x</span></code> was introduced fresh, proving <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code> for it counts as
-proving it for everyone (that’s the eigenvariable freshness from <a class="reference internal" href="../induction.html"><span class="doc">Induction and friends</span></a>).</p>
+<p>Here the motive <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">=</span> <span class="pre">_</span></code> is the predicate <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code> (that <code class="docutils literal notranslate"><span class="pre">_</span></code> sugar
+from <a class="reference internal" href="../induction.html"><span class="doc">Induction and friends</span></a>). Because <code class="docutils literal notranslate"><span class="pre">x</span></code> was introduced fresh, proving <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code> for
+it counts as proving it for everyone.</p>
 <p>To <em>use</em> a <code class="docutils literal notranslate"><span class="pre">∀</span></code>, instantiate it at a specific term. <code class="docutils literal notranslate"><span class="pre">forall_elim</span></code> takes
-<code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">y.</span> <span class="pre">P(y)</span></code> and, given a term <code class="docutils literal notranslate"><span class="pre">x</span></code>, yields <code class="docutils literal notranslate"><span class="pre">P(x)</span></code>:</p>
+<code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">y.</span> <span class="pre">P(y)</span></code> and a point <code class="docutils literal notranslate"><span class="pre">a</span></code> and yields <code class="docutils literal notranslate"><span class="pre">P(a)</span></code>. This time the motive is the
+abstract <code class="docutils literal notranslate"><span class="pre">P</span></code> itself, and the universal fact is a lemma parameter:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">forall_elim</span><span class="p">);</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">all_eq</span> <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">;</span>
 
-<span class="k">lemma</span> <span class="n">at_a_point</span><span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">at_a_point</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">a</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">all</span> <span class="o">:=</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">all_eq</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="n">then</span> <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">);</span> <span class="k">by</span> <span class="n">all</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>The third argument, <code class="docutils literal notranslate"><span class="pre">x</span></code>, is the point you’re instantiating at; the <code class="docutils literal notranslate"><span class="pre">then</span></code> goal
-is the universal statement you’re drawing it from.</p>
+<p>The third argument, <code class="docutils literal notranslate"><span class="pre">a</span></code>, is the point you’re instantiating at; the <code class="docutils literal notranslate"><span class="pre">then</span></code> goal
+is the universal statement you’re drawing it from, discharged by <code class="docutils literal notranslate"><span class="pre">all</span></code>.</p>
 </section>
 <section id="there-exists">
 <h2>There exists: <code class="docutils literal notranslate"><span class="pre">∃</span></code><a class="headerlink" href="#there-exists" title="Link to this heading">¶</a></h2>
-<p>Building a <code class="docutils literal notranslate"><span class="pre">∃</span></code> means producing a <strong>witness</strong>. <code class="docutils literal notranslate"><span class="pre">exists_intro</span></code> takes a term and a
-proof that the property holds <em>of that term</em>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">exists_intro</span><span class="p">);</span>
+<p>Building a <code class="docutils literal notranslate"><span class="pre">∃</span></code> means producing a <strong>witness</strong>. <code class="docutils literal notranslate"><span class="pre">exists_intro</span></code> takes a term <code class="docutils literal notranslate"><span class="pre">a</span></code>
+and a proof that the property holds <em>of that term</em>:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">exists_intro</span><span class="p">);</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
 
-<span class="k">lemma</span> <span class="n">there_is_one</span>
-  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">there_is_one</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">a</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">pa</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">exists_intro</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">exists_intro</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="n">then</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">);</span> <span class="k">by</span> <span class="n">pa</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>We offered <code class="docutils literal notranslate"><span class="pre">a</span></code> as the witness, so the leftover goal is the property at <code class="docutils literal notranslate"><span class="pre">a</span></code> —
-<code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">a</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">P(a)</span></code> — which our assumption <code class="docutils literal notranslate"><span class="pre">pa</span></code> supplies.</p>
 <p><em>Using</em> a <code class="docutils literal notranslate"><span class="pre">∃</span></code> is the dual of using a <code class="docutils literal notranslate"><span class="pre">∨</span></code>: you get a witness but you don’t get to
 know which one, so whatever you conclude must hold no matter who it is.
-<code class="docutils literal notranslate"><span class="pre">exists_elim</span></code> gives you a fresh <code class="docutils literal notranslate"><span class="pre">x</span></code> and the hypothesis that <code class="docutils literal notranslate"><span class="pre">P(x)</span></code> holds, and
-asks you to reach your goal from there — two premises, <code class="docutils literal notranslate"><span class="pre">cases</span></code>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">exists_elim</span><span class="p">);</span>
+<code class="docutils literal notranslate"><span class="pre">exists_elim</span></code> hands you a fresh <code class="docutils literal notranslate"><span class="pre">x</span></code> and the hypothesis <code class="docutils literal notranslate"><span class="pre">witness</span> <span class="pre">:=</span> <span class="pre">P(x)</span></code>
+(named, as always, after the rule’s premise), and asks you to reach your goal from
+there — two premises, <code class="docutils literal notranslate"><span class="pre">cases</span></code>. To show it really gives you something usable, we
+unpack an existential and immediately <em>repack</em> it:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">exists_intro</span><span class="p">,</span> <span class="n">exists_elim</span><span class="p">);</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">something</span> <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
 
-<span class="k">lemma</span> <span class="n">conclude_a_a</span>
-  <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">repack</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">ex</span> <span class="o">:=</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">exists_elim</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">)</span> <span class="k">cases</span>
-    <span class="k">case</span>
-      <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">exists_elim</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">cases</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">ex</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
+    <span class="k">case</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">;</span> <span class="n">witness</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
     <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">something</span><span class="p">;</span>
-    <span class="k">qed</span><span class="p">;</span>
-    <span class="k">case</span>
-      <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">;</span>
-      <span class="n">witness</span> <span class="o">:=</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
-      <span class="o">⊢</span> <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
+      <span class="k">by</span> <span class="n">exists_intro</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="n">then</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span> <span class="k">by</span> <span class="n">witness</span><span class="p">;</span>
     <span class="k">qed</span><span class="p">;</span>
   <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>The second branch introduces both the witness <code class="docutils literal notranslate"><span class="pre">x</span></code> and the hypothesis
-<code class="docutils literal notranslate"><span class="pre">witness</span> <span class="pre">:=</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code>. Our goal <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">a</span></code> doesn’t need them, but a real proof usually
-would.</p>
+<p>The second branch pulls out the witness <code class="docutils literal notranslate"><span class="pre">x</span></code> and the proof <code class="docutils literal notranslate"><span class="pre">witness</span> <span class="pre">:=</span> <span class="pre">P(x)</span></code>,
+then feeds them straight back into <code class="docutils literal notranslate"><span class="pre">exists_intro</span></code>. Trivial as a theorem, but it
+shows the exact shape every real <code class="docutils literal notranslate"><span class="pre">exists_elim</span></code> proof has.</p>
 <div class="tip admonition">
 <p class="admonition-title">Your turn</p>
-<p>Prove a universal from scratch.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">forall_intro</span><span class="p">);</span>
+<p>Combine the two moves: from <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">y.</span> <span class="pre">P(y)</span></code> — <code class="docutils literal notranslate"><span class="pre">P</span></code> holds <em>everywhere</em> — produce a
+proof that <code class="docutils literal notranslate"><span class="pre">∃</span> <span class="pre">x.</span> <span class="pre">P(x)</span></code>.</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">forall_elim</span><span class="p">,</span> <span class="n">exists_intro</span><span class="p">);</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
-<span class="k">lemma</span> <span class="n">all_reflexive</span>
-  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">lemma</span> <span class="n">somewhere</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">a</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">all</span> <span class="o">:=</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
 <span class="k">proof</span>
   <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
 <span class="kp">wip</span><span class="p">;</span>
@@ -362,45 +351,32 @@ would.</p>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>Start with <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">forall_intro(T,</span> <span class="pre">_</span> <span class="pre">=</span> <span class="pre">_)</span></code> — that’s a single premise, so
-continue with <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">x</span> <span class="pre">:</span> <span class="pre">T</span> <span class="pre">⊢</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">x;</span></code> and finish with <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">refl(T,</span> <span class="pre">x);</span></code>.</p>
+<p>Witness the existential at <code class="docutils literal notranslate"><span class="pre">a</span></code> first: <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">exists_intro(T,</span> <span class="pre">P,</span> <span class="pre">a)</span></code> leaves
+<code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">P(a);</span></code>. Get <code class="docutils literal notranslate"><span class="pre">P(a)</span></code> by instantiating the universal —
+<code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">forall_elim(T,</span> <span class="pre">P,</span> <span class="pre">a)</span> <span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">∀</span> <span class="pre">(y</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">P(y);</span> <span class="pre">by</span> <span class="pre">all;</span></code>.</p>
 </div>
 </div>
 </section>
 <section id="if-and-only-if">
 <h2>If and only if: <code class="docutils literal notranslate"><span class="pre">⇔</span></code><a class="headerlink" href="#if-and-only-if" title="Link to this heading">¶</a></h2>
 <p>A biconditional is just two implications bundled together, and its rules say
-exactly that. <code class="docutils literal notranslate"><span class="pre">biconditional_intro</span></code> asks for both directions — <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Q</span> <span class="pre">⇒</span> <span class="pre">P</span></code> — so two premises, <code class="docutils literal notranslate"><span class="pre">cases</span></code>:</p>
+exactly that. <code class="docutils literal notranslate"><span class="pre">biconditional_intro</span></code> asks for both directions — <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">B</span></code> and
+<code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">⇒</span> <span class="pre">A</span></code> — so two premises, <code class="docutils literal notranslate"><span class="pre">cases</span></code>, each closed by an assumed implication:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">biconditional_intro</span><span class="p">);</span>
 
-<span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">a</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">op</span> <span class="n">b</span> <span class="p">:</span> <span class="o">→</span> <span class="n">T</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">forward</span>  <span class="o">⊢</span> <span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">)</span> <span class="o">⇒</span> <span class="p">(</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">);</span>
-<span class="k">axiom</span> <span class="n">backward</span> <span class="o">⊢</span> <span class="p">(</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span> <span class="o">⇒</span> <span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">);</span>
-
-<span class="k">lemma</span> <span class="n">equivalent</span>
-  <span class="o">⊢</span> <span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">)</span> <span class="o">⇔</span> <span class="p">(</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">);</span>
+<span class="k">lemma</span> <span class="n">equivalent</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">fwd</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">B</span><span class="p">,</span> <span class="n">bwd</span> <span class="o">:=</span> <span class="n">B</span> <span class="o">⇒</span> <span class="n">A</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">A</span> <span class="o">⇔</span> <span class="n">B</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">biconditional_intro</span><span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span> <span class="k">cases</span>
-    <span class="k">case</span>
-      <span class="o">⊢</span> <span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">)</span> <span class="o">⇒</span> <span class="p">(</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">);</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">forward</span><span class="p">;</span>
-    <span class="k">qed</span><span class="p">;</span>
-    <span class="k">case</span>
-      <span class="o">⊢</span> <span class="p">(</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span> <span class="o">⇒</span> <span class="p">(</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">);</span>
-    <span class="k">proof</span>
-      <span class="k">by</span> <span class="n">backward</span><span class="p">;</span>
-    <span class="k">qed</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">biconditional_intro</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="k">cases</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">B</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">fwd</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
+    <span class="k">case</span> <span class="o">⊢</span> <span class="n">B</span> <span class="o">⇒</span> <span class="n">A</span><span class="p">;</span> <span class="k">proof</span> <span class="k">by</span> <span class="n">bwd</span><span class="p">;</span> <span class="k">qed</span><span class="p">;</span>
   <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Going the other way, <code class="docutils literal notranslate"><span class="pre">biconditional_elim_left</span></code> extracts <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code> from
-<code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇔</span> <span class="pre">Q</span></code> (and <code class="docutils literal notranslate"><span class="pre">biconditional_elim_right</span></code> extracts <code class="docutils literal notranslate"><span class="pre">Q</span> <span class="pre">⇒</span> <span class="pre">P</span></code>) — one premise each,
-so <code class="docutils literal notranslate"><span class="pre">then</span></code>. Between them you can take a <code class="docutils literal notranslate"><span class="pre">⇔</span></code> apart into whichever implication you
+<p>Going the other way, <code class="docutils literal notranslate"><span class="pre">biconditional_elim_left</span></code> extracts <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">B</span></code> from <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇔</span> <span class="pre">B</span></code>
+(and <code class="docutils literal notranslate"><span class="pre">biconditional_elim_right</span></code> extracts <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">⇒</span> <span class="pre">A</span></code>) — one premise each, so
+<code class="docutils literal notranslate"><span class="pre">then</span></code>. Between them you can take a <code class="docutils literal notranslate"><span class="pre">⇔</span></code> apart into whichever implication you
 need, then finish with <code class="docutils literal notranslate"><span class="pre">implication_elim</span></code> from <a class="reference internal" href="logic.html"><span class="doc">The logical toolkit</span></a>.</p>
 <p>That’s all of <code class="docutils literal notranslate"><span class="pre">core</span></code>. Next we leave pure logic behind and start reasoning about
 <em>data</em>.</p>
