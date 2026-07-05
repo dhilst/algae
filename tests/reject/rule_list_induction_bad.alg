@@ -8,7 +8,6 @@ proof
   by list_induction(A, xs, _ = _) cases
     case
       |- nil = nil;
-    proof
       by refl(List(A), nil);
     qed;
     case
@@ -16,7 +15,6 @@ proof
       rest : List(A);
       ih := rest = rest;
       |- nil = nil;
-    proof
       by refl(List(A), nil);
     qed;
   qed;

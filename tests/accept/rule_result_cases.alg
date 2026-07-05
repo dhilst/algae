@@ -8,13 +8,11 @@ proof
     case
       x : A;
       |- ok(x) = ok(x);
-    proof
       by refl(Result(A, E), ok(x));
     qed;
     case
       e : E;
       |- err(e) = err(e);
-    proof
       by refl(Result(A, E), err(e));
     qed;
   qed;

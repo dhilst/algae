@@ -18,19 +18,16 @@ proof
   by sum_reflect_elim(a = b, b = a, a = a) cases
     case
       |- a = a;
-    proof
       by refl(T, a);
     qed;
     case
       hyp := a = b;
       |- a = a;
-    proof
       by refl(T, a);
     qed;
     case
       hyp := b = a;
       |- a = a;
-    proof
       by refl(T, a);
     qed;
   qed;

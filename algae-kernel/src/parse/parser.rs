@@ -634,7 +634,10 @@ fn case_block(input: &mut In) -> ModalResult<CaseBlock> {
     expect(input, T::Turnstile)?;
     let goal = expr(input)?;
     semi(input)?;
-    let pf = proof_block(input)?;
+    // A `case` branch has no `proof` keyword — its body begins directly with the
+    // first `by` step and runs to `qed`/`wip`.
+    let body_start = cur_span(*input);
+    let pf = proof_body(input, body_start)?;
     let span = start.merge(pf.span);
     Ok(CaseBlock {
         context: ctx,
@@ -898,8 +901,10 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close) -> ProofStmt {
     current
 }
 
-fn proof_block(input: &mut In) -> ModalResult<ProofBlock> {
-    let start = expect(input, T::KwProof)?;
+/// Parse the body of a proof — the `by …` segment chain and its `qed`/`wip`
+/// terminator. `start` seeds the span; the leading `proof` keyword (if the
+/// grammar has one here) is consumed by the caller.
+fn proof_body(input: &mut In, start: Span) -> ModalResult<ProofBlock> {
     let segs = proof_segments(input)?;
     let (close, end) = if at(*input, &T::KwWip) {
         (Close::Wip, expect(input, T::KwWip)?)
@@ -913,6 +918,11 @@ fn proof_block(input: &mut In) -> ModalResult<ProofBlock> {
         close,
         span: start.merge(end),
     })
+}
+
+fn proof_block(input: &mut In) -> ModalResult<ProofBlock> {
+    let start = expect(input, T::KwProof)?;
+    proof_body(input, start)
 }
 
 // ---- declarations ---------------------------------------------------------
@@ -1217,7 +1227,7 @@ mod tests {
     #[test]
     fn parses_lemma_with_proof() {
         // Exercises both a `cases` branch and a flat `then` continuation.
-        let src = "lemma add_zero_right\n  |- forall (n : Nat) st n + 0 = n;\nproof\n  by induction(lambda (k : Nat) st k + 0 = k) cases\n    case\n      |- 0 + 0 = 0;\n    proof\n      by add_zero_left(0);\n    qed;\n    case\n      k : Nat;\n      ih := k + 0 = k;\n      |- s(k) + 0 = s(k);\n    proof\n      by rewrite_r(Nat, k + 0, k, ih, s(k) + 0 = s(_))\n      then |- s(k) + 0 = s(k + 0);\n      by add_succ_left(k, 0);\n    qed;\n  qed;\nqed;";
+        let src = "lemma add_zero_right\n  |- forall (n : Nat) st n + 0 = n;\nproof\n  by induction(lambda (k : Nat) st k + 0 = k) cases\n    case\n      |- 0 + 0 = 0;\n      by add_zero_left(0);\n    qed;\n    case\n      k : Nat;\n      ih := k + 0 = k;\n      |- s(k) + 0 = s(k);\n      by rewrite_r(Nat, k + 0, k, ih, s(k) + 0 = s(_))\n      then |- s(k) + 0 = s(k + 0);\n      by add_succ_left(k, 0);\n    qed;\n  qed;\nqed;";
         let m = parse(src);
         assert_eq!(m.decls.len(), 1);
     }

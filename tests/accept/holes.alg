@@ -27,7 +27,6 @@ proof
   by induction(_ = _) cases
     case
       |- z = z;
-    proof
       by refl(Nat, z);
     qed;
 
@@ -35,7 +34,6 @@ proof
       n : Nat;
       ih := n = n;
       |- s(n) = s(n);
-    proof
       by refl(Nat, s(n));
     qed;
   qed;

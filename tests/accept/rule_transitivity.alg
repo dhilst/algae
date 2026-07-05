@@ -14,12 +14,10 @@ proof
   by transitivity(T, a, b, c) cases
     case
       |- a = b;
-    proof
       by ab;
     qed;
     case
       |- b = c;
-    proof
       by bc;
     qed;
   qed;

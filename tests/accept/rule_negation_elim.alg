@@ -18,12 +18,10 @@ proof
   by negation_elim(a = b) cases
     case
       |- a = b;
-    proof
       by pos;
     qed;
     case
       |- ~(a = b);
-    proof
       by neg;
     qed;
   qed;

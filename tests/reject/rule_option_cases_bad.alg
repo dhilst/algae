@@ -8,13 +8,11 @@ proof
   by option_cases(A, m, _ = _) cases
     case
       |- none = none;
-    proof
       by refl(None, none);
     qed;
     case
       x : A;
       |- none = none;
-    proof
       by refl(None, none);
     qed;
   qed;

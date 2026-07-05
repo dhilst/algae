@@ -14,14 +14,12 @@ proof
   by exists_elim(T, _ = _, a = a) cases
     case
       |- exists (x : T) st x = x;
-    proof
       by ex;
     qed;
     case
       x : T;
       witness := x = x;
       |- a = a;
-    proof
       by refl(T, a);
     qed;
   qed;

@@ -7,7 +7,6 @@ proof
   by list_induction(A, xs, _ = _) cases
     case
       |- nil = nil;
-    proof
       by refl(List(A), nil);
     qed;
     case
@@ -15,7 +14,6 @@ proof
       rest : List(A);
       ih := rest = rest;
       |- cons(x, rest) = cons(x, rest);
-    proof
       by refl(List(A), cons(x, rest));
     qed;
   qed;

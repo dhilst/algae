@@ -8,14 +8,12 @@ proof
   by induction(_ = _) cases
     case
       |- s(0) = s(0);
-    proof
       by refl(Nat, s(0));
     qed;
     case
       n : Nat;
       ih := n = n;
       |- s(n) = s(n);
-    proof
       by refl(Nat, s(n));
     qed;
   qed;

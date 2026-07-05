@@ -12,13 +12,11 @@ proof
     case
       x : A;
       |- inl(x) = inl(x);
-    proof
       by refl(Sum(A, B), inl(x));
     qed;
     case
       y : B;
       |- inl(y) = inl(y);
-    proof
       by refl(Sum(A, B), inl(y));
     qed;
   qed;

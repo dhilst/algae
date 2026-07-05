@@ -48,13 +48,11 @@ Pairs and sums
        case
          x : A;
          ⊢ inl(x) = inl(x);
-       proof
          by refl(Sum(A, B), inl(x));
        qed;
        case
          y : B;
          ⊢ inr(y) = inr(y);
-       proof
          by refl(Sum(A, B), inr(y));
        qed;
      qed;
@@ -79,13 +77,11 @@ The data types follow suit. |option.alg| gives ``option_cases`` (``none`` or
      by option_cases(A, m, _ = _) cases
        case
          ⊢ none = none;
-       proof
          by refl(None, none);
        qed;
        case
          x : A;
          ⊢ some(x) = some(x);
-       proof
          by refl(Option(A), some(x));
        qed;
      qed;
@@ -105,7 +101,6 @@ the ``cons`` case even hands you an induction hypothesis ``ih`` about the tail.
      by list_induction(A, xs, _ = _) cases
        case
          ⊢ nil = nil;
-       proof
          by refl(List(A), nil);
        qed;
        case
@@ -113,7 +108,6 @@ the ``cons`` case even hands you an induction hypothesis ``ih`` about the tail.
          rest : List(A);
          ih := rest = rest;
          ⊢ cons(x, rest) = cons(x, rest);
-       proof
          by refl(List(A), cons(x, rest));
        qed;
      qed;

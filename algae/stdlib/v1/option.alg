@@ -81,7 +81,6 @@ model OptionMonad satisfies Monad(
       case
         A : Sort;
         ⊢ bind(none, return) = none;
-      proof
         by bind_none(A, A, return);
       qed;
 
@@ -89,7 +88,6 @@ model OptionMonad satisfies Monad(
         A : Sort;
         x : A;
         ⊢ bind(some(x), return) = some(x);
-      proof
         by rewrite_r(
           Option(A),
           bind(some(x), return),
@@ -126,7 +124,6 @@ model OptionMonad satisfies Monad(
              none,
              λ (x : A) st bind(f(x), g)
            );
-      proof
         by rewrite_r(
           Option(B),
           bind(none, f),
@@ -163,7 +160,6 @@ model OptionMonad satisfies Monad(
              some(x),
              λ (y : A) st bind(f(y), g)
            );
-      proof
         by rewrite_r(
           Option(B),
           bind(some(x), f),

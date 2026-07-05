@@ -52,7 +52,6 @@ proof
     # The base case
     case
       ⊢ 0 + 0 = 0;                # the current goal
-    proof
       by add_zero_left(0);        # by def of add_zero_left(n) := 0 + n = n;
     qed;
 
@@ -61,7 +60,6 @@ proof
       k : Nat;                    # the context
       ih := k + 0 = k;            # induction hypothesis
       ⊢ s(k) + 0 = s(k);          # the current goal
-    proof
       by rewrite_r(               # rewrite at right
         Nat,                      # the type of each side
         k + 0, k,                 # replace `k + 0` → `k`

@@ -7,14 +7,12 @@ proof
   by induction(_ = _) cases
     case
       |- 0 = 0;
-    proof
       by refl(Nat, 0);
     qed;
     case
       n : Nat;
       ih := n = n;
       |- s(n) = s(n);
-    proof
       by refl(Nat, s(n));
     qed;
   qed;

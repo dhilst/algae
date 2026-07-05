@@ -15,14 +15,12 @@ proof
   by exists_elim(T, _ = _, a = a) cases
     case
       |- a = a;
-    proof
       by refl(T, a);
     qed;
     case
       x : T;
       witness := x = x;
       |- a = a;
-    proof
       by refl(T, a);
     qed;
   qed;

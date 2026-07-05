@@ -29,8 +29,8 @@ and a proof of ``B`` and hands back ``A ∧ B`` — two premises, so we branch w
      ⊢ A ∧ B;
    proof
      by and_intro(A, B) cases
-       case ⊢ A; proof by x; qed;
-       case ⊢ B; proof by y; qed;
+       case ⊢ A; by x; qed;
+       case ⊢ B; by y; qed;
      qed;
    qed;
 
@@ -102,9 +102,9 @@ three ``case`` s. Here's disjunction's own commutativity:
      ⊢ B ∨ A;
    proof
      by or_elim(A, B, B ∨ A) cases
-       case ⊢ A ∨ B; proof by d; qed;
-       case P := A ⊢ B ∨ A; proof by or_intro_right(B, A) then ⊢ A; by P; qed;
-       case Q := B ⊢ B ∨ A; proof by or_intro_left(B, A) then ⊢ B; by Q; qed;
+       case ⊢ A ∨ B; by d; qed;
+       case P := A ⊢ B ∨ A; by or_intro_right(B, A) then ⊢ A; by P; qed;
+       case Q := B ⊢ B ∨ A; by or_intro_left(B, A) then ⊢ B; by Q; qed;
      qed;
    qed;
 
@@ -165,8 +165,8 @@ discharged from assumptions we were handed:
      ⊢ B;
    proof
      by implication_elim(A, B) cases
-       case ⊢ A ⇒ B; proof by f; qed;
-       case ⊢ A; proof by x; qed;
+       case ⊢ A ⇒ B; by f; qed;
+       case ⊢ A; by x; qed;
      qed;
    qed;
 
@@ -187,8 +187,8 @@ to reach ``False``:
    proof
      by negation_intro(A) then P := A ⊢ False;
      by implication_elim(A, False) cases
-       case ⊢ A ⇒ False; proof by f; qed;
-       case ⊢ A; proof by P; qed;
+       case ⊢ A ⇒ False; by f; qed;
+       case ⊢ A; by P; qed;
      qed;
    qed;
 

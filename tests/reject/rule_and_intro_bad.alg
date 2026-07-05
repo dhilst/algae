@@ -13,12 +13,10 @@ proof
   by and_intro(a = a, b = b) cases
     case
       |- a = a;
-    proof
       by refl(T, a);
     qed;
     case
       |- b = b;
-    proof
       by refl(T, b);
     qed;
   qed;

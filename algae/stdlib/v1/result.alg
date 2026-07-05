@@ -81,7 +81,6 @@ model ResultMonad satisfies Monad(
         A E : Sort;
         x : A;
         ⊢ bind(ok(x), return) = ok(x);
-      proof
         by rewrite_r(
           Result(A, E),
           bind(ok(x), return),
@@ -97,7 +96,6 @@ model ResultMonad satisfies Monad(
         A E : Sort;
         e : E;
         ⊢ bind(err(e), return) = err(e);
-      proof
         by bind_err(A, A, E, e, return);
       qed;
     qed;
@@ -128,7 +126,6 @@ model ResultMonad satisfies Monad(
              ok(x),
              λ (y : A) st bind(f(y), g)
            );
-      proof
         by rewrite_r(
           Result(B, E),
           bind(ok(x), f),
@@ -167,7 +164,6 @@ model ResultMonad satisfies Monad(
              err(e),
              λ (x : A) st bind(f(x), g)
            );
-      proof
         by rewrite_r(
           Result(B, E),
           bind(err(e), f),

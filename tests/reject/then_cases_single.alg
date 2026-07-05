@@ -14,7 +14,6 @@ proof
   by rewrite_r(T, a, b, ab, _ = _) cases
     case
       |- a = a;
-    proof
       by refl(T, a);
     qed;
   qed;

@@ -508,12 +508,13 @@ term_list =
 
 ## 3.15 Cases
 
-A `case_block` appears only inside a `cases` branch (§3.13); each has its own
-nested `proof_block`.
+A `case_block` appears only inside a `cases` branch (§3.13). Its body has **no
+`proof` keyword** — it begins directly with the first `by` step and runs to its
+own `qed`/`wip` terminator.
 
 ```ebnf
 case_block =
-  "case" case_body proof_block ;
+  "case" case_body proof_body terminator ";" ;
 
 case_body =
   [ context ] sequent_goal ;
@@ -529,7 +530,6 @@ case
   n : Nat;
   ih := P(n);
   |- P(s(n));
-proof
   by step_case(n, ih);
 qed;
 ```
@@ -1680,7 +1680,6 @@ model OptionMonad satisfies Monad(
       case
         A : Sort;
         |- bind(none, return) = none;
-      proof
         by bind_none(A, A, return);
       qed;
 
@@ -1688,7 +1687,6 @@ model OptionMonad satisfies Monad(
         A : Sort;
         x : A;
         |- bind(some(x), return) = some(x);
-      proof
         by rewrite_r(
           Option(A),
           bind(some(x), return),
@@ -1725,7 +1723,6 @@ model OptionMonad satisfies Monad(
              none,
              lambda (x : A) st bind(f(x), g)
            );
-      proof
         by rewrite_r(
           Option(B),
           bind(none, f),
@@ -1762,7 +1759,6 @@ model OptionMonad satisfies Monad(
              some(x),
              lambda (y : A) st bind(f(y), g)
            );
-      proof
         by rewrite_r(
           Option(B),
           bind(some(x), f),
@@ -1882,7 +1878,6 @@ model ResultMonad satisfies Monad(
         A E : Sort;
         x : A;
         |- bind(ok(x), return) = ok(x);
-      proof
         by rewrite_r(
           Result(A, E),
           bind(ok(x), return),
@@ -1898,7 +1893,6 @@ model ResultMonad satisfies Monad(
         A E : Sort;
         e : E;
         |- bind(err(e), return) = err(e);
-      proof
         by bind_err(A, A, E, e, return);
       qed;
     qed;
@@ -1929,7 +1923,6 @@ model ResultMonad satisfies Monad(
              ok(x),
              lambda (y : A) st bind(f(y), g)
            );
-      proof
         by rewrite_r(
           Result(B, E),
           bind(ok(x), f),
@@ -1968,7 +1961,6 @@ model ResultMonad satisfies Monad(
              err(e),
              lambda (x : A) st bind(f(x), g)
            );
-      proof
         by rewrite_r(
           Result(B, E),
           bind(err(e), f),
@@ -2134,7 +2126,6 @@ model ListMonad satisfies Monad(
       case
         A : Sort;
         |- bind(nil, return) = nil;
-      proof
         by bind_nil(A, A, return);
       qed;
 
@@ -2144,7 +2135,6 @@ model ListMonad satisfies Monad(
         rest : List(A);
         ih := bind(rest, return) = rest;
         |- bind(cons(x, rest), return) = cons(x, rest);
-      proof
         by rewrite_r(
           List(A),
           bind(cons(x, rest), return),
@@ -2221,7 +2211,6 @@ model ListMonad satisfies Monad(
              nil,
              lambda (x : A) st bind(f(x), g)
            );
-      proof
         by rewrite_r(
           List(B),
           bind(nil, f),
@@ -2260,7 +2249,6 @@ model ListMonad satisfies Monad(
              cons(x, rest),
              lambda (y : A) st bind(f(y), g)
            );
-      proof
         by rewrite_r(
           List(B),
           bind(cons(x, rest), f),
@@ -2385,7 +2373,6 @@ proof
     # The base case
     case
       |- 0 + 0 = 0;                # the current goal
-    proof
       by add_zero_left(0);        # by def of add_zero_left(n) := 0 + n = n;
     qed;
 
@@ -2394,7 +2381,6 @@ proof
       k : Nat;                    # the context
       ih := k + 0 = k;            # induction hypothesis
       |- s(k) + 0 = s(k);          # the current goal
-    proof
       by rewrite_r(               # rewrite at right
         Nat,                      # the type of each side
         k + 0, k,                 # replace `k + 0` → `k`

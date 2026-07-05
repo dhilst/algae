@@ -9,13 +9,11 @@ proof
     case
       x : A;
       |- err(x) = err(x);
-    proof
       by refl(Result(A, E), err(x));
     qed;
     case
       e : E;
       |- err(e) = err(e);
-    proof
       by refl(Result(A, E), err(e));
     qed;
   qed;

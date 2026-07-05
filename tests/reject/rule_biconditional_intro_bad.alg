@@ -19,12 +19,10 @@ proof
   by biconditional_intro(a = a, b = b) cases
     case
       |- (a = a) => (b = b);
-    proof
       by fwd;
     qed;
     case
       |- (b = b) => (a = a);
-    proof
       by bwd;
     qed;
   qed;

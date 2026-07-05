@@ -343,11 +343,14 @@ module.exports = grammar({
       repeat(seq(',', $.term)),
     ),
 
-    // 3.15 Cases
+    // 3.15 Cases — a case body has no `proof` keyword; it begins directly with
+    // the first `by` step and runs to its own `qed`/`wip` terminator.
     case_block: $ => seq(
       'case',
       $.case_body,
-      field('proof', $.proof_block),
+      $._proof_body,
+      choice('qed', 'wip'),
+      ';',
     ),
 
     // case_body = [ context ] sequent_goal

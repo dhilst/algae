@@ -18,12 +18,10 @@ proof
   by implication_elim(a = a, b = b) cases
     case
       |- (a = a) => (b = b);
-    proof
       by imp;
     qed;
     case
       |- a = a;
-    proof
       by ante;
     qed;
   qed;

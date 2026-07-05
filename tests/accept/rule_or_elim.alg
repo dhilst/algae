@@ -17,19 +17,16 @@ proof
   by or_elim(a = b, b = a, a = a) cases
     case
       |- a = b \/ b = a;
-    proof
       by disj;
     qed;
     case
       hyp := a = b;
       |- a = a;
-    proof
       by refl(T, a);
     qed;
     case
       hyp := b = a;
       |- a = a;
-    proof
       by refl(T, a);
     qed;
   qed;
