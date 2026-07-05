@@ -11,6 +11,9 @@ provides:
   WebAssembly by the [`algae-wasm`](../../algae-wasm) crate.
 - **Error reporting** — kernel diagnostics rendered as inline squiggles, gutter
   markers, and a results pane.
+- **Emacs keybindings** — the `@replit/codemirror-emacs` keymap (`C-a`/`C-e`,
+  `C-k`, `C-w`/`M-w`/`C-y`, `C-s`/`C-r`, mark & kill-ring, …). `Ctrl-Enter` still
+  runs the checker.
 
 ## Build
 
