@@ -1063,10 +1063,10 @@ fn theory_decl(input: &mut In) -> ModalResult<TheoryDecl> {
     let params = formal_params(input)?;
     expect(input, T::KwLaws)?;
     let mut items = Vec::new();
-    while !at(*input, &T::KwQed) {
+    while !at(*input, &T::KwEnd) {
         items.push(theory_item(input)?);
     }
-    expect(input, T::KwQed)?;
+    expect(input, T::KwEnd)?;
     let end = semi(input)?;
     Ok(TheoryDecl {
         name,
@@ -1111,7 +1111,7 @@ fn model_decl(input: &mut In) -> ModalResult<ModelDecl> {
     let theory = ident(input)?;
     let args = actual_args(input)?;
     expect(input, T::KwIff)?;
-    expect(input, T::KwProps)?;
+    expect(input, T::KwLaws)?;
     let mut laws = Vec::new();
     while !at(*input, &T::KwQed) && !at(*input, &T::KwWip) {
         laws.push(model_law(input)?);
@@ -1224,7 +1224,7 @@ mod tests {
 
     #[test]
     fn parses_theory_and_model() {
-        let src = "theory Semigroup(S : Sort, * : S * S -> S) laws\n  law associativity(x y z : S)\n    |- *( *(x, y), z ) = *( x, *(y, z) );\nqed;";
+        let src = "theory Semigroup(S : Sort, * : S * S -> S) laws\n  law associativity(x y z : S)\n    |- *( *(x, y), z ) = *( x, *(y, z) );\nend;";
         let m = parse(src);
         assert_eq!(m.decls.len(), 1);
     }

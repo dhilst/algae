@@ -57,7 +57,7 @@ model OptionMonad satisfies Monad(
   Option,
   return,
   bind
-) iff props
+) iff laws
   law left_identity;
   proof
     by rewrite_r(

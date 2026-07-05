@@ -19,7 +19,7 @@ on laws:
 
      law left_identity(x : S)   ⊢ mul(e, x) = x;
      law right_identity(x : S)  ⊢ mul(x, e) = x;
-   qed;
+   end;
 
 A **model** claims specific operators satisfy a theory, and must prove every law
 as an obligation. Here's the ``Monad`` interface from ``monad.alg``:
@@ -36,7 +36,7 @@ as an obligation. Here's the ``Monad`` interface from ``monad.alg``:
      law right_identity(m : M(A))            ⊢ bind(m, return) = m;
      law associativity(m : M(A), f : A → M(B), g : B → M(C))
        ⊢ bind(bind(m, f), g) = bind(m, λ (x : A) st bind(f(x), g));
-   qed;
+   end;
 
 ``option.alg``, ``list.alg``, and ``result.alg`` each ship a verified ``model``
 proving their type satisfies ``Monad``. Let's build a smaller one, end to end, that
@@ -70,10 +70,10 @@ theory, then prove our concrete stack is a **model** of it:
    ) laws
      law top_law(x : A, s : S(A))  ⊢ tp(psh(x, s)) = x;
      law pop_law(x : A, s : S(A))  ⊢ pp(psh(x, s)) = s;
-   qed;
+   end;
 
    # the claim: our concrete operations are a stack
-   model ConcreteStack satisfies StackSpec(A, Stack, empty, push, pop, top) iff props
+   model ConcreteStack satisfies StackSpec(A, Stack, empty, push, pop, top) iff laws
      law top_law;
      proof
        by top_ax(A, x, s);
@@ -87,7 +87,7 @@ theory, then prove our concrete stack is a **model** of it:
 
 Read the ``model`` header as *binding* each theory parameter to something concrete:
 the constructor ``S`` becomes ``Stack``, ``psh`` becomes ``push``, and so on. Then
-``iff props`` opens the obligations — one ``law <name>; proof … qed;`` per law in
+``iff laws`` opens the obligations — one ``law <name>; proof … qed;`` per law in
 the theory — and each is proved just like a lemma. Here every proof is a one-liner,
 because ``StackSpec``'s laws are exactly our two axioms. Press **Check ▶**: two
 obligations discharged, and ``ConcreteStack`` is certified a stack.

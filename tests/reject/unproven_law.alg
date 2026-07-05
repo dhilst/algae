@@ -20,5 +20,5 @@ model M satisfies T(S, e) iff {
   law l1;
   proof
     by refl(S, x);
-  qed;
+  end;
 };

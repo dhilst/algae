@@ -223,7 +223,7 @@ module.exports = grammar({
       field('params', $.formal_params),
       'laws',
       repeat($._theory_item),
-      'qed',
+      'end',
       ';',
     ),
 
@@ -257,7 +257,7 @@ module.exports = grammar({
       field('theory', $.identifier),
       field('args', $.actual_args),
       'iff',
-      'props',
+      'laws',
       repeat($.model_law),
       choice('qed', 'wip'),
       ';',

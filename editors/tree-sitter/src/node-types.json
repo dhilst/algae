@@ -1760,10 +1760,6 @@
     "named": true
   },
   {
-    "type": "props",
-    "named": false
-  },
-  {
     "type": "qed",
     "named": false
   },

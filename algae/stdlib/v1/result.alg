@@ -55,7 +55,7 @@ model ResultMonad satisfies Monad(
   λ (X : Sort) st Result(X, E),
   return,
   bind
-) iff props
+) iff laws
   law left_identity;
   proof
     by rewrite_r(

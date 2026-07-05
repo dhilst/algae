@@ -731,7 +731,7 @@
         },
         {
           "type": "STRING",
-          "value": "qed"
+          "value": "end"
         },
         {
           "type": "STRING",
@@ -859,7 +859,7 @@
         },
         {
           "type": "STRING",
-          "value": "props"
+          "value": "laws"
         },
         {
           "type": "REPEAT",

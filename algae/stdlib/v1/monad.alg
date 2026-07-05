@@ -29,7 +29,7 @@ theory Functor(
          g,
          map(f, x)
        );
-qed;
+end;
 
 theory Applicative(
   A B C : Sort,
@@ -76,7 +76,7 @@ theory Applicative(
        )
        =
        ap(u, ap(v, w));
-qed;
+end;
 
 theory Monad(
   A B C : Sort,
@@ -106,4 +106,4 @@ theory Monad(
          m,
          λ (x : A) st bind(f(x), g)
        );
-qed;
+end;

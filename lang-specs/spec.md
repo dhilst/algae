@@ -86,7 +86,6 @@ wip
 case
 cases
 then
-props
 laws
 theory
 law
@@ -331,7 +330,7 @@ the tutorial (`docs/tutorial/`).
 
 ```ebnf
 theory_decl =
-  "theory" ident formal_params "laws" theory_item_list "qed" ";" ;
+  "theory" ident formal_params "laws" theory_item_list "end" ";" ;
 
 theory_item_list =
   { theory_item } ;
@@ -352,8 +351,12 @@ theory Semigroup(
     x y z : S
   )
     |- *( *(x, y), z ) = *( x, *(y, z) );
-qed;
+end;
 ```
+
+A theory declares laws as requirements, not proofs — nothing is proved inside it,
+so `end` is a plain terminator (the laws become proof obligations only when a
+model claims to satisfy the theory).
 
 ---
 
@@ -397,7 +400,7 @@ law left_identity(
 ```ebnf
 model_decl =
   "model" ident "satisfies" ident actual_args "iff"
-  "props"
+  "laws"
     model_law_list
   terminator
   ";" ;
@@ -416,7 +419,7 @@ model NatAddMonoid satisfies Monoid(
   Nat,
   0,
   +
-) iff props
+) iff laws
   law Semigroup.associativity;
   proof
     by add_associativity;
@@ -1066,7 +1069,7 @@ This is theory inheritance.
 A model declaration:
 
 ```alg
-model M satisfies T(args) iff props
+model M satisfies T(args) iff laws
   law L1;
   proof
     ...
@@ -1130,8 +1133,8 @@ elsewhere it is a static error.
 `by wip` admits the current goal without a proof (like an axiom assumption). A
 proof that admits any goal must be closed by `wip` instead of `qed`; `qed` is
 accepted only on complete, sound proofs. The `wip` terminator is **viral**:
-every enclosing block (`proof`, `cases`, `props`) that transitively contains an
-admit must also be closed by `wip` rather than `qed`.
+every enclosing block (`proof`, `cases`, and a model's `iff laws`) that
+transitively contains an admit must also be closed by `wip` rather than `qed`.
 
 The checker skips admitted goals and verifies the remaining (sound) parts, but a
 unit containing any `wip` is reported as in progress and fails verification
@@ -1509,7 +1512,7 @@ theory Functor(
          g,
          map(f, x)
        );
-qed;
+end;
 
 theory Applicative(
   A B C : Sort,
@@ -1556,7 +1559,7 @@ theory Applicative(
        )
        =
        ap(u, ap(v, w));
-qed;
+end;
 
 theory Monad(
   A B C : Sort,
@@ -1586,7 +1589,7 @@ theory Monad(
          m,
          lambda (x : A) st bind(f(x), g)
        );
-qed;
+end;
 ```
 
 ---
@@ -1653,7 +1656,7 @@ model OptionMonad satisfies Monad(
   Option,
   return,
   bind
-) iff props
+) iff laws
   law left_identity;
   proof
     by rewrite_r(
@@ -1853,7 +1856,7 @@ model ResultMonad satisfies Monad(
   lambda (X : Sort) st Result(X, E),
   return,
   bind
-) iff props
+) iff laws
   law left_identity;
   proof
     by rewrite_r(
@@ -2107,7 +2110,7 @@ model ListMonad satisfies Monad(
   List,
   return,
   bind
-) iff props
+) iff laws
   law left_identity;
   proof
     by rewrite_r(
@@ -2425,7 +2428,7 @@ theory Magma(
     x y : S
   )
     |- mul(x, y) = mul(x, y);
-qed;
+end;
 
 theory Semigroup(
   S : Sort,
@@ -2437,7 +2440,7 @@ theory Semigroup(
     x y z : S
   )
     |- mul(mul(x, y), z) = mul(x, mul(y, z));
-qed;
+end;
 
 theory Monoid(
   S : Sort,
@@ -2455,7 +2458,7 @@ theory Monoid(
     x : S
   )
     |- mul(x, e) = x;
-qed;
+end;
 
 theory CommutativeMonoid(
   S : Sort,
@@ -2468,7 +2471,7 @@ theory CommutativeMonoid(
     x y : S
   )
     |- mul(x, y) = mul(y, x);
-qed;
+end;
 
 theory Group(
   S : Sort,
@@ -2487,7 +2490,7 @@ theory Group(
     x : S
   )
     |- mul(x, inv(x)) = e;
-qed;
+end;
 
 theory AbelianGroup(
   S : Sort,
@@ -2501,7 +2504,7 @@ theory AbelianGroup(
     x y : S
   )
     |- mul(x, y) = mul(y, x);
-qed;
+end;
 ```
 
 ---

@@ -105,7 +105,7 @@ model ListMonad satisfies Monad(
   List,
   return,
   bind
-) iff props
+) iff laws
   law left_identity;
   proof
     by rewrite_r(
