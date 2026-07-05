@@ -38,47 +38,63 @@ as an obligation. Here's the ``Monad`` interface from ``monad.alg``:
        ⊢ bind(bind(m, f), g) = bind(m, λ (x : A) st bind(f(x), g));
    qed;
 
-``option.alg`` proves ``Option`` is a lawful monad with a ``model`` block. Its
-shape is: name the theory, bind each parameter to a concrete operator, then prove
-every law just like a lemma (this listing elides the proof bodies):
+``option.alg``, ``list.alg``, and ``result.alg`` each ship a verified ``model``
+proving their type satisfies ``Monad``. Let's build a smaller one, end to end, that
+you can actually run.
 
-.. code-block:: text
-
-   model OptionMonad satisfies Monad(A, B, C, Option, return, bind) iff props
-     law left_identity;   proof … qed;
-     law right_identity;  proof … qed;
-     law associativity;   proof … qed;
-   qed;
-
-Here's that first law — ``bind(return(x), f) = f(x)`` — as a standalone lemma you
-can actually run (inside the model it's the body of ``law left_identity;``). Since
-``return(x)`` equals ``some(x)`` only *through* the axiom ``return_def`` — never by
-silent computation — the proof **rewrites** ``return(x)`` to ``some(x)`` with
-``rewrite_r``, then finishes with ``bind_some``:
+Remember the stack from :doc:`stack`? Those two axioms are really an *interface* —
+any type with ``push`` / ``pop`` / ``top`` obeying them is a stack. So make that a
+theory, then prove our concrete stack is a **model** of it:
 
 .. code-block:: alg
 
-   import option;
-   import core(rewrite_r);
+   import core;
 
-   lemma option_left_identity(A B : Sort, x : A, f : A → Option(B))
-     ⊢ bind(return(x), f) = f(x);
-   proof
-     by rewrite_r(
-       Option(A),
-       return(x), some(x),
-       return_def(A, x),                       # return(x) = some(x)
-       λ (o : Option(A)) st bind(o, f) = f(x)
-     )
-     then ⊢ bind(some(x), f) = f(x);
-     by bind_some(A, B, x, f);
+   sort Stack : Sort → Sort;
+   op empty : → Stack(A);
+   op push  : A * Stack(A) → Stack(A);
+   op pop   : Stack(A) → Stack(A);
+   op top   : Stack(A) → A;
+
+   axiom top_ax(A : Sort, x : A, s : Stack(A))  ⊢ top(push(x, s)) = x;
+   axiom pop_ax(A : Sort, x : A, s : Stack(A))  ⊢ pop(push(x, s)) = s;
+
+   # the interface: any S with these operations obeying these laws is a stack
+   theory StackSpec(
+     A : Sort,
+     S : Sort → Sort,
+     e : S(A),
+     psh : A * S(A) → S(A),
+     pp : S(A) → S(A),
+     tp : S(A) → A
+   ) laws
+     law top_law(x : A, s : S(A))  ⊢ tp(psh(x, s)) = x;
+     law pop_law(x : A, s : S(A))  ⊢ pp(psh(x, s)) = s;
    qed;
 
-A model bundles three proofs like this — one per law — and, once verified,
-certifies ``Option`` as a monad. It's the ``defeq`` discipline from
-:doc:`first-proofs` at scale: every monad-law proof in ``option.alg``,
-``list.alg``, and ``result.alg`` reaches its equalities through explicit
-``rewrite_r`` / ``rewrite_l`` steps — never by silent evaluation.
+   # the claim: our concrete operations are a stack
+   model ConcreteStack satisfies StackSpec(A, Stack, empty, push, pop, top) iff props
+     law top_law;
+     proof
+       by top_ax(A, x, s);
+     qed;
+
+     law pop_law;
+     proof
+       by pop_ax(A, x, s);
+     qed;
+   qed;
+
+Read the ``model`` header as *binding* each theory parameter to something concrete:
+the constructor ``S`` becomes ``Stack``, ``psh`` becomes ``push``, and so on. Then
+``iff props`` opens the obligations — one ``law <name>; proof … qed;`` per law in
+the theory — and each is proved just like a lemma. Here every proof is a one-liner,
+because ``StackSpec``'s laws are exactly our two axioms. Press **Check ▶**: two
+obligations discharged, and ``ConcreteStack`` is certified a stack.
+
+Every model has this shape, however big. ``option.alg``'s ``OptionMonad`` is the
+same skeleton with three richer proofs — each threading ``rewrite_r`` to reach its
+equality, the ``defeq`` discipline from :doc:`first-proofs` at scale.
 
 Imports and the standard library
 ================================
