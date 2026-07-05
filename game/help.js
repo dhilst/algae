@@ -73,6 +73,28 @@ const GENERAL_HTML = `
     <li>Messages read <code>line:col&nbsp;&nbsp;message</code> and underline in the
       editor. Fix the first one first — later errors are often just fallout.</li>
   </ul>
+
+  <h3>Staying alive</h3>
+  <ul>
+    <li><b>Health:</b> you begin at <b>10 / 10</b> HP. Banishing a sphinx grants
+      <b>+2 HP and +2 max HP</b>; felling a dragon grants <b>+5 / +5</b>. There is no
+      ceiling on maximum health — the deeper you fight, the tougher you get.</li>
+    <li><b>Food</b> restores <b>5 HP</b> (never above your maximum). Some sphinxes drop
+      it and treasure chests hold rations; eat from the 🍖 counter in the top bar.</li>
+    <li><b>Potion of Vigor</b> (found in a chest) raises your maximum by <b>+5</b> and
+      heals <b>+5</b>.</li>
+    <li><b>Hunger &amp; damage:</b> the dungeon is hungry — you lose <b>1 HP every real
+      minute</b> you spend down here, and if you hit <b>0</b> the dark takes you.
+      <b>This drain pauses while this help is open</b>, so read at your leisure.</li>
+    <li><b>Engaging:</b> wandering into a room with an unbeaten sphinx has a
+      <b>1-in-3 chance</b> it seizes you on the spot — you cannot simply stroll past
+      them. You may also choose to <b>Face</b> any monster. <b>Fleeing</b> a sphinx can
+      fail (10% on Level -1, rising to 50% on -5, impossible on -6), and a failed
+      escape costs you a bite of HP. Dragons cannot be fled.</li>
+    <li><b>Getting deeper:</b> a dragon guards the hatch from Level -3 down — beat it
+      for the key. Reach Level -6, defeat the demon, take the ring, and climb back to
+      the surface before sunrise.</li>
+  </ul>
 `;
 
 let openModal = null;
@@ -148,6 +170,8 @@ export function openHelp(challenge) {
   document.addEventListener("keydown", onKey);
   document.body.appendChild(overlay);
   openModal = overlay;
+  // Let the game pause hunger/damage while the player is reading.
+  document.dispatchEvent(new CustomEvent("help-open"));
   // Focus the modal so it scrolls with the keyboard and Esc is caught reliably.
   modal.tabIndex = -1;
   modal.focus();
@@ -162,5 +186,6 @@ export function closeHelp() {
   if (openModal) {
     openModal.remove();
     openModal = null;
+    document.dispatchEvent(new CustomEvent("help-close"));
   }
 }

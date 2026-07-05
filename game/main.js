@@ -607,4 +607,11 @@ function winScreen() {
 // Pause hunger persistence cleanly if the tab is hidden/closed.
 window.addEventListener("beforeunload", () => persist());
 
+// Freeze the hunger clock while the help modal is open, so reading the manual
+// never costs the player health. Resume when it closes (mid-run only).
+document.addEventListener("help-open", () => stopHunger());
+document.addEventListener("help-close", () => {
+  if (run && currentScreen !== "over" && currentScreen !== "win") startHunger();
+});
+
 boot();
