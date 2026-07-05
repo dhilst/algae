@@ -144,3 +144,9 @@ even work in proof-argument positions: ``by rewrite_r(Nat, k + 0, k, ?eq, _)?;``
 reports ``?eq : ⊢ k + 0 = k`` — the equation you still owe a proof of. And a hole
 the goal *doesn't* pin down — a genuinely free choice, like ``transitivity``'s
 middle term — is shown with its type and no value, so you know it's yours to pick.
+
+Inspect scales to whatever the tactic does. If it introduces an eigenvariable —
+say ``by forall_intro(T, _ = _)?`` — the suggested continuation restates it, so
+``then x : T ⊢ x = x;`` comes out ready to paste. If it leaves *two or more*
+subgoals, you get a whole ``cases`` skeleton, one ``case`` per goal with a named
+hole in each, so you can drop it in and fill the branches one at a time.

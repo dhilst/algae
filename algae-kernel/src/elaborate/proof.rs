@@ -900,12 +900,27 @@ fn report_tactic_hole(
                 }
                 if next.len() == 1 {
                     let name = stmt.subgoal_name.clone().unwrap_or_else(|| "goal".into());
+                    // Restate the remaining subgoal exactly — including any
+                    // eigenvariables/hypotheses the tactic introduced — so the
+                    // suggested `then …` is a valid continuation to paste.
+                    let sq = &next[0];
+                    let ext = show_ctx_ext(&sq.ctx[ctx.len().min(sq.ctx.len())..], &elab.interner);
+                    let g = show(&sq.goal, &elab.interner);
+                    let sequent = if ext.is_empty() { format!("⊢ {g}") } else { format!("{ext} ⊢ {g}") };
                     msg.push_str(&format!(
-                        "\nContinue with:\n  then ⊢ {};\n  by wip(?{name});\n",
-                        show(&next[0].goal, &elab.interner)
+                        "\nContinue with:\n  then {sequent};\n  by wip(?{name});\n"
                     ));
                 } else {
-                    msg.push_str("\nContinue with `cases`, one `case` per goal.\n");
+                    // Paste-able `cases` skeleton, one `case` per subgoal, each
+                    // branch left as a named hole to fill in.
+                    msg.push_str("\nContinue with:\n  cases\n");
+                    for (k, sq) in next.iter().enumerate() {
+                        let ext = show_ctx_ext(&sq.ctx[ctx.len().min(sq.ctx.len())..], &elab.interner);
+                        let g = show(&sq.goal, &elab.interner);
+                        let sequent = if ext.is_empty() { format!("⊢ {g}") } else { format!("{ext} ⊢ {g}") };
+                        msg.push_str(&format!("    case {sequent};\n      by wip(?g{});\n    wip;\n", k + 1));
+                    }
+                    msg.push_str("  wip;\n");
                 }
             }
             Err(e) => {
