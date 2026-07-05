@@ -373,6 +373,11 @@ even work in proof-argument positions: <code class="docutils literal notranslate
 reports <code class="docutils literal notranslate"><span class="pre">?eq</span> <span class="pre">:</span> <span class="pre">⊢</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">k</span></code> — the equation you still owe a proof of. And a hole
 the goal <em>doesn’t</em> pin down — a genuinely free choice, like <code class="docutils literal notranslate"><span class="pre">transitivity</span></code>’s
 middle term — is shown with its type and no value, so you know it’s yours to pick.</p>
+<p>Inspect scales to whatever the tactic does. If it introduces an eigenvariable —
+say <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">forall_intro(T,</span> <span class="pre">_</span> <span class="pre">=</span> <span class="pre">_)?</span></code> — the suggested continuation restates it, so
+<code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">x</span> <span class="pre">:</span> <span class="pre">T</span> <span class="pre">⊢</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">x;</span></code> comes out ready to paste. If it leaves <em>two or more</em>
+subgoals, you get a whole <code class="docutils literal notranslate"><span class="pre">cases</span></code> skeleton, one <code class="docutils literal notranslate"><span class="pre">case</span></code> per goal with a named
+hole in each, so you can drop it in and fill the branches one at a time.</p>
 </section>
 </section>
 
