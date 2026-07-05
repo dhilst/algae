@@ -1,5 +1,7 @@
 # Algae
 
+**📖 Live docs & in-browser playground: <https://dhilst.github.io/algae/>**
+
 Algae v2 is a parser-oriented proof and algebraic-specification language: typed
 sorts, total operators, product/sum types, propositions, sequents, axioms,
 inference rules, lemmas/theorems, theories, laws, models, and **explicit proof
