@@ -23,6 +23,17 @@ function blockSource(block) {
   return text.replace(/\n$/, "");
 }
 
+// Sphinx's doctools.js installs global single-key shortcuts on `document`
+// (`/` focuses the search box; ← / → page-navigate) and only exempts
+// <input>/<textarea>/<select> elements. CodeMirror's editable area is a
+// contenteditable <div>, so those shortcuts fire mid-typing. Stopping keydown
+// events from bubbling out of the mounted editor keeps them from reaching the
+// document handler, while CodeMirror (whose handlers live on the inner
+// .cm-content) still processes the key at the target first.
+function shieldGlobalKeys(host) {
+  host.addEventListener("keydown", (event) => event.stopPropagation());
+}
+
 let editorModulePromise = null;
 function loadEditor() {
   if (!editorModulePromise) editorModulePromise = import(EDITOR_URL);
@@ -56,6 +67,7 @@ async function upgradeCodeBlocks(mountAlgaeEditor) {
       wasm: checkable ? wasm : undefined,
       moduleName: "example",
     });
+    shieldGlobalKeys(wrapper);
     block.replaceWith(wrapper);
   }
 }
@@ -79,6 +91,7 @@ async function upgradePlayground(mountAlgaeEditor) {
   const wasm = await loadWasm().catch(() => null);
   host.textContent = "";
   mountAlgaeEditor(host, { doc, wasm: wasm || undefined, moduleName });
+  shieldGlobalKeys(host);
 }
 
 async function main() {
