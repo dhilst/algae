@@ -6,5 +6,6 @@
   "module": "room060",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": true,
-  "lore": "The dragon's fire roars, and somewhere inside it you seem to hear every fear you have never spoken aloud."
+  "lore": "The dragon's fire roars, and somewhere inside it you seem to hear every fear you have never spoken aloud.",
+  "help": "Induction splits a `forall (n : Nat)` goal into a base case at `0` and a step case that may assume the property for `n`.\n✦ Secret: this same rule proves the standard library's `n + 0 = n`. You are nearer the bottom than the quiet makes it seem."
 }

@@ -5,5 +5,6 @@
   "monster": "sphinx",
   "module": "room004",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
-  "food": false
+  "food": false,
+  "help": "Two links `a = b` and `b = c` chain into `a = c`. `transitivity(T, a, b, c)` opens a `cases` block with two goals — prove them `by ab;` and `by bc;`. In a `cases` block, every branch and the block itself is closed with `qed` (or `wip` while unfinished)."
 }

@@ -5,5 +5,6 @@
   "monster": "sphinx",
   "module": "room042",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
-  "food": true
+  "food": true,
+  "help": "You hold an implication and its premise; one rule spends both at once, across two cases.\n✦ Whisper: every dragon in this place was once a sphinx that no one bothered to answer."
 }
