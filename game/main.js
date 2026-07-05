@@ -60,7 +60,7 @@ function titleScreen() {
 
   const story = el("div", "title-story");
   story.appendChild(el("p", null,
-    "On the eve of your wedding you lie awake beside Miriam — the purest, most luminous soul in the kingdom — certain in your bones that you are not good enough for the morning to come. Sleep takes you at last, and with it a nightmare: a demon steals into the house and carries off the wedding ring."));
+    "On the eve of your wedding, a demon breaks into the house and steals the wedding ring. Miriam — the purest, most luminous soul in the kingdom — does not weep. She takes your hand and says only, with a faith in you that you have never quite been able to share: “Bring it back before sunrise.”"));
   story.appendChild(el("p", null, "You go down after it, into an underworld that somehow seems to remember you. Defeat each monster by completing the unfinished proof it guards. Recover the ring. Return before sunrise."));
   wrap.appendChild(story);
 
@@ -559,9 +559,9 @@ function ringScreen() {
   app.innerHTML = "";
   const wrap = el("div", "screen message-screen ring-screen");
   wrap.appendChild(el("div", "big-emoji", "💍"));
-  wrap.appendChild(el("h1", null, "The demon lowers its head"));
-  wrap.appendChild(el("p", "message-body", "As the fire dies the ring is there in its open hand — and its face, you see now, was only ever your own. It presses the ring into your palm. “Take it,” it says, in a voice you know too well. “Go up to her.”"));
-  wrap.appendChild(el("p", "message-body dim", "Climb back to the surface with the ring."));
+  wrap.appendChild(el("h1", null, "The demon falls"));
+  wrap.appendChild(el("p", "message-body", "The last of its fire gutters out, and there in the ash lies the wedding ring, unburnt and bright. You close your fist around it. Far above, at the top of the long stair, the first grey of dawn is waiting."));
+  wrap.appendChild(el("p", "message-body dim", "Climb back to the surface with the ring before sunrise."));
   const b = el("button", "btn btn-primary", "Begin the long climb");
   b.addEventListener("click", () => dungeonScreen());
   wrap.appendChild(b);
