@@ -98,6 +98,22 @@ export function startCombat(host, opts) {
 
   castBtn.addEventListener("click", cast);
 
+  // Ctrl/Cmd-Enter casts the proof (win check), not just the editor's internal
+  // check. Caught in the capture phase on the editor host so it runs before
+  // CodeMirror's own Mod-Enter binding, which we then suppress to avoid a
+  // redundant second check.
+  editorSlot.addEventListener(
+    "keydown",
+    (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        cast();
+      }
+    },
+    true
+  );
+
   if (fleeBtn) {
     fleeBtn.addEventListener("click", () => {
       if (done) return;
