@@ -1,20 +1,16 @@
 # Two halves must both be spoken.
-import core(and_intro, refl);
+import core(and_intro);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-
-lemma banish
-  |- a = a /\ b = b;
+lemma banish(A B : Prop, x := A, y := B)
+  |- A /\ B;
 proof
-  by and_intro(a = a, b = b) cases
+  by and_intro(A, B) cases
     case
-      |- a = a;
+      |- A;
       by wip;
     wip;
     case
-      |- b = b;
+      |- B;
       by wip;
     wip;
   wip;

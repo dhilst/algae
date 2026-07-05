@@ -1,16 +1,12 @@
 # Grant the hypothesis; the conclusion stands on its own.
-import core(implication_intro, refl);
+import core(implication_intro);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-
-lemma banish
-  |- (b = b) => (a = a);
+lemma banish(A : Prop)
+  |- A => A;
 proof
-  by implication_intro(b = b, a = a)
+  by implication_intro(A, A)
   then
-    hyp := b = b;
-    |- a = a;
+    P := A;
+    |- A;
     by wip;
 wip;

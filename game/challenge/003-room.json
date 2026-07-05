@@ -7,5 +7,5 @@
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
   "lore": "Scratched on the wall, in a hand you almost recognize: WILL I BE ENOUGH?",
-  "help": "From a conjunction `P /\\ Q` you may keep just one half. `and_right(P, Q)` asks for a proof of `P /\\ Q` (the axiom `conj`) and yields `Q`."
+  "help": "From a conjunction `A /\\ B` you may keep just one half. `and_right(A, B)` asks for a proof of `A /\\ B` (you hold `both`) and yields `B`. Supply the conjunction with `by both;`."
 }

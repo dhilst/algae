@@ -6,5 +6,5 @@
   "module": "room022",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
-  "help": "To prove `P => Q`, assume `P` and prove `Q`. `implication_intro(P, Q)` hands you the hypothesis; here the goal `a = a` needs only `refl` and never uses it."
+  "help": "To prove `A => A`, assume `A` and prove `A`. `implication_intro(A, A)` introduces the antecedent as a hypothesis named `P` — the goal then *is* that hypothesis, closed `by P;`."
 }

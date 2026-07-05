@@ -1,12 +1,10 @@
-# Something exists. Name it, then reach a truth that never needed the name.
-import core(refl, exists_elim);
+# Something exists. Unpack it, and pack it up again.
+import core(exists_intro, exists_elim);
 
 sort T : Sort;
-op a : -> T;
-axiom ex |- exists (x : T) st x = x;
 
-lemma banish
-  |- a = a;
+lemma banish(P : T -> Prop, ex := exists (x : T) st P(x))
+  |- exists (x : T) st P(x);
 proof
   by wip;
 wip;

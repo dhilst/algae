@@ -1,13 +1,8 @@
 # Assume the forbidden, and let it collapse into falsehood.
-import core(negation_intro);
+import core(negation_intro, implication_elim);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-axiom absurd |- False;
-
-lemma banish
-  |- ~(a = b);
+lemma banish(A : Prop, f := A => False)
+  |- ~A;
 proof
   by wip;
 wip;
