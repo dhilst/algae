@@ -137,6 +137,9 @@ body {
   text-shadow: 4px 4px 0 var(--stone-0);
 }
 .title-tag { color: var(--blood-bright); margin: 0; font-style: italic; }
+.title-note { margin: 0; font-style: italic; font-size: 13px; color: var(--ink-dim); }
+.title-note-link { color: var(--amber-bright); text-decoration: underline; }
+.title-note-link:hover { color: var(--gold); }
 .title-story {
   text-align: left;
   background: var(--stone-1);
