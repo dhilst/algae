@@ -58,6 +58,16 @@ function titleScreen() {
   wrap.appendChild(el("h1", "title-name", "Dungeon Proof Crawler"));
   wrap.appendChild(el("p", "title-tag", "Every monster is a proof. Bring back the ring before sunrise."));
 
+  const note = el("p", "title-note");
+  note.appendChild(document.createTextNode("This is a game about Algae, an algebraic specification language. If you don't know what Algae is, "));
+  const tut = el("a", "title-note-link", "check out the tutorial first");
+  tut.href = "https://dhilst.github.io/algae/";
+  tut.target = "_blank";
+  tut.rel = "noopener noreferrer";
+  note.appendChild(tut);
+  note.appendChild(document.createTextNode("."));
+  wrap.appendChild(note);
+
   const story = el("div", "title-story");
   story.appendChild(el("p", null,
     "On the eve of your wedding, a demon breaks into the house and steals the wedding ring. Miriam — the purest, most luminous soul in the kingdom — does not weep. She takes your hand and says only, with a faith in you that you have never quite been able to share: “Bring it back before sunrise.”"));
