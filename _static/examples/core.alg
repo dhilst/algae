@@ -157,6 +157,17 @@ rule false_elim(
   ⊢ P
 end;
 
+# Proof by contrapositive: to prove `P ⇒ Q`, prove `¬Q ⇒ ¬P` instead. This is a
+# classical principle (its soundness rests on the law of excluded middle), added
+# as a primitive rule so the contrapositive proof technique is available.
+rule contrapositive(
+  P Q : Prop
+)
+  ⊢ ¬Q ⇒ ¬P
+  ────────────────────────
+  ⊢ P ⇒ Q
+end;
+
 rule biconditional_intro(
   P Q : Prop
 )

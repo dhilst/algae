@@ -265,7 +265,12 @@ in <a class="reference internal" href="inference-rules.html"><span class="doc">I
 (<a class="reference internal" href="tour/logic.html"><span class="doc">The logical toolkit</span></a>, <a class="reference internal" href="tour/quantifiers.html"><span class="doc">Quantifiers and ⇔</span></a>).</p>
 <p>Here’s one worked all the way through, so you know what a finished answer looks
 like — the <em>and</em>-introduction from <a class="reference internal" href="backward-reasoning.html"><span class="doc">Reasoning backward</span></a>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_intro</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">and_intro</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∧</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">both</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">,</span> <span class="n">y</span> <span class="o">:=</span> <span class="n">B</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">;</span>
@@ -286,7 +291,11 @@ axiom or an assumption <code class="docutils literal notranslate"><span class="p
 <div class="tip admonition">
 <p class="admonition-title">Exercises</p>
 <p><strong>1a.</strong> From a proof of <code class="docutils literal notranslate"><span class="pre">A</span></code>, build <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code> (the <em>left</em> injection).</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_intro_left</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">or_intro_left</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∨</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">inject_left</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">B</span><span class="p">;</span>
@@ -301,7 +310,11 @@ axiom or an assumption <code class="docutils literal notranslate"><span class="p
 so <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">A;</span></code>, closed <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">x</span></code>.</p>
 </div>
 <p><strong>1b.</strong> Same, but the <em>right</em> injection: from a proof of <code class="docutils literal notranslate"><span class="pre">B</span></code>, build <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_intro_right</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">or_intro_right</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∨</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">inject_right</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">y</span> <span class="o">:=</span> <span class="n">B</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">B</span><span class="p">;</span>
@@ -316,7 +329,11 @@ so <code class="docutils literal notranslate"><span class="pre">then</span> <spa
 then <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">y</span></code>.</p>
 </div>
 <p><strong>1c.</strong> Take a conjunction apart: from a proof of <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code>, get <code class="docutils literal notranslate"><span class="pre">A</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_left</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">and_left</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∧</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">take_left</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">h</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span>
@@ -340,7 +357,11 @@ named hypothesis after its premise <code class="docutils literal notranslate"><s
 <div class="tip admonition">
 <p class="admonition-title">Exercises</p>
 <p><strong>2a.</strong> Prove the identity implication <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">A</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">implication_intro</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">implication_intro</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="n">P</span> <span class="o">:=</span> <span class="n">P</span> <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">id</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">A</span><span class="p">;</span>
@@ -355,7 +376,11 @@ named hypothesis after its premise <code class="docutils literal notranslate"><s
 <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">:</span> <span class="pre">A</span></code> and proving <code class="docutils literal notranslate"><span class="pre">A</span></code> — close it <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">P</span></code>.</p>
 </div>
 <p><strong>2b.</strong> If you already hold a proof of <code class="docutils literal notranslate"><span class="pre">B</span></code>, then <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">B</span></code> for any <code class="docutils literal notranslate"><span class="pre">A</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">implication_intro</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">implication_intro</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="n">P</span> <span class="o">:=</span> <span class="n">P</span> <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">const_imp</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">q</span> <span class="o">:=</span> <span class="n">B</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">B</span><span class="p">;</span>
@@ -370,7 +395,17 @@ named hypothesis after its premise <code class="docutils literal notranslate"><s
 <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">q</span></code>.</p>
 </div>
 <p><strong>2c.</strong> Prove <code class="docutils literal notranslate"><span class="pre">(A</span> <span class="pre">∧</span> <span class="pre">B)</span> <span class="pre">⇒</span> <span class="pre">A</span></code> — assume the conjunction, then project.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">implication_intro</span><span class="p">,</span> <span class="n">and_left</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">implication_intro</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="n">P</span> <span class="o">:=</span> <span class="n">P</span> <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">and_left</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∧</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">proj</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="p">(</span><span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">)</span> <span class="o">⇒</span> <span class="n">A</span><span class="p">;</span>
@@ -395,7 +430,25 @@ assuming <code class="docutils literal notranslate"><span class="pre">B</span></
 <div class="tip admonition">
 <p class="admonition-title">Exercises</p>
 <p><strong>3a.</strong> Disjunction commutes: from <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code>, prove <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">∨</span> <span class="pre">A</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_elim</span><span class="p">,</span> <span class="n">or_intro_left</span><span class="p">,</span> <span class="n">or_intro_right</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">or_elim</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="n">R</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∨</span> <span class="n">Q</span><span class="p">;</span>
+  <span class="n">P</span> <span class="o">:=</span> <span class="n">P</span> <span class="o">⊢</span> <span class="n">R</span><span class="p">;</span>
+  <span class="n">Q</span> <span class="o">:=</span> <span class="n">Q</span> <span class="o">⊢</span> <span class="n">R</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">R</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">or_intro_left</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∨</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">or_intro_right</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∨</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">or_comm</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">d</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">B</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">B</span> <span class="o">∨</span> <span class="n">A</span><span class="p">;</span>
@@ -411,7 +464,13 @@ assuming <code class="docutils literal notranslate"><span class="pre">B</span></
 <code class="docutils literal notranslate"><span class="pre">or_intro_right</span></code>) and a branch <code class="docutils literal notranslate"><span class="pre">Q</span> <span class="pre">:=</span> <span class="pre">B</span></code> (with <code class="docutils literal notranslate"><span class="pre">or_intro_left</span></code>).</p>
 </div>
 <p><strong>3b.</strong> A trivial-looking but instructive one: from <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">A</span></code>, prove <code class="docutils literal notranslate"><span class="pre">A</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_elim</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">or_elim</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="n">R</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∨</span> <span class="n">Q</span><span class="p">;</span>
+  <span class="n">P</span> <span class="o">:=</span> <span class="n">P</span> <span class="o">⊢</span> <span class="n">R</span><span class="p">;</span>
+  <span class="n">Q</span> <span class="o">:=</span> <span class="n">Q</span> <span class="o">⊢</span> <span class="n">R</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">R</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">idem</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">d</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">A</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span>
@@ -427,7 +486,20 @@ branch hands you an assumption of <code class="docutils literal notranslate"><sp
 </div>
 <p><strong>3c.</strong> The constructive dilemma: from <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">C</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">⇒</span> <span class="pre">C</span></code>,
 conclude <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_elim</span><span class="p">,</span> <span class="n">implication_elim</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">or_elim</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="n">R</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∨</span> <span class="n">Q</span><span class="p">;</span>
+  <span class="n">P</span> <span class="o">:=</span> <span class="n">P</span> <span class="o">⊢</span> <span class="n">R</span><span class="p">;</span>
+  <span class="n">Q</span> <span class="o">:=</span> <span class="n">Q</span> <span class="o">⊢</span> <span class="n">R</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">R</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">implication_elim</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">dilemma</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="n">C</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">d</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">B</span><span class="p">,</span> <span class="n">f</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">C</span><span class="p">,</span> <span class="n">g</span> <span class="o">:=</span> <span class="n">B</span> <span class="o">⇒</span> <span class="n">C</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">C</span><span class="p">;</span>
@@ -451,8 +523,24 @@ case</em>), then assume <code class="docutils literal notranslate"><span class="
 <code class="docutils literal notranslate"><span class="pre">induction</span></code> rule from <code class="docutils literal notranslate"><span class="pre">nat</span></code> has exactly those two premises, so it splits into
 two <code class="docutils literal notranslate"><span class="pre">case</span></code> s. Here’s the classic — <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">n</span></code> — worked in full; the
 exercises ask you to rebuild each part.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">backward</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
+
+<span class="k">rule</span> <span class="n">induction</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>
+  <span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">,</span> <span class="n">ih</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+  <span class="p">──────────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+<span class="k">rule</span> <span class="n">backward</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">add_zero_right</span>
   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">n</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
@@ -473,8 +561,24 @@ exercises ask you to rebuild each part.</p>
 <div class="tip admonition">
 <p class="admonition-title">Exercises</p>
 <p><strong>4a.</strong> Fill in only the <strong>base case</strong> — the step is done for you.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">backward</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
+
+<span class="k">rule</span> <span class="n">induction</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>
+  <span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">,</span> <span class="n">ih</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+  <span class="p">──────────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+<span class="k">rule</span> <span class="n">backward</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">add_zero_right</span>
   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">n</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
@@ -499,8 +603,24 @@ so <code class="docutils literal notranslate"><span class="pre">by</span> <span 
 <code class="docutils literal notranslate"><span class="pre">qed</span></code>).</p>
 </div>
 <p><strong>4b.</strong> Now fill in only the <strong>step case</strong> — the base is done.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">backward</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
+
+<span class="k">rule</span> <span class="n">induction</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>
+  <span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">,</span> <span class="n">ih</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+  <span class="p">──────────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+<span class="k">rule</span> <span class="n">backward</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">add_zero_right</span>
   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">n</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
@@ -523,8 +643,17 @@ so <code class="docutils literal notranslate"><span class="pre">by</span> <span 
 <span class="pre">s(k</span> <span class="pre">+</span> <span class="pre">0);</span></code>, and finish <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">add_succ_left(k,</span> <span class="pre">0);</span></code>.</p>
 </div>
 <p><strong>4c.</strong> From scratch: prove it with nothing but the induction skeleton.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">backward</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
+<span class="k">rule</span> <span class="n">backward</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">add_zero_right</span>
   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">n</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
@@ -558,7 +687,18 @@ goal. (This is also why the next section has no exercises.)</p>
 <div class="tip admonition">
 <p class="admonition-title">Exercises</p>
 <p><strong>5a.</strong> From <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">False</span></code>, prove <code class="docutils literal notranslate"><span class="pre">¬A</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">negation_intro</span><span class="p">,</span> <span class="n">implication_elim</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">negation_intro</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="n">P</span> <span class="o">:=</span> <span class="n">P</span> <span class="o">⊢</span> <span class="no">False</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">¬</span><span class="n">P</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">implication_elim</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">neg_from_imp</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">f</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">⇒</span> <span class="no">False</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="o">¬</span><span class="n">A</span><span class="p">;</span>
@@ -573,7 +713,18 @@ goal. (This is also why the next section has no exercises.)</p>
 <code class="docutils literal notranslate"><span class="pre">implication_elim(A,</span> <span class="pre">False)</span></code> against <code class="docutils literal notranslate"><span class="pre">f</span></code> and <code class="docutils literal notranslate"><span class="pre">P</span></code>.</p>
 </div>
 <p><strong>5b.</strong> Explosion: from a proof of <code class="docutils literal notranslate"><span class="pre">A</span></code> and a proof of <code class="docutils literal notranslate"><span class="pre">¬A</span></code>, prove any <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">false_elim</span><span class="p">,</span> <span class="n">negation_elim</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">false_elim</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="no">False</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">negation_elim</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="o">¬</span><span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="no">False</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">explode</span><span class="p">(</span><span class="n">A</span> <span class="n">C</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">,</span> <span class="n">nx</span> <span class="o">:=</span> <span class="o">¬</span><span class="n">A</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">C</span><span class="p">;</span>
@@ -588,7 +739,18 @@ goal. (This is also why the next section has no exercises.)</p>
 <code class="docutils literal notranslate"><span class="pre">negation_elim(A)</span></code> produces from <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">nx</span></code> (two <code class="docutils literal notranslate"><span class="pre">cases</span></code>).</p>
 </div>
 <p><strong>5c.</strong> Prove <code class="docutils literal notranslate"><span class="pre">¬¬A</span></code> from <code class="docutils literal notranslate"><span class="pre">A</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">negation_intro</span><span class="p">,</span> <span class="n">negation_elim</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">negation_intro</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="n">P</span> <span class="o">:=</span> <span class="n">P</span> <span class="o">⊢</span> <span class="no">False</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">¬</span><span class="n">P</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">negation_elim</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="o">¬</span><span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="no">False</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">dni</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="o">¬</span><span class="p">(</span><span class="o">¬</span><span class="n">A</span><span class="p">);</span>
@@ -606,14 +768,83 @@ and <code class="docutils literal notranslate"><span class="pre">x</span> <span 
 </section>
 <section id="proof-by-contrapositive">
 <h2>6. Proof by contrapositive<a class="headerlink" href="#proof-by-contrapositive" title="Link to this heading">¶</a></h2>
-<p><strong>Goal:</strong> prove <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code>. <strong>Method (classically):</strong> prove <code class="docutils literal notranslate"><span class="pre">¬Q</span> <span class="pre">⇒</span> <span class="pre">¬P</span></code> instead.</p>
-<p>This one Algae’s core <strong>cannot</strong> do. Turning a proof of <code class="docutils literal notranslate"><span class="pre">¬Q</span> <span class="pre">⇒</span> <span class="pre">¬P</span></code> back into
-<code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code> requires double-negation elimination — again, excluded middle — which
-<code class="docutils literal notranslate"><span class="pre">core</span></code> doesn’t assume. (The <em>forward</em> direction is fine: from <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code> you can
-always derive <code class="docutils literal notranslate"><span class="pre">¬Q</span> <span class="pre">⇒</span> <span class="pre">¬P</span></code>; it’s the <em>reverse</em>, the one the technique relies on,
-that’s off-limits.) If you need classical reasoning, you’d add an excluded-middle
-axiom of your own — but that’s beyond this crash course, so there are no exercises
-here.</p>
+<p><strong>Goal:</strong> prove <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code>. <strong>Method:</strong> prove <code class="docutils literal notranslate"><span class="pre">¬Q</span> <span class="pre">⇒</span> <span class="pre">¬P</span></code> instead. <code class="docutils literal notranslate"><span class="pre">core</span></code>
+provides this as the <code class="docutils literal notranslate"><span class="pre">contrapositive</span></code> rule: it takes your goal <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code> down to
+the single premise <code class="docutils literal notranslate"><span class="pre">¬Q</span> <span class="pre">⇒</span> <span class="pre">¬P</span></code>.</p>
+<div class="note admonition">
+<p class="admonition-title">This one is classical</p>
+<p>Unlike everything else in this chapter, <code class="docutils literal notranslate"><span class="pre">contrapositive</span></code> is a <em>classical</em>
+principle — turning <code class="docutils literal notranslate"><span class="pre">¬Q</span> <span class="pre">⇒</span> <span class="pre">¬P</span></code> back into <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">⇒</span> <span class="pre">Q</span></code> rests on the law of
+excluded middle. <code class="docutils literal notranslate"><span class="pre">core</span></code> ships it as a primitive rule so the technique is
+available; the rest of the logic stays intuitionistic.</p>
+</div>
+<div class="tip admonition">
+<p class="admonition-title">Exercises</p>
+<p><strong>6a.</strong> From <code class="docutils literal notranslate"><span class="pre">¬B</span> <span class="pre">⇒</span> <span class="pre">¬A</span></code>, prove <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">B</span></code>.</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">contrapositive</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">¬</span><span class="n">Q</span> <span class="o">⇒</span> <span class="o">¬</span><span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">lemma</span> <span class="n">contra_direct</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">nn</span> <span class="o">:=</span> <span class="o">¬</span><span class="n">B</span> <span class="o">⇒</span> <span class="o">¬</span><span class="n">A</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">B</span><span class="p">;</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
+<span class="kp">wip</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p><code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">contrapositive(A,</span> <span class="pre">B)</span> <span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">¬B</span> <span class="pre">⇒</span> <span class="pre">¬A;</span> <span class="pre">by</span> <span class="pre">nn;</span></code> — the rule turns
+the goal straight into the hypothesis you hold.</p>
+</div>
+<p><strong>6b.</strong> The mirror: from <code class="docutils literal notranslate"><span class="pre">¬A</span> <span class="pre">⇒</span> <span class="pre">¬B</span></code>, prove <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">⇒</span> <span class="pre">A</span></code>.</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">contrapositive</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">¬</span><span class="n">Q</span> <span class="o">⇒</span> <span class="o">¬</span><span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">lemma</span> <span class="n">contra_swap</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">nn</span> <span class="o">:=</span> <span class="o">¬</span><span class="n">A</span> <span class="o">⇒</span> <span class="o">¬</span><span class="n">B</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">B</span> <span class="o">⇒</span> <span class="n">A</span><span class="p">;</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
+<span class="kp">wip</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p><code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">contrapositive(B,</span> <span class="pre">A)</span> <span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">¬A</span> <span class="pre">⇒</span> <span class="pre">¬B;</span> <span class="pre">by</span> <span class="pre">nn;</span></code> — mind the order:
+the goal is <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">⇒</span> <span class="pre">A</span></code>, so <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">=</span> <span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">Q</span> <span class="pre">=</span> <span class="pre">A</span></code>.</p>
+</div>
+<p><strong>6c.</strong> Prove <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">⇒</span> <span class="pre">A</span></code> the long way round — via its contrapositive.</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">contrapositive</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">¬</span><span class="n">Q</span> <span class="o">⇒</span> <span class="o">¬</span><span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">implication_intro</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="n">P</span> <span class="o">:=</span> <span class="n">P</span> <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">lemma</span> <span class="n">contra_id</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">A</span> <span class="o">⇒</span> <span class="n">A</span><span class="p">;</span>
+<span class="k">proof</span>
+  <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
+<span class="kp">wip</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p><code class="docutils literal notranslate"><span class="pre">contrapositive(A,</span> <span class="pre">A)</span></code> leaves <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">¬A</span> <span class="pre">⇒</span> <span class="pre">¬A</span></code> — an identity
+implication you close with <code class="docutils literal notranslate"><span class="pre">implication_intro(¬A,</span> <span class="pre">¬A)</span> <span class="pre">then</span> <span class="pre">P</span> <span class="pre">:=</span> <span class="pre">¬A</span> <span class="pre">⊢</span> <span class="pre">¬A;</span>
+<span class="pre">by</span> <span class="pre">P;</span></code>.</p>
+</div>
+</div>
 </section>
 <section id="universal-proof">
 <h2>7. Universal proof<a class="headerlink" href="#universal-proof" title="Link to this heading">¶</a></h2>
@@ -624,7 +855,13 @@ all.</p>
 <div class="tip admonition">
 <p class="admonition-title">Exercises</p>
 <p><strong>7a.</strong> Everything equals itself: prove <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">x.</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">forall_intro</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">forall_intro</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">axiom</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>  <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
@@ -642,7 +879,11 @@ in; close <code class="docutils literal notranslate"><span class="pre">by</span>
 </div>
 <p><strong>7b.</strong> Instantiate a universal: from <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">y.</span> <span class="pre">P(y)</span></code> and a point <code class="docutils literal notranslate"><span class="pre">a</span></code>, get
 <code class="docutils literal notranslate"><span class="pre">P(a)</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">forall_elim</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
@@ -658,7 +899,24 @@ in; close <code class="docutils literal notranslate"><span class="pre">by</span>
 <p><code class="docutils literal notranslate"><span class="pre">forall_elim(T,</span> <span class="pre">P,</span> <span class="pre">a)</span> <span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">∀</span> <span class="pre">(y</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">P(y);</span> <span class="pre">by</span> <span class="pre">all;</span></code>.</p>
 </div>
 <p><strong>7c.</strong> From <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">x.</span> <span class="pre">P(x)</span></code> and <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">x.</span> <span class="pre">Q(x)</span></code>, prove <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">x.</span> <span class="pre">P(x)</span> <span class="pre">∧</span> <span class="pre">Q(x)</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">forall_intro</span><span class="p">,</span> <span class="n">forall_elim</span><span class="p">,</span> <span class="n">and_intro</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">forall_intro</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">and_intro</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∧</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
@@ -684,7 +942,11 @@ the single goal <code class="docutils literal notranslate"><span class="pre">P(a
 <div class="tip admonition">
 <p class="admonition-title">Exercises</p>
 <p><strong>8a.</strong> From a proof of <code class="docutils literal notranslate"><span class="pre">P(a)</span></code>, conclude <code class="docutils literal notranslate"><span class="pre">∃</span> <span class="pre">x.</span> <span class="pre">P(x)</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">exists_intro</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">exists_intro</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
@@ -701,7 +963,13 @@ the single goal <code class="docutils literal notranslate"><span class="pre">P(a
 the witness, so the leftover goal is <code class="docutils literal notranslate"><span class="pre">P</span></code> at <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p>
 </div>
 <p><strong>8b.</strong> Something exists that equals <code class="docutils literal notranslate"><span class="pre">a</span></code>: prove <code class="docutils literal notranslate"><span class="pre">∃</span> <span class="pre">x.</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">a</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">exists_intro</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">exists_intro</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">axiom</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>  <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
@@ -718,7 +986,13 @@ the witness, so the leftover goal is <code class="docutils literal notranslate">
 <span class="pre">a)</span> <span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">a</span> <span class="pre">=</span> <span class="pre">a;</span></code> and close <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">refl(T,</span> <span class="pre">a)</span></code>.</p>
 </div>
 <p><strong>8c.</strong> Every element is <em>some</em> self-equal thing: prove <code class="docutils literal notranslate"><span class="pre">∃</span> <span class="pre">z.</span> <span class="pre">z</span> <span class="pre">=</span> <span class="pre">z</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">exists_intro</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">exists_intro</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">axiom</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>  <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
@@ -745,7 +1019,18 @@ must not mention <code class="docutils literal notranslate"><span class="pre">a<
 <div class="tip admonition">
 <p class="admonition-title">Exercises</p>
 <p><strong>9a.</strong> Unpack and immediately repack: from <code class="docutils literal notranslate"><span class="pre">∃</span> <span class="pre">x.</span> <span class="pre">P(x)</span></code>, prove <code class="docutils literal notranslate"><span class="pre">∃</span> <span class="pre">x.</span> <span class="pre">P(x)</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">exists_intro</span><span class="p">,</span> <span class="n">exists_elim</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">exists_intro</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">exists_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">witness</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
@@ -763,7 +1048,24 @@ existential, then in the witness branch <code class="docutils literal notranslat
 with <code class="docutils literal notranslate"><span class="pre">exists_intro(T,</span> <span class="pre">P,</span> <span class="pre">x)</span> <span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">P(x);</span> <span class="pre">by</span> <span class="pre">witness;</span></code>.</p>
 </div>
 <p><strong>9b.</strong> Flip an existential equation: from <code class="docutils literal notranslate"><span class="pre">∃</span> <span class="pre">x.</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">a</span></code>, prove <code class="docutils literal notranslate"><span class="pre">∃</span> <span class="pre">y.</span> <span class="pre">a</span> <span class="pre">=</span> <span class="pre">y</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">exists_intro</span><span class="p">,</span> <span class="n">exists_elim</span><span class="p">,</span> <span class="n">symmetry</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">exists_intro</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">exists_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">witness</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">y</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
@@ -783,7 +1085,25 @@ with <code class="docutils literal notranslate"><span class="pre">exists_intro(T
 </div>
 <p><strong>9c.</strong> Discharge under a universal: from <code class="docutils literal notranslate"><span class="pre">∃</span> <span class="pre">x.</span> <span class="pre">P(x)</span></code> and
 <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">x.</span> <span class="pre">P(x)</span> <span class="pre">⇒</span> <span class="pre">R</span></code>, prove <code class="docutils literal notranslate"><span class="pre">R</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">exists_elim</span><span class="p">,</span> <span class="n">forall_elim</span><span class="p">,</span> <span class="n">implication_elim</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">exists_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">∃</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">witness</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">implication_elim</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">⇒</span> <span class="n">Q</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 
@@ -812,7 +1132,12 @@ form <code class="docutils literal notranslate"><span class="pre">x</span> <span
 <div class="tip admonition">
 <p class="admonition-title">Exercises</p>
 <p><strong>10a.</strong> Close a definitional equation: prove <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
 
 <span class="k">lemma</span> <span class="n">zero_plus_zero</span>
   <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
@@ -827,8 +1152,19 @@ form <code class="docutils literal notranslate"><span class="pre">x</span> <span
 <span class="pre">add_zero_left(0);</span></code>.</p>
 </div>
 <p><strong>10b.</strong> Rewrite, then reflect: prove <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">forward</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
+<span class="k">axiom</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>  <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">forward</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
@@ -844,8 +1180,17 @@ form <code class="docutils literal notranslate"><span class="pre">x</span> <span
 <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">refl(Nat,</span> <span class="pre">n)</span></code>.</p>
 </div>
 <p><strong>10c.</strong> Flip an equality: from <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code>, prove <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">a</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">symmetry</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
+<span class="k">rule</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">y</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">flip_eq</span><span class="p">(</span><span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">,</span> <span class="n">h</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>

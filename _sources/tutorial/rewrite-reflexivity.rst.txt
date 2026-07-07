@@ -123,11 +123,16 @@ off the top:
    axiom pop_push(A : Sort, x : A, s : Stack(A))  ⊢ pop(push(x, s)) = s;
 
    lemma one_pop(A : Sort, a b : A)
-     ⊢ top(pop(push(a, push(b, empty)))) = b;
+     ⊢ top(
+         pop(push(a, push(b, empty)))    # this is going to be replaced
+       ) = b;
    proof
-     by forward(Stack(A), pop(push(a, push(b, empty))), push(b, empty),
-                pop_push(A, a, push(b, empty)), top(_) = b)
-     then ⊢ top(push(b, empty)) = b;
+     by forward(Stack(A),
+         pop(push(a, push(b, empty))),   # replace this
+         push(b, empty),                 # with this
+         pop_push(A, a, push(b, empty)), # using this equation
+         top(_) = b)                     # at this position
+     then ⊢ top(push(b, empty)) = b;     # yielding this
      by top_push(A, b, empty);
    qed;
 
@@ -139,6 +144,9 @@ Read the placeholder ``top(_) = b`` by plugging each side of the equation
   rewrite, which ``top_push`` closes.
 
 Deeper stacks work the same way — just more rewrites. Three pushes and two pops:
+
+*Don't worry — you can't read this. This is exactly why we need induction, which
+we'll cover later.*
 
 .. code-block:: alg
 
@@ -159,8 +167,11 @@ Deeper stacks work the same way — just more rewrites. Three pushes and two pop
    lemma three_deep(A : Sort, a b c : A)
      ⊢ top(pop(pop(push(a, push(b, push(c, empty)))))) = c;
    proof
-     by forward(Stack(A), pop(push(a, push(b, push(c, empty)))), push(b, push(c, empty)),
-                pop_push(A, a, push(b, push(c, empty))), top(pop(_)) = c)
+     by forward(Stack(A),
+         pop(push(a, push(b, push(c, empty)))),
+         push(b, push(c, empty)),
+         pop_push(A, a, push(b, push(c, empty))),
+         top(pop(_)) = c)
      then ⊢ top(pop(push(b, push(c, empty)))) = c;
      by forward(Stack(A), pop(push(b, push(c, empty))), push(c, empty),
                 pop_push(A, b, push(c, empty)), top(_) = c)
