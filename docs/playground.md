@@ -23,7 +23,7 @@ are available via `import`.
 </style>
 <div class="algae-load-bar">
   <input id="algae-load-url" type="text"
-         placeholder="Load a .alg from a URL — e.g. game/challenge/060-room.alg" />
+         placeholder="Load a .alg from a URL — a game room, or a raw.githubusercontent.com link" />
   <button id="algae-load-btn" type="button">Load</button>
 </div>
 <div id="algae-playground"
@@ -31,12 +31,16 @@ are available via `import`.
      data-module="nat"></div>
 ```
 
-```{admonition} Load any proof by URL
+```{admonition} Load and share proofs by URL
 :class: note
-Paste a path or URL into the box above and press **Load** to open that `.alg`
-file in the editor — handy for trying a [game](game.md) room, e.g.
-`game/challenge/060-room.alg`. You can also link straight to it:
-`playground.html?src=game/challenge/060-room.alg`.
+Paste any URL into the box above and press **Load** to open that `.alg` file in
+the editor — a [game](game.md) room like `game/challenge/060-room.alg`, or an
+absolute link such as a raw GitHub file
+(`https://raw.githubusercontent.com/dhilst/algae/refs/heads/main/algae/v1/challenge/002-room.alg`).
+
+The address updates to `playground.html?q=<url>`, so **that link is itself
+shareable** — send it to anyone and the playground loads the proof automatically.
+(Cross-origin hosts must allow it via CORS; raw GitHub does.)
 ```
 
 ```{admonition} If a proof is incomplete
