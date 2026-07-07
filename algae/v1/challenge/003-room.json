@@ -7,5 +7,5 @@
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
   "lore": "Scratched on the wall, in a hand you almost recognize: WILL I BE ENOUGH?",
-  "help": "Direct proof. and_left(A, B) concludes A from its one premise ⊢ A ∧ B; then ⊢ A ∧ B; by h;."
+  "help": "and_left(A, B) then ⊢ A ∧ B; by h;."
 }

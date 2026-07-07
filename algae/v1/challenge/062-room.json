@@ -1,10 +1,10 @@
 {
   "id": "062",
   "tier": "hard",
-  "title": "Name It, Then Forget",
+  "title": "A Chain Of Consequence",
   "monster": "dragon",
   "module": "room062",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": true,
-  "help": "Existential elim. exists_elim(T, P, ∃ (x : T) st P(x)) cases: feed ex, then in the witness branch rebuild with exists_intro(T, P, x) then ⊢ P(x); by witness."
+  "help": "This room holds 3 lemmas — finish them all (turn every wip into qed). (1) Helper (modus ponens). implication_elim(A, B) cases; by f; and by x;. (2) Uses mp. implication_intro then P := A ⊢ C; by mp(B, C, g, mp(A, B, f, P));. (3) Uses imp_trans twice. by imp_trans(A, C, D, imp_trans(A, B, C, f, g), h);."
 }

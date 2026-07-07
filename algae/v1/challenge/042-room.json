@@ -1,10 +1,10 @@
 {
   "id": "042",
   "tier": "medium",
-  "title": "Rewrite The World",
+  "title": "Rewrite And Witness",
   "monster": "sphinx",
   "module": "room042",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
-  "help": "Equational. Turn 0 + n into n with forward(Nat, 0 + n, n, add_zero_left(n), n = _) then ⊢ n = n; by refl(Nat, n)."
+  "help": "This room holds 2 lemmas — finish them all (turn every wip into qed). (1) forward(Nat, 0 + n, n, add_zero_left(n), n = _) then ⊢ n = n; by refl(Nat, n);. (2) exists_intro(T, λ (z : T) st z = a, a) then ⊢ a = a; by refl(T, a);."
 }

@@ -1,10 +1,10 @@
 {
   "id": "082",
   "tier": "veryhard",
-  "title": "Flip The Witness",
+  "title": "Follow The Equalities",
   "monster": "dragon",
   "module": "room082",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": false,
-  "help": "Existential elim. Open ex with exists_elim; in the witness branch (witness := x = a), re-witness with x and flip via symmetry."
+  "help": "This room holds 3 lemmas — finish them all (turn every wip into qed). (1) Helper. symmetry(T, a, b) then ⊢ a = b; by h;. (2) Helper. transitivity(T, a, b, c) cases; by h1; and by h2;. (3) Uses sym and trans. by trans(a, b, c, h1, sym(c, b, h2));."
 }

@@ -1,11 +1,11 @@
 {
   "id": "100",
   "tier": "boss",
-  "title": "The Demon's Arithmetic",
+  "title": "The Demon's Symmetry",
   "monster": "dragon",
   "module": "room100",
   "prompt": "The final demon holds the ring. Complete the proof to end the descent.",
   "food": false,
   "lore": "The demon shudders, and for an instant its shape flickers into something you almost know — then the fire takes it.",
-  "help": "Mathematical induction. by induction(_ + 0 = _) cases. Base: 0 + 0 = 0 by add_zero_left(0). Step: rewrite k into k + 0 with backward(Nat, k + 0, k, ih, s(k) + 0 = s(_)) then add_succ_left(k, 0)."
+  "help": "This room holds 5 lemmas — finish them all (turn every wip into qed). (1) Helper. by and_intro(B, A) cases; and_right/and_left each then ⊢ A ∧ B; by both. (2) Helper. or_elim(A, B, B ∨ A) cases; build with or_intro_right / or_intro_left. (3) Uses and_comm. implication_intro then P := A ∧ B ⊢ B ∧ A; by and_comm(A, B, P);. (4) Uses or_comm. implication_intro then P := A ∨ B ⊢ B ∨ A; by or_comm(A, B, P);. (5) The finale. and_intro cases; by and_comm_imp(A, B); and by or_comm_imp(A, B);."
 }

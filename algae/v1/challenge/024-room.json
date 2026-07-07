@@ -7,5 +7,5 @@
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
   "lore": "For a heartbeat you remember her laugh, and how sure you once were that you deserved it.",
-  "help": "Universal (elim). forall_elim(T, P, a) then ⊢ ∀ (y : T) st P(y); discharge with all."
+  "help": "forall_elim(T, P, a) then ⊢ ∀ (y : T) st P(y); by all;."
 }

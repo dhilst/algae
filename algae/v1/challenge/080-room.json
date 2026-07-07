@@ -1,10 +1,10 @@
 {
   "id": "080",
   "tier": "veryhard",
-  "title": "Whichever Branch, Same End",
+  "title": "For All, Everywhere",
   "monster": "dragon",
   "module": "room080",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": true,
-  "help": "Proof by cases (constructive dilemma). or_elim(A, B, C) cases; in each branch run implication_elim against f / g and the branch assumption."
+  "help": "This room holds 3 lemmas — finish them all (turn every wip into qed). (1) Helper. forall_intro then and_intro; each half by forall_elim on hp / hq. (2) Uses forall_and. forall_elim(T, λx. P(x) ∧ Q(x), a) then ⊢ ∀y. P(y) ∧ Q(y); by forall_and(P, Q, hp, hq);. (3) Uses forall_and_at. and_left(P(a), Q(a)) then ⊢ P(a) ∧ Q(a); by forall_and_at(P, Q, hp, hq, a);."
 }

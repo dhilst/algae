@@ -7,5 +7,5 @@
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
   "lore": "'You are not ready for her,' it whispers as it dissolves. 'You never were.'",
-  "help": "Direct proof. or_intro_left(A, B) proves A ∨ B from ⊢ A (one premise → then), closed by your assumption x."
+  "help": "or_intro_left(A, B) then ⊢ A; by x;."
 }
