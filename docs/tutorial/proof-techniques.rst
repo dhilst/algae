@@ -17,7 +17,12 @@ like — the *and*-introduction from :doc:`backward-reasoning`:
 
 .. code-block:: alg
 
-   import core(and_intro);
+   rule and_intro(P Q : Prop)
+     ⊢ P;
+     ⊢ Q
+     ────────────────────────
+     ⊢ P ∧ Q
+   end;
 
    lemma both(A B : Prop, x := A, y := B)
      ⊢ A ∧ B;
@@ -44,7 +49,11 @@ axiom or an assumption ``by h``) closes a goal outright.
 
    .. code-block:: alg
 
-      import core(or_intro_left);
+      rule or_intro_left(P Q : Prop)
+        ⊢ P
+        ────────────────────────
+        ⊢ P ∨ Q
+      end;
 
       lemma inject_left(A B : Prop, x := A)
         ⊢ A ∨ B;
@@ -59,7 +68,11 @@ axiom or an assumption ``by h``) closes a goal outright.
 
    .. code-block:: alg
 
-      import core(or_intro_right);
+      rule or_intro_right(P Q : Prop)
+        ⊢ Q
+        ────────────────────────
+        ⊢ P ∨ Q
+      end;
 
       lemma inject_right(A B : Prop, y := B)
         ⊢ A ∨ B;
@@ -74,7 +87,11 @@ axiom or an assumption ``by h``) closes a goal outright.
 
    .. code-block:: alg
 
-      import core(and_left);
+      rule and_left(P Q : Prop)
+        ⊢ P ∧ Q
+        ────────────────────────
+        ⊢ P
+      end;
 
       lemma take_left(A B : Prop, h := A ∧ B)
         ⊢ A;
@@ -99,7 +116,11 @@ named hypothesis after its premise ``P := P ⊢ Q``.
 
    .. code-block:: alg
 
-      import core(implication_intro);
+      rule implication_intro(P Q : Prop)
+        P := P ⊢ Q
+        ────────────────────────
+        ⊢ P ⇒ Q
+      end;
 
       lemma id(A : Prop)
         ⊢ A ⇒ A;
@@ -114,7 +135,11 @@ named hypothesis after its premise ``P := P ⊢ Q``.
 
    .. code-block:: alg
 
-      import core(implication_intro);
+      rule implication_intro(P Q : Prop)
+        P := P ⊢ Q
+        ────────────────────────
+        ⊢ P ⇒ Q
+      end;
 
       lemma const_imp(A B : Prop, q := B)
         ⊢ A ⇒ B;
@@ -129,7 +154,17 @@ named hypothesis after its premise ``P := P ⊢ Q``.
 
    .. code-block:: alg
 
-      import core(implication_intro, and_left);
+      rule implication_intro(P Q : Prop)
+        P := P ⊢ Q
+        ────────────────────────
+        ⊢ P ⇒ Q
+      end;
+
+      rule and_left(P Q : Prop)
+        ⊢ P ∧ Q
+        ────────────────────────
+        ⊢ P
+      end;
 
       lemma proj(A B : Prop)
         ⊢ (A ∧ B) ⇒ A;
@@ -155,7 +190,25 @@ assuming ``B``, both aiming at the same goal.
 
    .. code-block:: alg
 
-      import core(or_elim, or_intro_left, or_intro_right);
+      rule or_elim(P Q R : Prop)
+        ⊢ P ∨ Q;
+        P := P ⊢ R;
+        Q := Q ⊢ R
+        ────────────────────────
+        ⊢ R
+      end;
+
+      rule or_intro_left(P Q : Prop)
+        ⊢ P
+        ────────────────────────
+        ⊢ P ∨ Q
+      end;
+
+      rule or_intro_right(P Q : Prop)
+        ⊢ Q
+        ────────────────────────
+        ⊢ P ∨ Q
+      end;
 
       lemma or_comm(A B : Prop, d := A ∨ B)
         ⊢ B ∨ A;
@@ -171,7 +224,13 @@ assuming ``B``, both aiming at the same goal.
 
    .. code-block:: alg
 
-      import core(or_elim);
+      rule or_elim(P Q R : Prop)
+        ⊢ P ∨ Q;
+        P := P ⊢ R;
+        Q := Q ⊢ R
+        ────────────────────────
+        ⊢ R
+      end;
 
       lemma idem(A : Prop, d := A ∨ A)
         ⊢ A;
@@ -187,7 +246,20 @@ assuming ``B``, both aiming at the same goal.
 
    .. code-block:: alg
 
-      import core(or_elim, implication_elim);
+      rule or_elim(P Q R : Prop)
+        ⊢ P ∨ Q;
+        P := P ⊢ R;
+        Q := Q ⊢ R
+        ────────────────────────
+        ⊢ R
+      end;
+
+      rule implication_elim(P Q : Prop)
+        ⊢ P ⇒ Q;
+        ⊢ P
+        ────────────────────────
+        ⊢ Q
+      end;
 
       lemma dilemma(A B C : Prop, d := A ∨ B, f := A ⇒ C, g := B ⇒ C)
         ⊢ C;
@@ -210,8 +282,24 @@ exercises ask you to rebuild each part.
 
 .. code-block:: alg
 
-   import nat;
-   import core(backward);
+   sort Nat : Sort;
+   op 0 : → Nat;
+   op s : Nat → Nat;
+   op + : Nat * Nat → Nat;
+   axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
+   axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
+
+   rule induction(P : Nat → Prop)
+     ⊢ P(0);
+     n : Nat, ih := P(n) ⊢ P(s(n))
+     ──────────────────────────────
+     ⊢ ∀ (n : Nat) st P(n)
+   end;
+   rule backward(T : Sort, a b : T, eq := a = b, P : T → Prop)
+     ⊢ P(a)
+     ────────────────────────
+     ⊢ P(b)
+   end;
 
    lemma add_zero_right
      ⊢ ∀ (n : Nat) st n + 0 = n;
@@ -235,8 +323,24 @@ exercises ask you to rebuild each part.
 
    .. code-block:: alg
 
-      import nat;
-      import core(backward);
+      sort Nat : Sort;
+      op 0 : → Nat;
+      op s : Nat → Nat;
+      op + : Nat * Nat → Nat;
+      axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
+      axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
+
+      rule induction(P : Nat → Prop)
+        ⊢ P(0);
+        n : Nat, ih := P(n) ⊢ P(s(n))
+        ──────────────────────────────
+        ⊢ ∀ (n : Nat) st P(n)
+      end;
+      rule backward(T : Sort, a b : T, eq := a = b, P : T → Prop)
+        ⊢ P(a)
+        ────────────────────────
+        ⊢ P(b)
+      end;
 
       lemma add_zero_right
         ⊢ ∀ (n : Nat) st n + 0 = n;
@@ -261,8 +365,24 @@ exercises ask you to rebuild each part.
 
    .. code-block:: alg
 
-      import nat;
-      import core(backward);
+      sort Nat : Sort;
+      op 0 : → Nat;
+      op s : Nat → Nat;
+      op + : Nat * Nat → Nat;
+      axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
+      axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
+
+      rule induction(P : Nat → Prop)
+        ⊢ P(0);
+        n : Nat, ih := P(n) ⊢ P(s(n))
+        ──────────────────────────────
+        ⊢ ∀ (n : Nat) st P(n)
+      end;
+      rule backward(T : Sort, a b : T, eq := a = b, P : T → Prop)
+        ⊢ P(a)
+        ────────────────────────
+        ⊢ P(b)
+      end;
 
       lemma add_zero_right
         ⊢ ∀ (n : Nat) st n + 0 = n;
@@ -285,8 +405,17 @@ exercises ask you to rebuild each part.
 
    .. code-block:: alg
 
-      import nat;
-      import core(backward);
+      sort Nat : Sort;
+      op 0 : → Nat;
+      op s : Nat → Nat;
+      op + : Nat * Nat → Nat;
+      axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
+      axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
+      rule backward(T : Sort, a b : T, eq := a = b, P : T → Prop)
+        ⊢ P(a)
+        ────────────────────────
+        ⊢ P(b)
+      end;
 
       lemma add_zero_right
         ⊢ ∀ (n : Nat) st n + 0 = n;
@@ -322,7 +451,18 @@ all (the principle of explosion).
 
    .. code-block:: alg
 
-      import core(negation_intro, implication_elim);
+      rule negation_intro(P : Prop)
+        P := P ⊢ False
+        ────────────────────────
+        ⊢ ¬P
+      end;
+
+      rule implication_elim(P Q : Prop)
+        ⊢ P ⇒ Q;
+        ⊢ P
+        ────────────────────────
+        ⊢ Q
+      end;
 
       lemma neg_from_imp(A : Prop, f := A ⇒ False)
         ⊢ ¬A;
@@ -337,7 +477,18 @@ all (the principle of explosion).
 
    .. code-block:: alg
 
-      import core(false_elim, negation_elim);
+      rule false_elim(P : Prop)
+        ⊢ False
+        ────────────────────────
+        ⊢ P
+      end;
+
+      rule negation_elim(P : Prop)
+        ⊢ P;
+        ⊢ ¬P
+        ────────────────────────
+        ⊢ False
+      end;
 
       lemma explode(A C : Prop, x := A, nx := ¬A)
         ⊢ C;
@@ -352,7 +503,18 @@ all (the principle of explosion).
 
    .. code-block:: alg
 
-      import core(negation_intro, negation_elim);
+      rule negation_intro(P : Prop)
+        P := P ⊢ False
+        ────────────────────────
+        ⊢ ¬P
+      end;
+
+      rule negation_elim(P : Prop)
+        ⊢ P;
+        ⊢ ¬P
+        ────────────────────────
+        ⊢ False
+      end;
 
       lemma dni(A : Prop, x := A)
         ⊢ ¬(¬A);
@@ -366,15 +528,84 @@ all (the principle of explosion).
 6. Proof by contrapositive
 ==========================
 
-**Goal:** prove ``P ⇒ Q``. **Method (classically):** prove ``¬Q ⇒ ¬P`` instead.
+**Goal:** prove ``P ⇒ Q``. **Method:** prove ``¬Q ⇒ ¬P`` instead. ``core``
+provides this as the ``contrapositive`` rule: it takes your goal ``P ⇒ Q`` down to
+the single premise ``¬Q ⇒ ¬P``.
 
-This one Algae's core **cannot** do. Turning a proof of ``¬Q ⇒ ¬P`` back into
-``P ⇒ Q`` requires double-negation elimination — again, excluded middle — which
-``core`` doesn't assume. (The *forward* direction is fine: from ``P ⇒ Q`` you can
-always derive ``¬Q ⇒ ¬P``; it's the *reverse*, the one the technique relies on,
-that's off-limits.) If you need classical reasoning, you'd add an excluded-middle
-axiom of your own — but that's beyond this crash course, so there are no exercises
-here.
+.. admonition:: This one is classical
+   :class: note
+
+   Unlike everything else in this chapter, ``contrapositive`` is a *classical*
+   principle — turning ``¬Q ⇒ ¬P`` back into ``P ⇒ Q`` rests on the law of
+   excluded middle. ``core`` ships it as a primitive rule so the technique is
+   available; the rest of the logic stays intuitionistic.
+
+.. admonition:: Exercises
+   :class: tip
+
+   **6a.** From ``¬B ⇒ ¬A``, prove ``A ⇒ B``.
+
+   .. code-block:: alg
+
+      rule contrapositive(P Q : Prop)
+        ⊢ ¬Q ⇒ ¬P
+        ────────────────────────
+        ⊢ P ⇒ Q
+      end;
+
+      lemma contra_direct(A B : Prop, nn := ¬B ⇒ ¬A)
+        ⊢ A ⇒ B;
+      proof
+        by wip(?goal);
+      wip;
+
+   .. hint:: ``by contrapositive(A, B) then ⊢ ¬B ⇒ ¬A; by nn;`` — the rule turns
+      the goal straight into the hypothesis you hold.
+
+   **6b.** The mirror: from ``¬A ⇒ ¬B``, prove ``B ⇒ A``.
+
+   .. code-block:: alg
+
+      rule contrapositive(P Q : Prop)
+        ⊢ ¬Q ⇒ ¬P
+        ────────────────────────
+        ⊢ P ⇒ Q
+      end;
+
+      lemma contra_swap(A B : Prop, nn := ¬A ⇒ ¬B)
+        ⊢ B ⇒ A;
+      proof
+        by wip(?goal);
+      wip;
+
+   .. hint:: ``by contrapositive(B, A) then ⊢ ¬A ⇒ ¬B; by nn;`` — mind the order:
+      the goal is ``B ⇒ A``, so ``P = B`` and ``Q = A``.
+
+   **6c.** Prove ``A ⇒ A`` the long way round — via its contrapositive.
+
+   .. code-block:: alg
+
+      rule contrapositive(P Q : Prop)
+        ⊢ ¬Q ⇒ ¬P
+        ────────────────────────
+        ⊢ P ⇒ Q
+      end;
+
+      rule implication_intro(P Q : Prop)
+        P := P ⊢ Q
+        ────────────────────────
+        ⊢ P ⇒ Q
+      end;
+
+      lemma contra_id(A : Prop)
+        ⊢ A ⇒ A;
+      proof
+        by wip(?goal);
+      wip;
+
+   .. hint:: ``contrapositive(A, A)`` leaves ``⊢ ¬A ⇒ ¬A`` — an identity
+      implication you close with ``implication_intro(¬A, ¬A) then P := ¬A ⊢ ¬A;
+      by P;``.
 
 7. Universal proof
 ==================
@@ -391,7 +622,13 @@ all.
 
    .. code-block:: alg
 
-      import core(forall_intro, refl);
+      rule forall_intro(T : Sort, P : T → Prop)
+        x : T ⊢ P(x)
+        ────────────────────────
+        ⊢ ∀ (x : T) st P(x)
+      end;
+
+      axiom refl(T : Sort, x : T)  ⊢ x = x;
 
       sort T : Sort;
 
@@ -409,7 +646,11 @@ all.
 
    .. code-block:: alg
 
-      import core(forall_elim);
+      rule forall_elim(T : Sort, P : T → Prop)
+        ⊢ ∀ (y : T) st P(y)
+        ────────────────────────
+        x : T ⊢ P(x)
+      end;
 
       sort T : Sort;
 
@@ -425,7 +666,24 @@ all.
 
    .. code-block:: alg
 
-      import core(forall_intro, forall_elim, and_intro);
+      rule forall_intro(T : Sort, P : T → Prop)
+        x : T ⊢ P(x)
+        ────────────────────────
+        ⊢ ∀ (x : T) st P(x)
+      end;
+
+      rule forall_elim(T : Sort, P : T → Prop)
+        ⊢ ∀ (y : T) st P(y)
+        ────────────────────────
+        x : T ⊢ P(x)
+      end;
+
+      rule and_intro(P Q : Prop)
+        ⊢ P;
+        ⊢ Q
+        ────────────────────────
+        ⊢ P ∧ Q
+      end;
 
       sort T : Sort;
 
@@ -452,7 +710,11 @@ the single goal ``P(a)``.
 
    .. code-block:: alg
 
-      import core(exists_intro);
+      rule exists_intro(T : Sort, P : T → Prop, x : T)
+        ⊢ P(x)
+        ────────────────────────
+        ⊢ ∃ (x : T) st P(x)
+      end;
 
       sort T : Sort;
 
@@ -469,7 +731,13 @@ the single goal ``P(a)``.
 
    .. code-block:: alg
 
-      import core(exists_intro, refl);
+      rule exists_intro(T : Sort, P : T → Prop, x : T)
+        ⊢ P(x)
+        ────────────────────────
+        ⊢ ∃ (x : T) st P(x)
+      end;
+
+      axiom refl(T : Sort, x : T)  ⊢ x = x;
 
       sort T : Sort;
 
@@ -486,7 +754,13 @@ the single goal ``P(a)``.
 
    .. code-block:: alg
 
-      import core(exists_intro, refl);
+      rule exists_intro(T : Sort, P : T → Prop, x : T)
+        ⊢ P(x)
+        ────────────────────────
+        ⊢ ∃ (x : T) st P(x)
+      end;
+
+      axiom refl(T : Sort, x : T)  ⊢ x = x;
 
       sort T : Sort;
 
@@ -514,7 +788,18 @@ must not mention ``a``, since you don't get to know which witness you were hande
 
    .. code-block:: alg
 
-      import core(exists_intro, exists_elim);
+      rule exists_intro(T : Sort, P : T → Prop, x : T)
+        ⊢ P(x)
+        ────────────────────────
+        ⊢ ∃ (x : T) st P(x)
+      end;
+
+      rule exists_elim(T : Sort, P : T → Prop, Q : Prop)
+        ⊢ ∃ (x : T) st P(x);
+        x : T, witness := P(x) ⊢ Q
+        ────────────────────────
+        ⊢ Q
+      end;
 
       sort T : Sort;
 
@@ -532,7 +817,24 @@ must not mention ``a``, since you don't get to know which witness you were hande
 
    .. code-block:: alg
 
-      import core(exists_intro, exists_elim, symmetry);
+      rule exists_intro(T : Sort, P : T → Prop, x : T)
+        ⊢ P(x)
+        ────────────────────────
+        ⊢ ∃ (x : T) st P(x)
+      end;
+
+      rule exists_elim(T : Sort, P : T → Prop, Q : Prop)
+        ⊢ ∃ (x : T) st P(x);
+        x : T, witness := P(x) ⊢ Q
+        ────────────────────────
+        ⊢ Q
+      end;
+
+      rule symmetry(T : Sort, x y : T)
+        ⊢ x = y
+        ────────────────────────
+        ⊢ y = x
+      end;
 
       sort T : Sort;
 
@@ -552,7 +854,25 @@ must not mention ``a``, since you don't get to know which witness you were hande
 
    .. code-block:: alg
 
-      import core(exists_elim, forall_elim, implication_elim);
+      rule exists_elim(T : Sort, P : T → Prop, Q : Prop)
+        ⊢ ∃ (x : T) st P(x);
+        x : T, witness := P(x) ⊢ Q
+        ────────────────────────
+        ⊢ Q
+      end;
+
+      rule forall_elim(T : Sort, P : T → Prop)
+        ⊢ ∀ (y : T) st P(y)
+        ────────────────────────
+        x : T ⊢ P(x)
+      end;
+
+      rule implication_elim(P Q : Prop)
+        ⊢ P ⇒ Q;
+        ⊢ P
+        ────────────────────────
+        ⊢ Q
+      end;
 
       sort T : Sort;
 
@@ -582,7 +902,12 @@ form ``x = x``.
 
    .. code-block:: alg
 
-      import nat;
+      sort Nat : Sort;
+      op 0 : → Nat;
+      op s : Nat → Nat;
+      op + : Nat * Nat → Nat;
+      axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
+      axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
 
       lemma zero_plus_zero
         ⊢ 0 + 0 = 0;
@@ -597,8 +922,19 @@ form ``x = x``.
 
    .. code-block:: alg
 
-      import nat;
-      import core(refl, forward);
+      sort Nat : Sort;
+      op 0 : → Nat;
+      op s : Nat → Nat;
+      op + : Nat * Nat → Nat;
+      axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
+      axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
+      axiom refl(T : Sort, x : T)  ⊢ x = x;
+
+      rule forward(T : Sort, a b : T, eq := a = b, P : T → Prop)
+        ⊢ P(b)
+        ────────────────────────
+        ⊢ P(a)
+      end;
 
       lemma zero_left_flip(n : Nat)
         ⊢ n = 0 + n;
@@ -614,8 +950,17 @@ form ``x = x``.
 
    .. code-block:: alg
 
-      import nat;
-      import core(symmetry);
+      sort Nat : Sort;
+      op 0 : → Nat;
+      op s : Nat → Nat;
+      op + : Nat * Nat → Nat;
+      axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
+      axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
+      rule symmetry(T : Sort, x y : T)
+        ⊢ x = y
+        ────────────────────────
+        ⊢ y = x
+      end;
 
       lemma flip_eq(a b : Nat, h := a = b)
         ⊢ b = a;
