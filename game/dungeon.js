@@ -1,8 +1,9 @@
 // Procedural dungeon generation. Seven floors (0 = surface down to -6 = the
-// final boss). Every normal floor is 12 rooms (10 monster, 2 chest) laid out on
-// a grid, connected by N/S/E/W doors, with a guaranteed-connected graph. Bosses
-// (dragons) appear from floor -3 and guard the hatch down. All of it is a pure
-// function of the run seed via the shared RNG, so a seed reproduces a world.
+// final boss). Every non-surface floor is 5 rooms — 4 monster rooms and 1 chest
+// — laid out on a grid, connected by N/S/E/W doors, with a guaranteed-connected
+// graph. Bosses (dragons) appear from floor -3 and guard the hatch down. All of
+// it is a pure function of the run seed via the shared RNG, so a seed
+// reproduces a world.
 
 import { makeRng } from "./rng.js";
 
@@ -131,7 +132,7 @@ function generateFloor(floor, rng, manifest, letters) {
     return meta(floor, { index: floor.index, rooms: [r], byId: new Map([[0, r]]), entryId: 0, exitId: 0 });
   }
 
-  const count = floor.final ? 5 : 12;
+  const count = 5; // every non-surface floor: 4 monster rooms + 1 chest
   const cells = growCells(rng, count);
   const rooms = cells.map((c, i) => makeRoom(i, c.x, c.y));
   const byPos = new Map(rooms.map((r) => [key(r.x, r.y), r]));
@@ -153,10 +154,10 @@ function generateFloor(floor, rng, manifest, letters) {
   const pool = rng.shuffle(manifest[fillerTier] || manifest.trivial);
   const others = rooms.filter((r) => r.id !== exitId);
 
-  // Two chests on non-final floors (never the entry/exit rooms).
-  if (!floor.final) {
-    const chestSpots = rng.shuffle(others.filter((r) => !r.isEntryUp)).slice(0, 2);
-    const kinds = rng.shuffle(["food", "maxhp", "letter", "food"]).slice(0, 2);
+  // One chest per floor (never the entry or exit room).
+  {
+    const chestSpots = rng.shuffle(others.filter((r) => !r.isEntryUp)).slice(0, 1);
+    const kinds = rng.shuffle(["food", "maxhp", "letter", "food"]).slice(0, 1);
     chestSpots.forEach((r, i) => {
       r.type = "chest";
       r.chestKind = kinds[i];
