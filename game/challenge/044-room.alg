@@ -1,8 +1,9 @@
-# Whichever branch is true, swap the sides.
-import core(or_elim, or_intro_left, or_intro_right);
+import core(exists_intro, refl);
 
-lemma banish(A B : Prop, d := A \/ B)
-  |- B \/ A;
+sort T : Sort;
+
+lemma exists_self(a : T)
+  ⊢ ∃ (z : T) st z = z;
 proof
   by wip;
 wip;

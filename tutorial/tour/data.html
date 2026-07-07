@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Proving with auxiliary lemmas" href="../auxiliary-lemmas.html"><link rel="prev" title="Quantifiers and ⇔" href="quantifiers.html">
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Proof techniques crash course" href="../proof-techniques.html"><link rel="prev" title="Quantifiers and ⇔" href="quantifiers.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
         <title>Reasoning about data - Algae</title>
@@ -192,10 +192,15 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">Tutorial</a><input aria-label="Toggle navigation of Tutorial" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">What is Algae?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../editor.html">The editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../propositional-logic.html">Propositional logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../inference-rules.html">Inference rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../backward-reasoning.html">Reasoning backward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../proofs.html">Building proofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../worlds.html">Two worlds and a vocabulary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../first-proofs.html">Your first proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../holes.html">Proving with holes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../rewrite.html">Rewriting with a motive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../induction.html">Induction and friends</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../errors.html">Specifying error behavior</a></li>
@@ -206,6 +211,7 @@
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Reasoning about data</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -257,7 +263,7 @@
 <li><p><strong>case-analysis</strong> rules that mirror a type’s constructors — to prove something
 about <em>any</em> value, prove it for each way the value could have been built;</p></li>
 <li><p><strong>equations</strong> (axioms) describing what the operations <em>do</em>, which you drive with
-<code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> / <code class="docutils literal notranslate"><span class="pre">rewrite_l</span></code> (see <a class="reference internal" href="../rewrite.html"><span class="doc">Rewriting with a motive</span></a>).</p></li>
+<code class="docutils literal notranslate"><span class="pre">backward</span></code> / <code class="docutils literal notranslate"><span class="pre">forward</span></code> (see <a class="reference internal" href="../rewrite-reflexivity.html"><span class="doc">Reflexivity and rewriting</span></a>).</p></li>
 </ul>
 <p>We met one already — <code class="docutils literal notranslate"><span class="pre">induction</span></code> in <a href="https://github.com/dhilst/algae/blob/main/algae/stdlib/v1/nat.alg" target="_blank" rel="noopener"><code class="docutils literal notranslate"><span class="pre">nat.alg</span></code></a> is exactly the case-analysis rule
 for the naturals (base case <code class="docutils literal notranslate"><span class="pre">0</span></code>, step case <code class="docutils literal notranslate"><span class="pre">s(n)</span></code>). Everything here is the same
@@ -404,12 +410,12 @@ yourself. The kernel is patient, and now, so are you.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../auxiliary-lemmas.html">
+          <a class="next-page" href="../proof-techniques.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Proving with auxiliary lemmas</div>
+                <div class="title">Proof techniques crash course</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

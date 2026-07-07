@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Two worlds and a vocabulary" href="worlds.html"><link rel="prev" title="Algae" href="../index.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="What is Algae?" href="intro.html"><link rel="prev" title="Algae" href="../index.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
         <title>Tutorial - Algae</title>
@@ -192,10 +192,15 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Tutorial</a><input aria-label="Toggle navigation of Tutorial" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html">What is Algae?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editor.html">The editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propositional-logic.html">Propositional logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first-proofs.html">Your first proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="holes.html">Proving with holes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rewrite.html">Rewriting with a motive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
@@ -206,6 +211,7 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -255,41 +261,79 @@
 it a vocabulary (sorts and operators), a few facts (axioms and inference rules),
 and then you <em>prove things</em> — by building explicit proof trees that a tiny, deeply
 suspicious kernel re-checks step by step. No hand-waving survives.</p>
-<p>Here’s the good news: you don’t have to memorise a wall of syntax before your
-first proof. We’ll write a one-liner almost immediately, and from there the
-checker’s <strong>holes</strong> feature (<a class="reference internal" href="holes.html"><span class="doc">Proving with holes</span></a>) does a lot of the teaching for you — it
-literally prints the goal, what’s in scope, and which tactics might work next.</p>
+<p>This tutorial runs entirely <strong>in your browser</strong>. Every <code class="docutils literal notranslate"><span class="pre">alg</span></code> block below is a
+live editor backed by the real kernel compiled to WebAssembly — edit it, press
+<strong>Check ▶</strong>, and watch the kernel object. We start from the ground up: the
+editor, then just enough logic, then how Algae writes rules and assembles proofs,
+and finally sorts, specifications, and equational reasoning. The later chapters
+work through the real standard library — <code class="docutils literal notranslate"><span class="pre">core</span></code>, <code class="docutils literal notranslate"><span class="pre">nat</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">group</span></code>,
+<code class="docutils literal notranslate"><span class="pre">monad</span></code> — so nothing here is throwaway toy code. It all <code class="docutils literal notranslate"><span class="pre">import</span></code>s, and it
+all verifies.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Every <code class="docutils literal notranslate"><span class="pre">alg</span></code> block on this site is a <strong>live editor</strong>. Edit it and press
-<strong>Check ▶</strong> to run the real kernel — compiled to WebAssembly — right in your
-browser. Break things on purpose; the kernel is unbribable and will point at
-exactly where you went wrong.</p>
+<p>You don’t have to memorise a wall of syntax before your first proof. Break
+things on purpose; the kernel is unbribable and will point at exactly where
+you went wrong. And when you’re not sure what to write next, leave a
+<strong>hole</strong> — the editor will tell you the goal and even suggest the fix.</p>
 </div>
-<p>We work through the real standard library — <code class="docutils literal notranslate"><span class="pre">core</span></code>, <code class="docutils literal notranslate"><span class="pre">nat</span></code>, <code class="docutils literal notranslate"><span class="pre">option</span></code>,
-<code class="docutils literal notranslate"><span class="pre">group</span></code>, <code class="docutils literal notranslate"><span class="pre">monad</span></code> — so nothing here is throwaway toy code. It’s all
-<code class="docutils literal notranslate"><span class="pre">import</span></code>-able, and it all verifies.</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is Algae?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#two-ways-to-run-it">Two ways to run it</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#where-we-re-headed">Where we’re headed</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="editor.html">The editor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="editor.html#check">Check ▶</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editor.html#holes-wip-and-name">Holes: <code class="docutils literal notranslate"><span class="pre">wip</span></code> and <code class="docutils literal notranslate"><span class="pre">?name</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="editor.html#suggestions">Suggestions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editor.html#format">Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="propositional-logic.html">Propositional logic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="propositional-logic.html#negation-not">Negation: <code class="docutils literal notranslate"><span class="pre">¬</span></code> (not)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propositional-logic.html#conjunction-and">Conjunction: <code class="docutils literal notranslate"><span class="pre">∧</span></code> (and)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propositional-logic.html#disjunction-or">Disjunction: <code class="docutils literal notranslate"><span class="pre">∨</span></code> (or)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propositional-logic.html#implication-implies">Implication: <code class="docutils literal notranslate"><span class="pre">→</span></code> (implies)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propositional-logic.html#why-truth-tables-aren-t-enough">Why truth tables aren’t enough</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inference-rules.html">Inference rules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="inference-rules.html#sequents-and-the-turnstile">Sequents and the turnstile <code class="docutils literal notranslate"><span class="pre">⊢</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference-rules.html#anatomy-of-a-rule">Anatomy of a rule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference-rules.html#conjunction-in-words-and-in-algae">Conjunction, in words and in Algae</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html#the-mechanic">The mechanic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html#your-first-proof">Your first proof</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html#the-vocabulary">The vocabulary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="proofs.html">Building proofs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proofs.html#proofs-are-dominoes">Proofs are dominoes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofs.html#a-branching-proof-end-to-end">A branching proof, end to end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofs.html#what-the-checker-actually-checks">What the checker actually checks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="specs.html#sorts-and-operations">Sorts and operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html#axioms-give-operators-meaning">Axioms give operators meaning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html#equational-reasoning">Equational reasoning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#reflexivity">Reflexivity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#rewriting-with-a-motive">Rewriting with a motive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#the-sugar">The <code class="docutils literal notranslate"><span class="pre">_</span></code> sugar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#when-the-motive-misses">When the motive misses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#the-other-direction-backward">The other direction: <code class="docutils literal notranslate"><span class="pre">backward</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="worlds.html#running-the-checker">Running the checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="worlds.html#sorts-operators-types">Sorts, operators, types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="worlds.html#propositions-and-sequents">Propositions and sequents</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="first-proofs.html">Your first proofs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="first-proofs.html#axioms-give-operators-meaning">Axioms give operators meaning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first-proofs.html#rules-proofs-that-branch">Rules: proofs that branch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first-proofs.html#the-shape-of-a-proof">The shape of a proof</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="holes.html">Proving with holes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="holes.html#holes-inside-a-tactic">Holes inside a tactic</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="rewrite.html">Rewriting with a motive</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="rewrite.html#when-the-motive-misses">When the motive misses</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rewrite.html#no-sugar-same-proof">No sugar, same proof</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="induction.html">Induction and friends</a><ul>
@@ -317,6 +361,19 @@ exactly where you went wrong.</p>
 <li class="toctree-l2"><a class="reference internal" href="tour/index.html#the-modules">The modules</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#direct-proof">1. Direct proof</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#conditional-proof-implication">2. Conditional proof (implication)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#proof-by-cases">3. Proof by cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#mathematical-induction">4. Mathematical induction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#proof-by-contradiction">5. Proof by contradiction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#proof-by-contrapositive">6. Proof by contrapositive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#universal-proof">7. Universal proof</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#existential-proof-a-witness">8. Existential proof (a witness)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#existential-elimination-use-a-witness">9. Existential elimination (use a witness)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#equational-reasoning-rewriting">10. Equational reasoning (rewriting)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html#a-proof-becomes-a-fact">A proof becomes a fact</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html#prove-once-reuse-forever">Prove once, reuse forever</a></li>
@@ -331,12 +388,12 @@ exactly where you went wrong.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="worlds.html">
+          <a class="next-page" href="intro.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Two worlds and a vocabulary</div>
+                <div class="title">What is Algae?</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

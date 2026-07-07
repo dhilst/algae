@@ -192,10 +192,15 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Tutorial</a><input aria-label="Toggle navigation of Tutorial" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="intro.html">What is Algae?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editor.html">The editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propositional-logic.html">Propositional logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first-proofs.html">Your first proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="holes.html">Proving with holes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rewrite.html">Rewriting with a motive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
@@ -206,6 +211,7 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -334,8 +340,8 @@ the theory — and each is proved just like a lemma. Here every proof is a one-l
 because <code class="docutils literal notranslate"><span class="pre">StackSpec</span></code>’s laws are exactly our two axioms. Press <strong>Check ▶</strong>: two
 obligations discharged, and <code class="docutils literal notranslate"><span class="pre">ConcreteStack</span></code> is certified a stack.</p>
 <p>Every model has this shape, however big. <code class="docutils literal notranslate"><span class="pre">option.alg</span></code>’s <code class="docutils literal notranslate"><span class="pre">OptionMonad</span></code> is the
-same skeleton with three richer proofs — each threading <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> to reach its
-equality, the <code class="docutils literal notranslate"><span class="pre">defeq</span></code> discipline from <a class="reference internal" href="first-proofs.html"><span class="doc">Your first proofs</span></a> at scale.</p>
+same skeleton with three richer proofs — each threading <code class="docutils literal notranslate"><span class="pre">backward</span></code> to reach its
+equality, the <code class="docutils literal notranslate"><span class="pre">defeq</span></code> discipline from <a class="reference internal" href="specs.html"><span class="doc">Sorts, operations, and equations</span></a> at scale.</p>
 <section id="imports-and-the-standard-library">
 <h2>Imports and the standard library<a class="headerlink" href="#imports-and-the-standard-library" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">module;</span></code> brings in <strong>everything</strong> a module declares — its sorts,
@@ -356,7 +362,7 @@ come along (which is why <code class="docutils literal notranslate"><span class=
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">core</span></code></p></td>
-<td><p>equality (<code class="docutils literal notranslate"><span class="pre">refl</span></code>, <code class="docutils literal notranslate"><span class="pre">symmetry</span></code>, <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> / <code class="docutils literal notranslate"><span class="pre">rewrite_l</span></code>), logic, quantifiers</p></td>
+<td><p>equality (<code class="docutils literal notranslate"><span class="pre">refl</span></code>, <code class="docutils literal notranslate"><span class="pre">symmetry</span></code>, <code class="docutils literal notranslate"><span class="pre">backward</span></code> / <code class="docutils literal notranslate"><span class="pre">forward</span></code>), logic, quantifiers</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nat</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Nat</span></code>, <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, and <code class="docutils literal notranslate"><span class="pre">induction</span></code></p></td>

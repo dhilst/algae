@@ -55,7 +55,7 @@ element type ``A`` and *any* stack ``s``. Press **Check ▶**:
 
 .. code-block:: alg
 
-   import core(rewrite_r);
+   import core(forward);
 
    sort Stack : Sort → Sort;
 
@@ -78,7 +78,7 @@ element type ``A`` and *any* stack ``s``. Press **Check ▶**:
    lemma top_after_pop(A : Sort, a b : A, s : Stack(A))
      ⊢ top(pop(push(a, push(b, s)))) = b;
    proof
-     by rewrite_r(Stack(A), pop(push(a, push(b, s))), push(b, s),
+     by forward(Stack(A), pop(push(a, push(b, s))), push(b, s),
                   pop_push(A, a, push(b, s)), top(_) = b)
      then ⊢ top(push(b, s)) = b;
      by top_push(A, b, s);
@@ -88,7 +88,7 @@ element type ``A`` and *any* stack ``s``. Press **Check ▶**:
    lemma pop_twice(A : Sort, a b : A, s : Stack(A))
      ⊢ pop(pop(push(a, push(b, s)))) = s;
    proof
-     by rewrite_r(Stack(A), pop(push(a, push(b, s))), push(b, s),
+     by forward(Stack(A), pop(push(a, push(b, s))), push(b, s),
                   pop_push(A, a, push(b, s)), pop(_) = s)
      then ⊢ pop(push(b, s)) = s;
      by pop_push(A, b, s);
@@ -99,10 +99,11 @@ Three obligations, all discharged. Reading them:
 - **``top_of_two``** is a one-liner. ``top_push`` says ``top(push(a, _)) = a`` for
   *any* stack in the hole — including ``push(b, s)`` — so the whole thing collapses
   in a single step. The ``b`` and ``s`` underneath never matter to ``top``.
-- **``top_after_pop``** is the LIFO story in a proof. We ``rewrite_r`` the inner
-  ``pop(push(a, push(b, s)))`` to ``push(b, s)`` using ``pop_push`` — the motive
+- **``top_after_pop``** is the LIFO story in a proof. We rewrite the inner
+  ``pop(push(a, push(b, s)))`` to ``push(b, s)`` with ``forward`` (using
+  ``pop_push``) — the motive
   ``top(_) = b`` aims the rewrite at the argument of ``top`` (see
-  :doc:`rewrite`) — leaving ``top(push(b, s)) = b``, which is ``top_push`` again.
+  :doc:`rewrite-reflexivity`) — leaving ``top(push(b, s)) = b``, which is ``top_push`` again.
   So after one pop, ``b`` really is on top.
 - **``pop_twice``** chains two rewrites: ``pop_push`` peels the outer ``push(a, …)``
   to reach ``pop(push(b, s))``, and a second ``pop_push`` peels that to ``s``.

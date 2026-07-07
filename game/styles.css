@@ -438,6 +438,13 @@ button.chip:disabled { opacity: 0.5; }
 .help-body ul { margin: 0; padding-left: 20px; }
 .help-body li { margin: 7px 0; }
 .help-body p { margin: 8px 0; }
+.help-tutorial-link {
+  padding: 8px 12px;
+  border-left: 3px solid var(--amber-bright);
+  background: rgba(255, 191, 0, 0.08);
+}
+.help-tutorial-link a { color: var(--amber-bright); text-decoration: underline; font-weight: bold; }
+.help-tutorial-link a:hover { color: var(--gold); }
 .help-body code {
   background: var(--stone-0);
   color: var(--amber-bright);

@@ -1,6 +1,6 @@
 import core(
   refl,
-  rewrite_r,
+  backward,
   transitivity
 );
 
@@ -60,7 +60,7 @@ proof
       k : Nat;                    # the context
       ih := k + 0 = k;            # induction hypothesis
       ⊢ s(k) + 0 = s(k);          # the current goal
-      by rewrite_r(               # rewrite at right
+      by backward(               # backward: replace `k + 0` with `k`
         Nat,                      # the type of each side
         k + 0, k,                 # replace `k + 0` → `k`
         ih,                       # by the induction hypothesis (k + 0 = k)

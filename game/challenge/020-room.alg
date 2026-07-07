@@ -1,17 +1,7 @@
-# Two halves must both be spoken.
-import core(and_intro);
+import core(implication_intro);
 
-lemma banish(A B : Prop, x := A, y := B)
-  |- A /\ B;
+lemma const_imp(A B : Prop, q := B)
+  ⊢ A ⇒ B;
 proof
-  by and_intro(A, B) cases
-    case
-      |- A;
-      by wip;
-    wip;
-    case
-      |- B;
-      by wip;
-    wip;
-  wip;
+  by wip;
 wip;

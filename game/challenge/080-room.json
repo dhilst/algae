@@ -1,10 +1,10 @@
 {
   "id": "080",
   "tier": "veryhard",
-  "title": "Down The List",
+  "title": "Whichever Branch, Same End",
   "monster": "dragon",
   "module": "room080",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": true,
-  "help": "Good luck!"
+  "help": "Proof by cases (constructive dilemma). or_elim(A, B, C) cases; in each branch run implication_elim against f / g and the branch assumption."
 }

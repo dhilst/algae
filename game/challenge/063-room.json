@@ -1,11 +1,11 @@
 {
   "id": "063",
   "tier": "hard",
-  "title": "The Other Cut",
+  "title": "Twice Denied",
   "monster": "dragon",
   "module": "room063",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": false,
   "lore": "Grooves worn into the stone, as if others came this way before you — each of them, it seems, alone.",
-  "help": "Good luck!"
+  "help": "Proof by contradiction. negation_intro(¬A) then P := ¬A ⊢ False; now P : ¬A and x : A — negation_elim(A) gives False."
 }

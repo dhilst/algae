@@ -8,7 +8,7 @@ Logic tells you how to combine facts; the data modules tell you how to reason ab
 - **case-analysis** rules that mirror a type's constructors — to prove something
   about *any* value, prove it for each way the value could have been built;
 - **equations** (axioms) describing what the operations *do*, which you drive with
-  ``rewrite_r`` / ``rewrite_l`` (see :doc:`../rewrite`).
+  ``backward`` / ``forward`` (see :doc:`../rewrite-reflexivity`).
 
 We met one already — ``induction`` in |nat.alg| is exactly the case-analysis rule
 for the naturals (base case ``0``, step case ``s(n)``). Everything here is the same

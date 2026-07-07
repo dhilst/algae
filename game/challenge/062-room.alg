@@ -1,13 +1,9 @@
-# Rewrite the world along an equation until the goal appears.
-import core(refl, rewrite_r);
+import core(exists_intro, exists_elim);
 
 sort T : Sort;
-op a : -> T;
-op b : -> T;
-axiom ab |- a = b;
 
-lemma banish
-  |- b = b;
+lemma repack(P : T → Prop, ex := ∃ (x : T) st P(x))
+  ⊢ ∃ (x : T) st P(x);
 proof
   by wip;
 wip;

@@ -1,6 +1,6 @@
 import core(
   refl,
-  rewrite_r,
+  backward,
   transitivity,
   symmetry
 );

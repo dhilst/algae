@@ -1,11 +1,11 @@
 {
   "id": "003",
   "tier": "trivial",
-  "title": "The Right Hand",
+  "title": "One True Half",
   "monster": "sphinx",
   "module": "room003",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
   "lore": "Scratched on the wall, in a hand you almost recognize: WILL I BE ENOUGH?",
-  "help": "From a conjunction `A /\\ B` you may keep just one half. `and_right(A, B)` asks for a proof of `A /\\ B` (you hold `both`) and yields `B`. Supply the conjunction with `by both;`."
+  "help": "Direct proof. and_left(A, B) concludes A from its one premise ⊢ A ∧ B; then ⊢ A ∧ B; by h;."
 }

@@ -1,7 +1,7 @@
 import core(
   refl,
-  rewrite_r,
-  rewrite_l,
+  backward,
+  forward,
   transitivity,
   and_intro,
   and_left,

@@ -1,9 +1,7 @@
-# n + 0 = n. The rewrite is laid out; supply the defining law.
-import nat(induction, add_zero_left, add_succ_left);
-import core(rewrite_r);
+import core(false_elim, negation_elim);
 
-lemma banish
-  |- forall (n : Nat) st n + 0 = n;
+lemma explode(A C : Prop, x := A, nx := ¬A)
+  ⊢ C;
 proof
   by wip;
 wip;

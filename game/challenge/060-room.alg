@@ -1,8 +1,7 @@
-# The dragon coils around the induction. Take the successor step.
-import nat(induction, refl);
+import core(or_elim, or_intro_left, or_intro_right);
 
-lemma banish
-  |- forall (n : Nat) st n = n;
+lemma or_comm(A B : Prop, d := A ∨ B)
+  ⊢ B ∨ A;
 proof
   by wip;
 wip;

@@ -21,7 +21,7 @@ branches, so this is a job for ``cases``. Here is the full proof of
 
 .. code-block:: alg
 
-   import core(refl, rewrite_r, transitivity);
+   import core(refl, backward, transitivity);
 
    sort Nat : Sort;
    op 0 : → Nat;
@@ -51,7 +51,7 @@ branches, so this is a job for ``cases``. Here is the full proof of
          k : Nat;
          ih := k + 0 = k;                 # step: assume P(k)
          ⊢ s(k) + 0 = s(k);             # prove P(s k)
-         by rewrite_r(Nat, k + 0, k, ih, s(k) + 0 = s(_))
+         by backward(Nat, k + 0, k, ih, s(k) + 0 = s(_))
          then ⊢ s(k) + 0 = s(k + 0);      # goal after rewriting k <- k + 0
          by add_succ_left(k, 0);          # conclusion s(k) + 0 = s(k + 0) is the goal
        qed;
@@ -70,7 +70,7 @@ Reading it as a tree:
   ``s(k) + 0 = s(k + 0)``, which ``add_succ_left(k, 0)`` discharges.
 
 Notice ``ih`` — a **hypothesis** introduced by the step case — being handed to
-``rewrite_r`` as a proof argument. That's the proof namespace at work: ``ih`` is
+``backward`` as a proof argument. That's the proof namespace at work: ``ih`` is
 not a term, it's *evidence*.
 
 Eigenvariables
@@ -89,7 +89,7 @@ Writing motives by hand is tedious, so ``_`` is sugar for a lambda. In the proof
 above, ``by induction(_ + 0 = _)`` means ``by induction(λ k. k + 0 = k)``: each
 ``_`` becomes the lambda's bound variable. Reach for ``_`` whenever a predicate
 argument is obvious from the goal. (This is a different beast from the ``?name``
-holes in :doc:`holes` — ``_`` is filled in silently; ``?`` asks the checker to
+holes in :doc:`editor` — ``_`` is filled in silently; ``?`` asks the checker to
 *talk to you*.)
 
 Parameters vs. ``forall``
@@ -139,7 +139,7 @@ begins by introducing the variable:
 
 Here the ``then`` keeps its context: ``forall_intro`` introduces the fresh
 eigenvariable ``n``, so the continuation names it (``n : Nat ⊢ …``). When a step
-introduces no new variables — most ``rewrite_r`` steps — you can drop the context
+introduces no new variables — most ``backward`` steps — you can drop the context
 and just write ``then ⊢ <goal>;``.
 
 This is also why ``induction`` states its conclusion as ``∀ (n : Nat) st P(n)``

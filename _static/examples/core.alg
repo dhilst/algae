@@ -9,7 +9,21 @@ axiom refl(
 )
   ⊢ x = x;
 
-rule rewrite_r(
+# The two congruence rules rewrite one subterm of the goal using an equation.
+# They are named for the direction the rewrite runs *at proof time* — remember
+# that proofs go backward, from the goal toward its premises.
+#
+#   forward   takes a proof of `a = b` and replaces `a` with `b` in the goal
+#             (the goal `P(a)` becomes the subgoal `P(b)` — following the
+#             equation left-to-right, the way you'd read `a = b`).
+#   backward  takes a proof of `a = b` and replaces `b` with `a` in the goal
+#             (the goal `P(b)` becomes the subgoal `P(a)` — using the equation
+#             right-to-left, against its natural reading).
+#
+# In both, `P : T → Prop` is the *motive*: a proposition with a hole marking
+# exactly which subterm the equation lands on.
+
+rule backward(
   T : Sort,
   a b : T,
   eq := a = b,
@@ -20,7 +34,7 @@ rule rewrite_r(
   ⊢ P(b)
 end;
 
-rule rewrite_l(
+rule forward(
   T : Sort,
   a b : T,
   eq := a = b,

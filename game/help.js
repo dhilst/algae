@@ -29,6 +29,10 @@ function parseImports(src) {
 }
 
 const GENERAL_HTML = `
+  <p class="help-tutorial-link">New to Algae? Read the
+    <a href="../tutorial/index.html" target="_blank" rel="noopener noreferrer">tutorial</a>
+    — a gentle, from-scratch walkthrough of the editor, logic, and proofs.</p>
+
   <h3>Using the editor</h3>
   <ul>
     <li><b>Check your proof:</b> press <kbd>Ctrl</kbd>+<kbd>Enter</kbd>
@@ -40,9 +44,6 @@ const GENERAL_HTML = `
       monster, replace every <code>by wip;</code> with a real step and change each
       closing <code>wip;</code> back to <code>qed;</code>. The monster falls only when
       nothing is left admitted.</li>
-    <li><b>The <code>_</code> hole:</b> an underscore is a placeholder the kernel fills
-      in for you — for example a motive written <code>_ = _</code>. Use it when the
-      shape is forced and you'd rather not spell it out.</li>
     <li><b>Named holes <code>by wip(?name);</code>:</b> these admit the goal <i>and</i>
       print it (with candidate rules), so you can see exactly what's left to prove.
       Stuck? Drop in <code>by wip(?here);</code>, check, and read what it asks for.</li>
@@ -52,6 +53,15 @@ const GENERAL_HTML = `
       with the arguments it <i>inferred</i> (<code>?P = …</code>, <code>?Q = …</code>)
       and the subgoal(s) the rule produces, then admits so the rest still checks. It's
       the fastest way to learn a step — the tour calls it “let the checker tell you.”</li>
+    <li><b>Suggestions:</b> when a check flags a fixable spot — a hole with candidate
+      rules, a mismatched <code>qed</code>/<code>wip</code>, or a half-applied step —
+      <b>click the underlined text</b> (or press <kbd>Ctrl</kbd>+<kbd>Space</kbd>) to
+      see suggested fixes and apply one with a keystroke. It re-checks automatically,
+      so you can chain suggestions until the goal falls.</li>
+    <li><b>The <code>_</code> motive:</b> in a rewrite (<code>forward</code> /
+      <code>backward</code>), an underscore marks the spot the equation lands — e.g.
+      <code>top(_) = b</code>. It's shorthand for a little lambda, so you point at one
+      subterm without spelling the whole proposition out.</li>
     <li><b>Hover for details:</b> after checking, hover the underlined spot — a hole
       shows the goal it still expects; an error shows what went wrong.</li>
   </ul>

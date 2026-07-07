@@ -1,8 +1,7 @@
-# Induction over a list. The cons cell is yours to close.
-import list(list_induction, refl);
+import core(or_elim, implication_elim);
 
-lemma banish(A : Sort, xs : List(A))
-  |- xs = xs;
+lemma dilemma(A B C : Prop, d := A ∨ B, f := A ⇒ C, g := B ⇒ C)
+  ⊢ C;
 proof
   by wip;
 wip;

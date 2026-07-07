@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Specifying a stack" href="stack.html"><link rel="prev" title="Rewriting with a motive" href="rewrite.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Specifying a stack" href="stack.html"><link rel="prev" title="Two worlds and a vocabulary" href="worlds.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
         <title>Induction and friends - Algae</title>
@@ -192,10 +192,15 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Tutorial</a><input aria-label="Toggle navigation of Tutorial" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="intro.html">What is Algae?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editor.html">The editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propositional-logic.html">Propositional logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="first-proofs.html">Your first proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="holes.html">Proving with holes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rewrite.html">Rewriting with a motive</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Induction and friends</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
@@ -206,6 +211,7 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -265,7 +271,7 @@ conclusion is a <em>universally quantified</em> proposition:</p>
 prove <code class="docutils literal notranslate"><span class="pre">P(s(n))</span></code>) — and a conclusion <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">n.</span> <span class="pre">P(n)</span></code>. Two premises means two
 branches, so this is a job for <code class="docutils literal notranslate"><span class="pre">cases</span></code>. Here is the full proof of
 <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">n</span></code>, straight from <code class="docutils literal notranslate"><span class="pre">nat.alg</span></code>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">rewrite_r</span><span class="p">,</span> <span class="n">transitivity</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">backward</span><span class="p">,</span> <span class="n">transitivity</span><span class="p">);</span>
 
 <span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 <span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
@@ -295,7 +301,7 @@ branches, so this is a job for <code class="docutils literal notranslate"><span 
       <span class="n">k</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">;</span>
       <span class="n">ih</span> <span class="o">:=</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">k</span><span class="p">;</span>                 <span class="c1"># step: assume P(k)</span>
       <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">);</span>             <span class="c1"># prove P(s k)</span>
-      <span class="k">by</span> <span class="n">rewrite_r</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">ih</span><span class="p">,</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">_</span><span class="p">))</span>
+      <span class="k">by</span> <span class="n">backward</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">ih</span><span class="p">,</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">_</span><span class="p">))</span>
       <span class="n">then</span> <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">);</span>      <span class="c1"># goal after rewriting k &lt;- k + 0</span>
       <span class="k">by</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>          <span class="c1"># conclusion s(k) + 0 = s(k + 0) is the goal</span>
     <span class="k">qed</span><span class="p">;</span>
@@ -315,7 +321,7 @@ It uses <code class="docutils literal notranslate"><span class="pre">ih</span></
 <code class="docutils literal notranslate"><span class="pre">s(k)</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">s(k</span> <span class="pre">+</span> <span class="pre">0)</span></code>, which <code class="docutils literal notranslate"><span class="pre">add_succ_left(k,</span> <span class="pre">0)</span></code> discharges.</p></li>
 </ul>
 <p>Notice <code class="docutils literal notranslate"><span class="pre">ih</span></code> — a <strong>hypothesis</strong> introduced by the step case — being handed to
-<code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> as a proof argument. That’s the proof namespace at work: <code class="docutils literal notranslate"><span class="pre">ih</span></code> is
+<code class="docutils literal notranslate"><span class="pre">backward</span></code> as a proof argument. That’s the proof namespace at work: <code class="docutils literal notranslate"><span class="pre">ih</span></code> is
 not a term, it’s <em>evidence</em>.</p>
 <section id="eigenvariables">
 <h2>Eigenvariables<a class="headerlink" href="#eigenvariables" title="Link to this heading">¶</a></h2>
@@ -331,7 +337,7 @@ the surrounding context) — and that freshness is exactly what makes “prove
 above, <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">induction(_</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">_)</span></code> means <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">induction(λ</span> <span class="pre">k.</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">k)</span></code>: each
 <code class="docutils literal notranslate"><span class="pre">_</span></code> becomes the lambda’s bound variable. Reach for <code class="docutils literal notranslate"><span class="pre">_</span></code> whenever a predicate
 argument is obvious from the goal. (This is a different beast from the <code class="docutils literal notranslate"><span class="pre">?name</span></code>
-holes in <a class="reference internal" href="holes.html"><span class="doc">Proving with holes</span></a> — <code class="docutils literal notranslate"><span class="pre">_</span></code> is filled in silently; <code class="docutils literal notranslate"><span class="pre">?</span></code> asks the checker to
+holes in <a class="reference internal" href="editor.html"><span class="doc">The editor</span></a> — <code class="docutils literal notranslate"><span class="pre">_</span></code> is filled in silently; <code class="docutils literal notranslate"><span class="pre">?</span></code> asks the checker to
 <em>talk to you</em>.)</p>
 </section>
 <section id="parameters-vs-forall">
@@ -374,7 +380,7 @@ begins by introducing the variable:</p>
 </div>
 <p>Here the <code class="docutils literal notranslate"><span class="pre">then</span></code> keeps its context: <code class="docutils literal notranslate"><span class="pre">forall_intro</span></code> introduces the fresh
 eigenvariable <code class="docutils literal notranslate"><span class="pre">n</span></code>, so the continuation names it (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">:</span> <span class="pre">Nat</span> <span class="pre">⊢</span> <span class="pre">…</span></code>). When a step
-introduces no new variables — most <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> steps — you can drop the context
+introduces no new variables — most <code class="docutils literal notranslate"><span class="pre">backward</span></code> steps — you can drop the context
 and just write <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">&lt;goal&gt;;</span></code>.</p>
 <p>This is also why <code class="docutils literal notranslate"><span class="pre">induction</span></code> states its conclusion as <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">(n</span> <span class="pre">:</span> <span class="pre">Nat)</span> <span class="pre">st</span> <span class="pre">P(n)</span></code>
 rather than taking <code class="docutils literal notranslate"><span class="pre">n</span></code> as a parameter: the step case must reason about <code class="docutils literal notranslate"><span class="pre">n</span></code> as
@@ -423,14 +429,14 @@ can’t put them in a proposition or quantify over them.</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="rewrite.html">
+          <a class="prev-page" href="worlds.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Rewriting with a motive</div>
+                <div class="title">Two worlds and a vocabulary</div>
                 
               </div>
             </a>

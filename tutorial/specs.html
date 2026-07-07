@@ -3,10 +3,10 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Proving with holes" href="holes.html"><link rel="prev" title="Two worlds and a vocabulary" href="worlds.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Reflexivity and rewriting" href="rewrite-reflexivity.html"><link rel="prev" title="Building proofs" href="proofs.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
-        <title>Your first proofs - Algae</title>
+        <title>Sorts, operations, and equations - Algae</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -192,10 +192,15 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Tutorial</a><input aria-label="Toggle navigation of Tutorial" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="intro.html">What is Algae?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editor.html">The editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="propositional-logic.html">Propositional logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Your first proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="holes.html">Proving with holes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rewrite.html">Rewriting with a motive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
@@ -206,6 +211,7 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -231,7 +237,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/tutorial/first-proofs.rst.txt" title="View this page">
+  <a class="muted-link" href="../_sources/tutorial/specs.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -249,27 +255,49 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="your-first-proofs">
-<h1>Your first proofs<a class="headerlink" href="#your-first-proofs" title="Link to this heading">¶</a></h1>
+          <section id="sorts-operations-and-equations">
+<h1>Sorts, operations, and equations<a class="headerlink" href="#sorts-operations-and-equations" title="Link to this heading">¶</a></h1>
+<p>So far the propositions were abstract — bare <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">:</span> <span class="pre">Prop</span></code>. Now let’s give
+ourselves something concrete to talk <em>about</em>. That’s the <strong>algebraic
+specification</strong> side of Algae: you name a little world and pin down how it
+behaves, then prove things in it. This chapter is a brief tour; the later
+chapters (<a class="reference internal" href="worlds.html"><span class="doc">Two worlds and a vocabulary</span></a>, <a class="reference internal" href="stack.html"><span class="doc">Specifying a stack</span></a>, <a class="reference internal" href="theories.html"><span class="doc">Theories, laws, and models</span></a>) go deeper.</p>
+<section id="sorts-and-operations">
+<h2>Sorts and operations<a class="headerlink" href="#sorts-and-operations" title="Link to this heading">¶</a></h2>
+<p>A <strong>sort</strong> is a base type. An <strong>operation</strong> (<code class="docutils literal notranslate"><span class="pre">op</span></code>) is a function symbol with a
+signature — the arrow <code class="docutils literal notranslate"><span class="pre">→</span></code> gives the result type, <code class="docutils literal notranslate"><span class="pre">*</span></code> builds a tuple of
+arguments. Here’s the opening of the standard library’s <code class="docutils literal notranslate"><span class="pre">nat</span></code>:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>            <span class="c1"># a base sort</span>
+
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>               <span class="c1"># a constant (no arguments, so just → Nat)</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>           <span class="c1"># successor: takes a Nat, returns a Nat</span>
+<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>     <span class="c1"># addition: takes two Nats, written infix as x + y</span>
+</pre></div>
+</div>
+<p>That’s a <em>vocabulary</em> and nothing more. <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span></code>, and <code class="docutils literal notranslate"><span class="pre">+</span></code> are just symbols;
+nothing yet says <code class="docutils literal notranslate"><span class="pre">s(0)</span></code> is “one” or that <code class="docutils literal notranslate"><span class="pre">+</span></code> adds. In Algae, operators are
+<strong>inert</strong> — the checker never evaluates them. <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span></code> does not quietly become
+<code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+</section>
 <section id="axioms-give-operators-meaning">
 <h2>Axioms give operators meaning<a class="headerlink" href="#axioms-give-operators-meaning" title="Link to this heading">¶</a></h2>
-<p>An <strong>axiom</strong> asserts a sequent as true without proof. Operators are born
-meaningless; equational axioms are how they earn their meaning. <code class="docutils literal notranslate"><span class="pre">nat.alg</span></code> gives
-<code class="docutils literal notranslate"><span class="pre">+</span></code> its personality with two of them:</p>
+<p>Operators earn their meaning from <strong>axioms</strong> — sequents asserted true with no
+proof. <code class="docutils literal notranslate"><span class="pre">nat</span></code> gives <code class="docutils literal notranslate"><span class="pre">+</span></code> its personality with two equations:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
 <span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Now a plot twist that trips up newcomers. Algae’s built-in notion of “the same
-term” — <strong>definitional equality</strong> (<code class="docutils literal notranslate"><span class="pre">defeq</span></code>) — is <strong>α/β-equivalence only</strong>. Two
-terms are equal when they share a beta normal form, full stop. Operators are
-<strong>inert constants</strong>: the checker never <em>evaluates</em> them, so <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span></code> does <strong>not</strong>
-quietly collapse to <code class="docutils literal notranslate"><span class="pre">0</span></code>. An axiom only takes effect where a proof explicitly
-reaches for it.</p>
-<p>The simplest way to reach for one is to close a goal that an axiom’s conclusion
-already matches. Instantiate <code class="docutils literal notranslate"><span class="pre">add_zero_left</span></code> at <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span></code> and its conclusion
-<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code> reads <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code> — which is exactly our goal, so it closes on the
-spot. <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">nat;</span></code> brings <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">+</span></code>, and <code class="docutils literal notranslate"><span class="pre">add_zero_left</span></code> into scope:</p>
+<p>An axiom is exactly a <strong>zero-premise rule</strong> (recall <a class="reference internal" href="backward-reasoning.html"><span class="doc">Reasoning backward</span></a>):
+nothing to establish, so wherever its conclusion matches your goal, it closes it.
+Describing a structure by its operations plus a handful of such equations is what
+“algebraic specification” means — and because the axioms are all you assume, a
+proof from them holds for <em>every</em> structure that satisfies them.</p>
+</section>
+<section id="equational-reasoning">
+<h2>Equational reasoning<a class="headerlink" href="#equational-reasoning" title="Link to this heading">¶</a></h2>
+<p>Because <code class="docutils literal notranslate"><span class="pre">add_zero_left</span></code> is an equation whose conclusion is <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>, we can
+close any goal that matches it. Instantiate at <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span></code> and the conclusion reads
+<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code> — precisely a goal we might have:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">zero_plus_zero</span>
@@ -279,90 +307,22 @@ spot. <code class="docutils literal notranslate"><span class="pre">import</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>There it is — your first proof. One line of <code class="docutils literal notranslate"><span class="pre">by</span></code>, one <code class="docutils literal notranslate"><span class="pre">qed</span></code>.</p>
-<p>To apply an equation to a <em>subterm</em> — rewriting <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code> <em>inside</em> a
-bigger goal instead of matching the whole thing — you reach for the explicit
-congruence rules <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> / <code class="docutils literal notranslate"><span class="pre">rewrite_l</span></code> (coming up). There’s no hidden
-computation step anywhere: every use of an equation is a rule you can point to in
-the proof.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">core</span></code> module hands you <code class="docutils literal notranslate"><span class="pre">refl</span></code>, which proves anything equal to itself:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">axiom</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
-</pre></div>
+<p>One <code class="docutils literal notranslate"><span class="pre">by</span></code>, and it closes — the axiom is premise-free. This is <em>equational
+reasoning</em>: you prove things by lining goals up with equations you’ve assumed
+(or already proved).</p>
+<div class="note admonition">
+<p class="admonition-title">Definitional equality is α/β only</p>
+<p>There’s one rule newcomers trip on. Algae’s built-in notion of “the same
+term” — <strong>definitional equality</strong> — is <em>α/β-equivalence only</em>: two terms are
+the same when they share a normal form after renaming bound variables and
+applying lambdas, full stop. Operators are inert, so <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span></code> is <strong>not</strong>
+definitionally <code class="docutils literal notranslate"><span class="pre">0</span></code>. That’s why <code class="docutils literal notranslate"><span class="pre">zero_plus_zero</span></code> needs <code class="docutils literal notranslate"><span class="pre">add_zero_left</span></code> and
+can’t be closed by “they’re obviously equal.” Every use of an equation is a
+step you can point to — there is no hidden computation.</p>
 </div>
-<p>You instantiate it at the point of use — <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">refl(Nat,</span> <span class="pre">0)</span></code> proves <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code>.
-But remember: <code class="docutils literal notranslate"><span class="pre">defeq</span></code> is α/β only, so <code class="docutils literal notranslate"><span class="pre">refl</span></code> closes <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code> <strong>only</strong> when
-<code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> are already α/β-equal. <code class="docutils literal notranslate"><span class="pre">refl(Nat,</span> <span class="pre">0)</span></code> proves <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code> but
-<strong>not</strong> <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
-</section>
-<section id="rules-proofs-that-branch">
-<h2>Rules: proofs that branch<a class="headerlink" href="#rules-proofs-that-branch" title="Link to this heading">¶</a></h2>
-<p>An <strong>inference rule</strong> has premises above a line and a conclusion below it.
-Applying a rule to a goal that matches its conclusion hands you one new subgoal
-per premise. Here’s <code class="docutils literal notranslate"><span class="pre">symmetry</span></code> from <code class="docutils literal notranslate"><span class="pre">core</span></code>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">y</span>
-  <span class="p">────────────────────────</span>
-  <span class="o">⊢</span> <span class="n">y</span> <span class="o">=</span> <span class="n">x</span>
-<span class="k">end</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>To use it you say <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">symmetry(...)</span></code>. Its single premise leaves <strong>one</strong> goal
-still to prove, so you continue <em>the same block</em> with <code class="docutils literal notranslate"><span class="pre">then</span></code>: restate that goal,
-then knock it out with the next <code class="docutils literal notranslate"><span class="pre">by</span></code>. Watch us flip <code class="docutils literal notranslate"><span class="pre">add_zero_left</span></code> around —
-proving <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> from <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">symmetry</span><span class="p">);</span>
-
-<span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
-<span class="k">proof</span>
-  <span class="k">by</span> <span class="n">symmetry</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>   <span class="c1"># conclusion y = x matches goal n = 0 + n</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>            <span class="c1"># the one remaining subgoal</span>
-  <span class="k">by</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>         <span class="c1"># discharged by the axiom</span>
-<span class="k">qed</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>The rhythm is always the same: <strong>a step leaves subgoals; ``then`` continues a
-single one, ``cases`` splits several.</strong> An axiom (or any premise-free fact) leaves
-<em>zero</em> subgoals, so it closes the goal outright — which is why
-<code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">add_zero_left(n);</span></code> ends the chain with no <code class="docutils literal notranslate"><span class="pre">then</span></code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">symmetry(T,</span> <span class="pre">a,</span> <span class="pre">b)</span></code> passes three <em>arguments</em>, matched against the rule’s
-parameters <code class="docutils literal notranslate"><span class="pre">(T,</span> <span class="pre">x,</span> <span class="pre">y)</span></code> and typechecked like operator arguments. The current
-<em>goal</em> is not passed — it’s matched against the rule’s conclusion. A rule adds
-exactly one thing over an axiom: its premises become new subgoals.</p>
-<p>Parameters can be terms, sorts, predicates (<code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">:</span> <span class="pre">T</span> <span class="pre">→</span> <span class="pre">Prop</span></code>), or <strong>proof
-arguments</strong> — a parameter written <code class="docutils literal notranslate"><span class="pre">eq</span> <span class="pre">:=</span> <span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code> wants a <em>proof reference</em>
-whose statement is <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code>, not a term. <code class="docutils literal notranslate"><span class="pre">rewrite_r</span></code> uses one:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">rewrite_r</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-  <span class="p">────────────────────────</span>
-  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-<span class="k">end</span><span class="p">;</span>
-</pre></div>
-</div>
-</div>
-</section>
-<section id="the-shape-of-a-proof">
-<h2>The shape of a proof<a class="headerlink" href="#the-shape-of-a-proof" title="Link to this heading">¶</a></h2>
-<p>A proof block is the keyword <code class="docutils literal notranslate"><span class="pre">proof</span></code>, a chain of <code class="docutils literal notranslate"><span class="pre">by</span></code> steps, and a terminator
-<code class="docutils literal notranslate"><span class="pre">qed</span></code> (complete) or <code class="docutils literal notranslate"><span class="pre">wip</span></code> (still cooking). Every <code class="docutils literal notranslate"><span class="pre">by</span></code> step has exactly one
-of three outcomes, and its shape follows the number of subgoals it leaves:</p>
-<ul class="simple">
-<li><p><strong>zero</strong> — <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">refl(Nat,</span> <span class="pre">0);</span></code> closes the goal.</p></li>
-<li><p><strong>one</strong> — <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">symmetry(...)</span> <span class="pre">then</span> <span class="pre">&lt;goal&gt;;</span> <span class="pre">by</span> <span class="pre">…</span></code> continues the <em>same</em> block,
-no nesting; the <code class="docutils literal notranslate"><span class="pre">then</span></code> restates the single remaining subgoal.</p></li>
-<li><p><strong>many</strong> — <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">induction(...)</span> <span class="pre">cases</span> <span class="pre">&lt;case&gt;</span> <span class="pre">&lt;case&gt;</span> <span class="pre">…</span></code> branches, one <code class="docutils literal notranslate"><span class="pre">case</span></code>
-per subgoal (each <code class="docutils literal notranslate"><span class="pre">case</span></code> has its own nested <code class="docutils literal notranslate"><span class="pre">proof</span> <span class="pre">…</span> <span class="pre">qed</span></code>).</p></li>
-</ul>
-<p>So a proof reads top to bottom: a straight <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">…</span> <span class="pre">then</span> <span class="pre">…</span> <span class="pre">by</span> <span class="pre">…</span></code> chain for
-single-goal steps, splitting into <code class="docutils literal notranslate"><span class="pre">cases</span></code> only where a rule genuinely branches.
-<code class="docutils literal notranslate"><span class="pre">then</span></code> may only follow a step that leaves one goal, <code class="docutils literal notranslate"><span class="pre">cases</span></code> a step that leaves
-two or more, and a <code class="docutils literal notranslate"><span class="pre">case</span></code> is legal only inside a <code class="docutils literal notranslate"><span class="pre">cases</span></code> block.</p>
-<p>And when you’re not sure what to write next? Don’t guess — leave a hole. That’s
-the whole next chapter.</p>
+<p>Applying an equation to a <em>part</em> of a goal — rewriting <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code> buried
+<em>inside</em> a larger proposition, rather than matching the whole thing — is the job
+of the next chapter: reflexivity and the rewrite rules.</p>
 </section>
 </section>
 
@@ -371,23 +331,23 @@ the whole next chapter.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="holes.html">
+          <a class="next-page" href="rewrite-reflexivity.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Proving with holes</div>
+                <div class="title">Reflexivity and rewriting</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="worlds.html">
+          <a class="prev-page" href="proofs.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Two worlds and a vocabulary</div>
+                <div class="title">Building proofs</div>
                 
               </div>
             </a>
@@ -421,10 +381,10 @@ the whole next chapter.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Your first proofs</a><ul>
+<li><a class="reference internal" href="#">Sorts, operations, and equations</a><ul>
+<li><a class="reference internal" href="#sorts-and-operations">Sorts and operations</a></li>
 <li><a class="reference internal" href="#axioms-give-operators-meaning">Axioms give operators meaning</a></li>
-<li><a class="reference internal" href="#rules-proofs-that-branch">Rules: proofs that branch</a></li>
-<li><a class="reference internal" href="#the-shape-of-a-proof">The shape of a proof</a></li>
+<li><a class="reference internal" href="#equational-reasoning">Equational reasoning</a></li>
 </ul>
 </li>
 </ul>

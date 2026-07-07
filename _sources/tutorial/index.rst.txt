@@ -7,32 +7,38 @@ it a vocabulary (sorts and operators), a few facts (axioms and inference rules),
 and then you *prove things* — by building explicit proof trees that a tiny, deeply
 suspicious kernel re-checks step by step. No hand-waving survives.
 
-Here's the good news: you don't have to memorise a wall of syntax before your
-first proof. We'll write a one-liner almost immediately, and from there the
-checker's **holes** feature (:doc:`holes`) does a lot of the teaching for you — it
-literally prints the goal, what's in scope, and which tactics might work next.
+This tutorial runs entirely **in your browser**. Every ``alg`` block below is a
+live editor backed by the real kernel compiled to WebAssembly — edit it, press
+**Check ▶**, and watch the kernel object. We start from the ground up: the
+editor, then just enough logic, then how Algae writes rules and assembles proofs,
+and finally sorts, specifications, and equational reasoning. The later chapters
+work through the real standard library — ``core``, ``nat``, ``list``, ``group``,
+``monad`` — so nothing here is throwaway toy code. It all ``import``\ s, and it
+all verifies.
 
 .. tip::
 
-   Every ``alg`` block on this site is a **live editor**. Edit it and press
-   **Check ▶** to run the real kernel — compiled to WebAssembly — right in your
-   browser. Break things on purpose; the kernel is unbribable and will point at
-   exactly where you went wrong.
-
-We work through the real standard library — ``core``, ``nat``, ``option``,
-``group``, ``monad`` — so nothing here is throwaway toy code. It's all
-``import``-able, and it all verifies.
+   You don't have to memorise a wall of syntax before your first proof. Break
+   things on purpose; the kernel is unbribable and will point at exactly where
+   you went wrong. And when you're not sure what to write next, leave a
+   **hole** — the editor will tell you the goal and even suggest the fix.
 
 .. toctree::
    :maxdepth: 2
 
+   intro
+   editor
+   propositional-logic
+   inference-rules
+   backward-reasoning
+   proofs
+   specs
+   rewrite-reflexivity
    worlds
-   first-proofs
-   holes
-   rewrite
    induction
    stack
    errors
    theories
    tour/index
+   proof-techniques
    auxiliary-lemmas

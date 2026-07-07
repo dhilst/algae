@@ -93,8 +93,8 @@ because ``StackSpec``'s laws are exactly our two axioms. Press **Check ▶**: tw
 obligations discharged, and ``ConcreteStack`` is certified a stack.
 
 Every model has this shape, however big. ``option.alg``'s ``OptionMonad`` is the
-same skeleton with three richer proofs — each threading ``rewrite_r`` to reach its
-equality, the ``defeq`` discipline from :doc:`first-proofs` at scale.
+same skeleton with three richer proofs — each threading ``backward`` to reach its
+equality, the ``defeq`` discipline from :doc:`specs` at scale.
 
 Imports and the standard library
 ================================
@@ -113,7 +113,7 @@ The standard library lives in ``algae/stdlib/v1/``:
    * - module
      - what it provides
    * - ``core``
-     - equality (``refl``, ``symmetry``, ``rewrite_r`` / ``rewrite_l``), logic, quantifiers
+     - equality (``refl``, ``symmetry``, ``backward`` / ``forward``), logic, quantifiers
    * - ``nat``
      - ``Nat``, ``+``, ``*``, and ``induction``
    * - ``option``, ``result``, ``list``

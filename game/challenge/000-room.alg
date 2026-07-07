@@ -1,11 +1,7 @@
-# The sphinx traces a single glyph in the dust and waits.
-import core(refl);
+import nat;
 
-sort T : Sort;
-op a : -> T;
-
-lemma banish
-  |- a = a;
+lemma zero_plus_zero
+  ⊢ 0 + 0 = 0;
 proof
   by wip;
 wip;

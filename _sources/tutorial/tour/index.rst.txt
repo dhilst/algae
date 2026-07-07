@@ -31,7 +31,7 @@ Every rule has the same anatomy — premises above a line, a conclusion below:
 
 To *apply* a rule with ``by``, the kernel matches your current goal against its
 **conclusion** and hands you back one subgoal per **premise**. So the number of
-premises decides the shape of the step (you saw this in :doc:`../first-proofs`):
+premises decides the shape of the step (you saw this in :doc:`../backward-reasoning`):
 
 - **zero premises** — the rule closes the goal outright (``by refl(Nat, n);``).
 - **one premise** — continue in the same block with ``then`` (``by symmetry(…)
@@ -41,7 +41,7 @@ premises decides the shape of the step (you saw this in :doc:`../first-proofs`):
 The arguments in ``by rule(args)`` fill the rule's *parameters* — the ``P``, ``Q``,
 ``T``, ``x`` … — and are matched and typechecked just like operator arguments. When
 in doubt about what a rule wants, leave a hole (``by rule?;``) and let the checker
-tell you (:doc:`../holes`).
+tell you (:doc:`../editor`).
 
 The modules
 ===========

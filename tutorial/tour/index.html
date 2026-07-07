@@ -192,10 +192,15 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">Tutorial</a><input aria-label="Toggle navigation of Tutorial" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">What is Algae?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../editor.html">The editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../propositional-logic.html">Propositional logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../inference-rules.html">Inference rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../backward-reasoning.html">Reasoning backward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../proofs.html">Building proofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../worlds.html">Two worlds and a vocabulary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../first-proofs.html">Your first proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../holes.html">Proving with holes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../rewrite.html">Rewriting with a motive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../induction.html">Induction and friends</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../errors.html">Specifying error behavior</a></li>
@@ -206,6 +211,7 @@
 <li class="toctree-l3"><a class="reference internal" href="data.html">Reasoning about data</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -274,7 +280,7 @@ a new tab, so keep one handy while you read).</p>
 </div>
 <p>To <em>apply</em> a rule with <code class="docutils literal notranslate"><span class="pre">by</span></code>, the kernel matches your current goal against its
 <strong>conclusion</strong> and hands you back one subgoal per <strong>premise</strong>. So the number of
-premises decides the shape of the step (you saw this in <a class="reference internal" href="../first-proofs.html"><span class="doc">Your first proofs</span></a>):</p>
+premises decides the shape of the step (you saw this in <a class="reference internal" href="../backward-reasoning.html"><span class="doc">Reasoning backward</span></a>):</p>
 <ul class="simple">
 <li><p><strong>zero premises</strong> — the rule closes the goal outright (<code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">refl(Nat,</span> <span class="pre">n);</span></code>).</p></li>
 <li><p><strong>one premise</strong> — continue in the same block with <code class="docutils literal notranslate"><span class="pre">then</span></code> (<code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">symmetry(…)</span>
@@ -284,7 +290,7 @@ premises decides the shape of the step (you saw this in <a class="reference inte
 <p>The arguments in <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">rule(args)</span></code> fill the rule’s <em>parameters</em> — the <code class="docutils literal notranslate"><span class="pre">P</span></code>, <code class="docutils literal notranslate"><span class="pre">Q</span></code>,
 <code class="docutils literal notranslate"><span class="pre">T</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code> … — and are matched and typechecked just like operator arguments. When
 in doubt about what a rule wants, leave a hole (<code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">rule?;</span></code>) and let the checker
-tell you (<a class="reference internal" href="../holes.html"><span class="doc">Proving with holes</span></a>).</p>
+tell you (<a class="reference internal" href="../editor.html"><span class="doc">The editor</span></a>).</p>
 </section>
 <section id="the-modules">
 <h2>The modules<a class="headerlink" href="#the-modules" title="Link to this heading">¶</a></h2>

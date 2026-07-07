@@ -1,8 +1,9 @@
-# The bare induction. Prove reflexivity over every natural number.
-import nat(induction, refl);
+import core(exists_elim, forall_elim, implication_elim);
 
-lemma banish
-  |- forall (n : Nat) st n = n;
+sort T : Sort;
+
+lemma exists_use(P : T → Prop, R : Prop, ex := ∃ (x : T) st P(x), use := ∀ (x : T) st P(x) ⇒ R)
+  ⊢ R;
 proof
   by wip;
 wip;

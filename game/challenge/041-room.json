@@ -1,11 +1,11 @@
 {
   "id": "041",
   "tier": "medium",
-  "title": "A Single Witness",
+  "title": "Whichever Branch",
   "monster": "sphinx",
   "module": "room041",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
   "lore": "The sphinx recites every promise you have ever broken, small as dust, and asks if she knows.",
-  "help": "Good luck!"
+  "help": "Proof by cases. or_elim(A, A, A) cases — feed d, and each branch hands you an assumption of A."
 }
