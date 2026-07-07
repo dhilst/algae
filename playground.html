@@ -270,6 +270,16 @@ are available via <code class="docutils literal notranslate"><span class="pre">i
 required, checks as <em>in progress</em> rather than done — the results pane tells you
 so. Fill in the holes and check again.</p>
 </div>
+<div class="tip admonition">
+<p class="admonition-title">Suggested fixes</p>
+<p>When a check flags a fixable error — a <code class="docutils literal notranslate"><span class="pre">wip</span></code>/<code class="docutils literal notranslate"><span class="pre">qed</span></code> terminator that doesn’t match
+the proof, a <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">wip(?goal)</span></code> hole with candidate tactics, or a tactic hole that
+suggests a continuation — you can apply the fix without retyping it. <strong>Click the
+flagged text</strong> (or press <strong>Ctrl-Space</strong>) to see the suggestions, then pick one to
+rewrite the source; the checker re-runs automatically so the next suggestion is
+ready. Hole candidates seed a complete <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">&lt;tactic&gt;?;</span></code> step, so the next check
+guides you to its arguments.</p>
+</div>
 </section>
 
         </article>

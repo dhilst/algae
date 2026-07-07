@@ -4,8 +4,11 @@
  * Proof-check `source` as module `module_name`.
  *
  * Returns a `CheckResult` object: `{ ok, diagnostics: [{severity, message,
- * start, end, line, col, end_line, end_col, has_span}], obligations, wip }`.
- * An empty `diagnostics` array with `ok: true` means success.
+ * start, end, line, col, end_line, end_col, has_span, fixes}], obligations,
+ * wip }`, where each `fixes` entry is `{ title, replacement, start, end, line,
+ * col, end_line, end_col }` — a machine-applicable suggestion the editor
+ * surfaces as an autocomplete completion. An empty `diagnostics` array with
+ * `ok: true` means success.
  * @param {string} source
  * @param {string} module_name
  * @param {any} extra
@@ -26,7 +29,8 @@ export function check(source, module_name, extra) {
 /**
  * Normalize operator glyphs. With `ascii = true`, Unicode operators become
  * their ASCII spellings; otherwise ASCII becomes Unicode. Returns
- * `{ ok, text, diagnostics }`.
+ * `{ ok, text, diagnostics }` (each diagnostic shaped as in [`check`], incl.
+ * its `fixes` array).
  * @param {string} source
  * @param {boolean} ascii
  * @returns {any}
