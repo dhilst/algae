@@ -2,8 +2,42 @@
 Induction and friends
 =====================
 
-Time for the real thing. ``nat`` defines addition and an induction rule whose
-conclusion is a *universally quantified* proposition:
+At the end of :doc:`rewrite-reflexivity` we hit a wall. We could prove
+"pop through ``n`` pushes and the right element is on top" for ``n = 1``, ``2``,
+``3`` — but every depth was a *separate* proof, one rewrite per push. A stack can
+hold arbitrarily many elements, and there's no way to spell out infinitely many
+rewrites. To reason about **arbitrarily large values** we need a new tool:
+**induction**.
+
+Numbers nest like pushes
+========================
+
+The cleanest place to meet induction is the natural numbers, in the ``nat``
+module. They're built from just two operators — a constant and a successor:
+
+.. code-block:: alg
+
+   sort Nat : Sort;
+   op 0 : → Nat;          # zero
+   op s : Nat → Nat;      # successor: "one more than"
+
+Every number is ``s`` nested over ``0``: ``s(0)`` is one, ``s(s(0))`` is two,
+``s(s(s(0)))`` is three, and so on. Just like a stack is ``push`` nested over
+``empty``, a number is ``s`` nested over ``0`` — and ``s`` can nest **arbitrarily
+deep**, so there are infinitely many naturals.
+
+That's the crux. To prove some ``P(n)`` holds for *every* ``n``, you cannot check
+them one at a time — there are infinitely many. Induction gives you a finite way
+to cover them all: prove ``P(0)``, and prove that *whenever* ``P(k)`` holds so
+does ``P(s(k))``. Those two facts, chained, reach every number — knock over the
+first domino and show each knocks over the next, and the whole infinite line
+falls.
+
+The induction rule
+==================
+
+``nat`` packages exactly that reasoning as a rule whose conclusion is a
+*universally quantified* proposition:
 
 .. code-block:: alg
 

@@ -2,10 +2,16 @@
 Specifying error behavior
 =========================
 
-The stack chapter left a loose thread: what *is* ``top(empty)``? Algae has no
-partial functions — ``top`` is total, so ``top(empty)`` is some element, we just
-never said which. That's a real gap. A caller who pops one element too many
-deserves a defined answer, not a shrug.
+Remember the warning back in :doc:`specs`, that our stack specification was
+**incomplete**? Here is exactly how. What is ``top(empty)`` — the top of an
+*empty* stack? The two axioms never say. A programmer implementing that spec would
+have to decide something on the spot — perhaps throw an exception — for a case the
+specification simply left open. We usually want to *avoid* runtime errors, or at
+the very least pin down in the specification where they may occur.
+
+So this is a real gap. Algae has no partial functions — ``top`` is total, so
+``top(empty)`` *is* some element, we just never said which. A caller who pops one
+element too many deserves a defined answer, not a shrug.
 
 Algae's motto is *failure is modeled with sum types*. So we give ``pop`` and
 ``top`` a second possible outcome — an ``Error`` — and specify the empty case

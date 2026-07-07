@@ -5,5 +5,5 @@ sort T : Sort;
 lemma exists_flip(a : T, ex := ∃ (x : T) st x = a)
   ⊢ ∃ (y : T) st a = y;
 proof
-  by wip;
+  by wip(?goal);
 wip;
