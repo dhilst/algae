@@ -667,6 +667,7 @@ enum Seg {
         reference: ProofRef,
         cases: Vec<CaseBlock>,
         cases_close: Close,
+        cases_close_span: Span,
         span: Span,
     },
     /// `by ref(…)? [then ?g];` — a tactic-inspect step (argument holes / next
@@ -774,18 +775,17 @@ fn proof_segments(input: &mut In) -> ModalResult<Vec<Seg>> {
             // Branching: one nested `case` per subgoal, with its own terminator.
             expect(input, T::KwCases)?;
             let cases = repeat_min1(input, case_block)?;
-            let cases_close = if at(*input, &T::KwWip) {
-                expect(input, T::KwWip)?;
-                Close::Wip
+            let (cases_close, cases_close_span) = if at(*input, &T::KwWip) {
+                (Close::Wip, expect(input, T::KwWip)?)
             } else {
-                expect(input, T::KwQed)?;
-                Close::Qed
+                (Close::Qed, expect(input, T::KwQed)?)
             };
             let end = semi(input)?;
             segs.push(Seg::Cases {
                 reference,
                 cases,
                 cases_close,
+                cases_close_span,
                 span: by_span.merge(end),
             });
             return Ok(segs);
@@ -814,6 +814,7 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close, close_span: Span) -> ProofStm
             admit: false,
             cases: Vec::new(),
             cases_close: close,
+            cases_close_span: Span::default(),
             continuation: Cont::Zero,
             hole: None,
             inspect: false,
@@ -825,6 +826,7 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close, close_span: Span) -> ProofStm
             admit: true,
             cases: Vec::new(),
             cases_close: close,
+            cases_close_span: Span::default(),
             continuation: Cont::Zero,
             hole,
             inspect: false,
@@ -835,12 +837,14 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close, close_span: Span) -> ProofStm
             reference,
             cases,
             cases_close,
+            cases_close_span,
             span,
         } => ProofStmt {
             reference: Some(reference),
             admit: false,
             cases,
             cases_close,
+            cases_close_span,
             continuation: Cont::Cases,
             hole: None,
             inspect: false,
@@ -856,6 +860,7 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close, close_span: Span) -> ProofStm
             admit: true,
             cases: Vec::new(),
             cases_close: close,
+            cases_close_span: Span::default(),
             continuation: Cont::Zero,
             hole: None,
             inspect: true,
@@ -893,6 +898,7 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close, close_span: Span) -> ProofStm
             admit: false,
             cases: vec![case],
             cases_close: close,
+            cases_close_span: Span::default(),
             continuation: Cont::Then,
             hole: None,
             inspect: false,

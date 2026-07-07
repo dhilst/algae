@@ -780,7 +780,18 @@ fn elaborate_step(
     // continuation shares the enclosing block's terminator, checked in
     // `elaborate_proof`, so it is exempt here.)
     if stmt.continuation == ast::Cont::Cases && stmt.cases_close.is_wip() != child_tainted {
-        elab.err(terminator_msg(child_tainted, "`cases` block"), stmt.span);
+        // Precise fix: swap just the `cases` block's terminator keyword.
+        let (title, replacement) = if child_tainted {
+            ("Replace `qed` with `wip`", "wip")
+        } else {
+            ("Replace `wip` with `qed`", "qed")
+        };
+        let fix = Fix {
+            title: title.to_string(),
+            replacement: replacement.to_string(),
+            span: stmt.cases_close_span,
+        };
+        elab.err_with_fixes(terminator_msg(child_tainted, "`cases` block"), stmt.span, vec![fix]);
         return None;
     }
 
@@ -1580,6 +1591,22 @@ mod fix_tests {
             .find(|f| f.replacement == "wip")
             .expect("expected a `wip` terminator fix");
         assert_eq!(&src[fix.span.start..fix.span.end], "qed");
+    }
+
+    #[test]
+    fn wip_on_complete_cases_block_offers_qed_fix() {
+        // A `cases` block whose branches all close (`qed`) but is itself
+        // terminated with `wip` should offer to swap that `wip` for `qed`.
+        let src = "import core(and_intro);\nlemma both(A B : Prop, x := A, y := B)\n  |- A /\\ B;\nproof\n  by and_intro(A, B) cases\n    case |- A; by x; qed;\n    case |- B; by y; qed;\n  wip;\nqed;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement == "qed")
+            .expect("cases block should offer a `qed` terminator fix");
+        // The fix targets exactly the `cases` block's `wip` keyword.
+        assert_eq!(&src[fix.span.start..fix.span.end], "wip");
     }
 
     #[test]

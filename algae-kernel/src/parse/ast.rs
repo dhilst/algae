@@ -248,6 +248,10 @@ pub struct ProofStmt {
     pub cases: Vec<CaseBlock>,
     /// For a multi-case (`cases … qed/wip`) statement: how it is terminated.
     pub cases_close: Close,
+    /// Span of the `qed`/`wip` keyword that closes a `cases` block (for a fix
+    /// that swaps just the keyword). Meaningful only when `continuation` is
+    /// `Cases`; a dummy span otherwise.
+    pub cases_close_span: Span,
     /// Which surface form produced `cases` (for diagnostics).
     pub continuation: Cont,
     /// For `by wip(?name)`: the hole's name (without the `?`). Triggers a hole
