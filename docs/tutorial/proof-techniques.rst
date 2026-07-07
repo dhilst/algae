@@ -271,162 +271,7 @@ assuming ``B``, both aiming at the same goal.
       ``implication_elim(A, C)`` against ``f`` and ``P``; symmetrically use ``g``
       and ``Q`` in the ``Q := B`` branch.
 
-4. Mathematical induction
-=========================
-
-**Goal:** prove ``∀ n : Nat. P(n)``. **Method:** prove ``P(0)`` (the *base
-case*), then assume ``P(k)`` and prove ``P(s(k))`` (the *step case*). The
-``induction`` rule from ``nat`` has exactly those two premises, so it splits into
-two ``case`` s. Here's the classic — ``n + 0 = n`` — worked in full; the
-exercises ask you to rebuild each part.
-
-.. code-block:: alg
-
-   sort Nat : Sort;
-   op 0 : → Nat;
-   op s : Nat → Nat;
-   op + : Nat * Nat → Nat;
-   axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
-   axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
-
-   rule induction(P : Nat → Prop)
-     ⊢ P(0);
-     n : Nat, ih := P(n) ⊢ P(s(n))
-     ──────────────────────────────
-     ⊢ ∀ (n : Nat) st P(n)
-   end;
-   rule backward(T : Sort, a b : T, eq := a = b, P : T → Prop)
-     ⊢ P(a)
-     ────────────────────────
-     ⊢ P(b)
-   end;
-
-   lemma add_zero_right
-     ⊢ ∀ (n : Nat) st n + 0 = n;
-   proof
-     by induction(_ + 0 = _) cases
-       case ⊢ 0 + 0 = 0;
-         by add_zero_left(0);
-       qed;
-       case k : Nat; ih := k + 0 = k; ⊢ s(k) + 0 = s(k);
-         by backward(Nat, k + 0, k, ih, s(k) + 0 = s(_))
-         then ⊢ s(k) + 0 = s(k + 0);
-         by add_succ_left(k, 0);
-       qed;
-     qed;
-   qed;
-
-.. admonition:: Exercises
-   :class: tip
-
-   **4a.** Fill in only the **base case** — the step is done for you.
-
-   .. code-block:: alg
-
-      sort Nat : Sort;
-      op 0 : → Nat;
-      op s : Nat → Nat;
-      op + : Nat * Nat → Nat;
-      axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
-      axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
-
-      rule induction(P : Nat → Prop)
-        ⊢ P(0);
-        n : Nat, ih := P(n) ⊢ P(s(n))
-        ──────────────────────────────
-        ⊢ ∀ (n : Nat) st P(n)
-      end;
-      rule backward(T : Sort, a b : T, eq := a = b, P : T → Prop)
-        ⊢ P(a)
-        ────────────────────────
-        ⊢ P(b)
-      end;
-
-      lemma add_zero_right
-        ⊢ ∀ (n : Nat) st n + 0 = n;
-      proof
-        by induction(_ + 0 = _) cases
-          case ⊢ 0 + 0 = 0;
-            by wip(?base);
-          wip;
-          case k : Nat; ih := k + 0 = k; ⊢ s(k) + 0 = s(k);
-            by backward(Nat, k + 0, k, ih, s(k) + 0 = s(_))
-            then ⊢ s(k) + 0 = s(k + 0);
-            by add_succ_left(k, 0);
-          qed;
-        qed;
-      qed;
-
-   .. hint:: ``0 + 0 = 0`` is exactly ``add_zero_left(0)`` — a premise-free axiom,
-      so ``by add_zero_left(0);`` closes it (change the branch's ``wip`` to
-      ``qed``).
-
-   **4b.** Now fill in only the **step case** — the base is done.
-
-   .. code-block:: alg
-
-      sort Nat : Sort;
-      op 0 : → Nat;
-      op s : Nat → Nat;
-      op + : Nat * Nat → Nat;
-      axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
-      axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
-
-      rule induction(P : Nat → Prop)
-        ⊢ P(0);
-        n : Nat, ih := P(n) ⊢ P(s(n))
-        ──────────────────────────────
-        ⊢ ∀ (n : Nat) st P(n)
-      end;
-      rule backward(T : Sort, a b : T, eq := a = b, P : T → Prop)
-        ⊢ P(a)
-        ────────────────────────
-        ⊢ P(b)
-      end;
-
-      lemma add_zero_right
-        ⊢ ∀ (n : Nat) st n + 0 = n;
-      proof
-        by induction(_ + 0 = _) cases
-          case ⊢ 0 + 0 = 0;
-            by add_zero_left(0);
-          qed;
-          case k : Nat; ih := k + 0 = k; ⊢ s(k) + 0 = s(k);
-            by wip(?step);
-          wip;
-        qed;
-      qed;
-
-   .. hint:: Rewrite the ``k`` inside ``s(_)`` into ``k + 0`` with
-      ``backward(Nat, k + 0, k, ih, s(k) + 0 = s(_))``, ``then ⊢ s(k) + 0 =
-      s(k + 0);``, and finish ``by add_succ_left(k, 0);``.
-
-   **4c.** From scratch: prove it with nothing but the induction skeleton.
-
-   .. code-block:: alg
-
-      sort Nat : Sort;
-      op 0 : → Nat;
-      op s : Nat → Nat;
-      op + : Nat * Nat → Nat;
-      axiom add_zero_left(n : Nat)     ⊢ 0 + n = n;
-      axiom add_succ_left(n m : Nat)   ⊢ s(n) + m = s(n + m);
-      rule backward(T : Sort, a b : T, eq := a = b, P : T → Prop)
-        ⊢ P(a)
-        ────────────────────────
-        ⊢ P(b)
-      end;
-
-      lemma add_zero_right
-        ⊢ ∀ (n : Nat) st n + 0 = n;
-      proof
-        by wip(?goal);
-      wip;
-
-   .. hint:: Start ``by induction(_ + 0 = _) cases``, then assemble the two
-      branches from 4a and 4b.
-
-5. Proof by contradiction
+4. Proof by contradiction
 =========================
 
 **Goal:** prove ``¬P``. **Method:** assume ``P``, and derive absurdity
@@ -525,7 +370,7 @@ all (the principle of explosion).
    .. hint:: ``negation_intro(¬A) then P := ¬A ⊢ False;`` — now you hold ``P : ¬A``
       and ``x : A``, a contradiction, so ``negation_elim(A)`` gives ``False``.
 
-6. Proof by contrapositive
+5. Proof by contrapositive
 ==========================
 
 **Goal:** prove ``P ⇒ Q``. **Method:** prove ``¬Q ⇒ ¬P`` instead. ``core``
@@ -607,7 +452,7 @@ the single premise ``¬Q ⇒ ¬P``.
       implication you close with ``implication_intro(¬A, ¬A) then P := ¬A ⊢ ¬A;
       by P;``.
 
-7. Universal proof
+6. Universal proof
 ==================
 
 **Goal:** prove ``∀ x. P(x)``. **Method:** let ``x`` be *arbitrary* (a fresh
@@ -696,7 +541,7 @@ all.
    .. hint:: ``forall_intro`` for a fresh ``x``, then ``and_intro(P(x), Q(x))``;
       get each half by ``forall_elim`` on ``hp`` / ``hq`` at ``x``.
 
-8. Existential proof (a witness)
+7. Existential proof (a witness)
 ================================
 
 **Goal:** prove ``∃ x. P(x)``. **Method:** supply a specific *witness* ``a`` and
@@ -773,7 +618,7 @@ the single goal ``P(a)``.
    .. hint:: Witness with ``a``: ``exists_intro(T, λ (z : T) st z = z, a) then
       ⊢ a = a;`` then ``by refl(T, a)``.
 
-9. Existential elimination (use a witness)
+8. Existential elimination (use a witness)
 ==========================================
 
 **Goal:** conclude ``Q`` given ``∃ x. P(x)``. **Method:** introduce a *fresh*
@@ -887,7 +732,7 @@ must not mention ``a``, since you don't get to know which witness you were hande
       at ``x`` with ``forall_elim`` to get ``P(x) ⇒ R``, then ``implication_elim``
       against ``witness``.
 
-10. Equational reasoning (rewriting)
+9. Equational reasoning (rewriting)
 ====================================
 
 **Goal:** a goal built from an equation. **Method:** given ``a = b``, replace ``a``
