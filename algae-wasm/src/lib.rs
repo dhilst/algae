@@ -13,7 +13,7 @@
 //!   JS values back to the CodeMirror editor. Syntax highlighting is done
 //!   client-side by a CodeMirror `StreamLanguage`, so no tokenizer is exported.
 
-use algae_kernel::diagnostics::{line_col, Diagnostic, Severity};
+use algae_kernel::diagnostics::{line_col, Diagnostic, Fix, Severity};
 use algae_kernel::elaborate::proof::{elaborate_unit, SourceResolver};
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
@@ -55,6 +55,39 @@ impl SourceResolver for BundledResolver {
     }
 }
 
+/// A machine-applicable fix flattened for JavaScript: replace the text in the
+/// span with `replacement`. Spans are given both as 0-based byte offsets and as
+/// 1-based line/col (the editor addresses positions by line/col for Unicode
+/// safety, matching `JsDiag`).
+#[derive(Serialize)]
+struct JsFix {
+    title: String,
+    replacement: String,
+    start: usize,
+    end: usize,
+    line: usize,
+    col: usize,
+    end_line: usize,
+    end_col: usize,
+}
+
+impl JsFix {
+    fn from(source: &str, f: &Fix) -> JsFix {
+        let (line, col) = line_col(source, f.span.start);
+        let (end_line, end_col) = line_col(source, f.span.end);
+        JsFix {
+            title: f.title.clone(),
+            replacement: f.replacement.clone(),
+            start: f.span.start,
+            end: f.span.end,
+            line,
+            col,
+            end_line,
+            end_col,
+        }
+    }
+}
+
 /// A diagnostic flattened for JavaScript. Spans are 0-based byte offsets into
 /// the source (CodeMirror's native addressing); line/column are 1-based for
 /// display.
@@ -72,6 +105,9 @@ struct JsDiag {
     end_col: usize,
     /// Whether the diagnostic carried a source span at all.
     has_span: bool,
+    /// Machine-applicable fix suggestions, surfaced by the editor as
+    /// Ctrl-Space autocomplete completions. Empty for most diagnostics.
+    fixes: Vec<JsFix>,
 }
 
 impl JsDiag {
@@ -81,6 +117,7 @@ impl JsDiag {
             Severity::Warning => "warning",
         }
         .to_string();
+        let fixes: Vec<JsFix> = d.fixes.iter().map(|f| JsFix::from(source, f)).collect();
         match d.span {
             Some(span) => {
                 let (line, col) = line_col(source, span.start);
@@ -95,6 +132,7 @@ impl JsDiag {
                     end_line,
                     end_col,
                     has_span: true,
+                    fixes,
                 }
             }
             None => JsDiag {
@@ -107,6 +145,7 @@ impl JsDiag {
                 end_line: 1,
                 end_col: 1,
                 has_span: false,
+                fixes,
             },
         }
     }
@@ -175,8 +214,11 @@ fn parse_extra(extra: JsValue) -> Vec<(String, String)> {
 /// Proof-check `source` as module `module_name`.
 ///
 /// Returns a `CheckResult` object: `{ ok, diagnostics: [{severity, message,
-/// start, end, line, col, end_line, end_col, has_span}], obligations, wip }`.
-/// An empty `diagnostics` array with `ok: true` means success.
+/// start, end, line, col, end_line, end_col, has_span, fixes}], obligations,
+/// wip }`, where each `fixes` entry is `{ title, replacement, start, end, line,
+/// col, end_line, end_col }` — a machine-applicable suggestion the editor
+/// surfaces as an autocomplete completion. An empty `diagnostics` array with
+/// `ok: true` means success.
 #[wasm_bindgen]
 pub fn check(source: &str, module_name: &str, extra: JsValue) -> Result<JsValue, JsValue> {
     let result = run_check(source, module_name, parse_extra(extra));
@@ -193,7 +235,8 @@ struct FormatResult {
 
 /// Normalize operator glyphs. With `ascii = true`, Unicode operators become
 /// their ASCII spellings; otherwise ASCII becomes Unicode. Returns
-/// `{ ok, text, diagnostics }`.
+/// `{ ok, text, diagnostics }` (each diagnostic shaped as in [`check`], incl.
+/// its `fixes` array).
 #[wasm_bindgen]
 pub fn format(source: &str, ascii: bool) -> Result<JsValue, JsValue> {
     let result = match algae_kernel::fmt::format_source(source, ascii) {
@@ -273,6 +316,33 @@ mod tests {
             .diagnostics
             .iter()
             .any(|d| d.message.contains("nope") || d.severity == "error"));
+    }
+
+    #[test]
+    fn diagnostics_carry_fixes() {
+        // A complete proof closed with `wip` → terminator fix swapping in `qed`.
+        let src = "import core(refl);\n\nsort T : Sort;\nop a : -> T;\n\nlemma l\n  |- a = a;\nproof\n  by refl(T, a);\nwip;\n";
+        let r = run_check(src, "playground", Vec::new());
+        assert!(!r.ok);
+        let fix = r
+            .diagnostics
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement == "qed")
+            .expect("expected a serialized `qed` fix");
+        // The fix carries both byte offsets and line/col for the editor.
+        assert_eq!(&src[fix.start..fix.end], "wip");
+        assert!(fix.line >= 1 && fix.col >= 1);
+        assert!(!fix.title.is_empty());
+    }
+
+    #[test]
+    fn hole_diagnostic_carries_candidate_fixes() {
+        let src = "import core(refl);\n\nsort T : Sort;\nop a : -> T;\n\nlemma h\n  |- a = a;\nproof\n  by wip(?goal);\nwip;\n";
+        let r = run_check(src, "playground", Vec::new());
+        let fixes: Vec<&JsFix> = r.diagnostics.iter().flat_map(|d| &d.fixes).collect();
+        assert!(!fixes.is_empty(), "hole should surface candidate fixes to JS");
+        assert!(fixes.iter().all(|f| f.replacement.starts_with("by ")));
     }
 
     #[test]

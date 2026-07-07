@@ -39,6 +39,17 @@ impl fmt::Display for Severity {
     }
 }
 
+/// A machine-applicable suggestion attached to a diagnostic: replace the text
+/// in `span` with `replacement`. `title` labels it in an editor's UI (e.g. a
+/// CodeMirror autocomplete completion). Carried as structured data — the free
+/// text describing the fix still lives in the diagnostic's `message`.
+#[derive(Clone, Debug)]
+pub struct Fix {
+    pub title: String,
+    pub replacement: String,
+    pub span: Span,
+}
+
 /// A single diagnostic message, optionally anchored to a span in a file.
 #[derive(Clone, Debug)]
 pub struct Diagnostic {
@@ -46,6 +57,8 @@ pub struct Diagnostic {
     pub message: String,
     pub file: Option<PathBuf>,
     pub span: Option<Span>,
+    /// Machine-applicable suggestions. Empty for most diagnostics.
+    pub fixes: Vec<Fix>,
 }
 
 impl Diagnostic {
@@ -55,6 +68,7 @@ impl Diagnostic {
             message: message.into(),
             file: None,
             span: None,
+            fixes: Vec::new(),
         }
     }
 
@@ -65,6 +79,16 @@ impl Diagnostic {
 
     pub fn with_span(mut self, span: Span) -> Diagnostic {
         self.span = Some(span);
+        self
+    }
+
+    pub fn with_fix(mut self, fix: Fix) -> Diagnostic {
+        self.fixes.push(fix);
+        self
+    }
+
+    pub fn with_fixes(mut self, fixes: Vec<Fix>) -> Diagnostic {
+        self.fixes = fixes;
         self
     }
 

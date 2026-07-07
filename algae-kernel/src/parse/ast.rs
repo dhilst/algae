@@ -220,6 +220,9 @@ pub struct ProofBlock {
     pub stmt: ProofStmt,
     /// How this proof block is terminated.
     pub close: Close,
+    /// Span of the `qed`/`wip` terminator keyword (for a precise fix that swaps
+    /// just the keyword). Covers the whole block-terminating keyword token.
+    pub close_span: Span,
     pub span: Span,
 }
 

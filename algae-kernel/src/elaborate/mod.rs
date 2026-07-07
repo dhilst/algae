@@ -8,7 +8,7 @@ use crate::core::name::{Interner, Sym};
 use crate::core::rule::{InlinedRule, Param};
 use crate::core::sequent::{CtxEntry, Sequent};
 use crate::core::term::{close, Expr};
-use crate::diagnostics::{Diagnostic, Span};
+use crate::diagnostics::{Diagnostic, Fix, Span};
 use crate::parse::ast;
 use std::collections::HashMap;
 
@@ -58,6 +58,9 @@ pub struct Elab {
     /// Name of the lemma/theorem/law whose proof is currently being elaborated,
     /// used to keep a proof from suggesting itself as a hole candidate.
     pub current_proof: Option<String>,
+    /// The unit's source text, so diagnostics can slice the original spelling of
+    /// a span when building a machine-applicable fix. Empty until set.
+    pub source: String,
 }
 
 /// Lexical scope used while lowering an expression.
@@ -106,11 +109,24 @@ impl Elab {
             sig: Signature::default(),
             diags: Vec::new(),
             current_proof: None,
+            source: String::new(),
         }
+    }
+
+    /// Return the original source text covered by `span`, if in range.
+    pub fn span_text(&self, span: Span) -> Option<&str> {
+        self.source.get(span.start..span.end)
     }
 
     pub fn err(&mut self, msg: impl Into<String>, span: Span) {
         self.diags.push(Diagnostic::error(msg).with_span(span));
+    }
+
+    /// Like [`err`](Self::err), but attaches machine-applicable fix suggestions
+    /// (surfaced as autocomplete completions by the web editor).
+    pub fn err_with_fixes(&mut self, msg: impl Into<String>, span: Span, fixes: Vec<Fix>) {
+        self.diags
+            .push(Diagnostic::error(msg).with_span(span).with_fixes(fixes));
     }
 
     /// Whether `name` is a declared constant (no interning).

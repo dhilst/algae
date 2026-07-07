@@ -5,6 +5,33 @@
 // diagnostics stay put (remapped) while you type, until the next manual check.
 
 import { setDiagnostics } from "@codemirror/lint";
+import { StateEffect, StateField } from "@codemirror/state";
+
+// Machine-applicable fixes from the last check, kept as editor state so the
+// autocomplete source (see index.js) can offer them at the cursor. Each mark is
+// `{ from, to, title, replacement }` in CodeMirror positions. `runAlgaeCheck`
+// republishes the set on every run; between runs the positions are remapped
+// through edits so a fix keeps pointing at the right text while you type.
+export const setAlgaeFixes = StateEffect.define();
+
+export const algaeFixesField = StateField.define({
+  create() {
+    return [];
+  },
+  update(marks, tr) {
+    for (const e of tr.effects) {
+      if (e.is(setAlgaeFixes)) return e.value;
+    }
+    if (tr.docChanged) {
+      return marks.map((m) => ({
+        ...m,
+        from: tr.changes.mapPos(m.from, -1),
+        to: tr.changes.mapPos(m.to, 1),
+      }));
+    }
+    return marks;
+  },
+});
 
 // Map a wasm diagnostic (1-based line/col, per algae_kernel::line_col) to an
 // absolute CodeMirror position. We deliberately use line/col rather than the
@@ -54,16 +81,34 @@ export function runAlgaeCheck(view, opts) {
 
   let result;
   let cmDiags;
+  let fixMarks = [];
   try {
     result = wasm.check(doc.toString(), moduleName, extra);
     cmDiags = result.diagnostics.map((d) => toCmDiagnostic(doc, d));
+    fixMarks = collectFixMarks(doc, result.diagnostics);
   } catch (err) {
     // A panic in the checker should surface, not silently pass.
     const message = "internal checker error: " + (err && err.message ? err.message : String(err));
     result = { ok: false, diagnostics: [], obligations: 0, wip: 0, error: message };
     cmDiags = [{ from: 0, to: Math.min(doc.line(1).to, doc.length), severity: "error", message }];
   }
-  view.dispatch(setDiagnostics(view.state, cmDiags));
+  // One transaction installs the diagnostics and republishes the fix set.
+  view.dispatch(setDiagnostics(view.state, cmDiags), { effects: setAlgaeFixes.of(fixMarks) });
   if (onResult) onResult(result);
   return result;
+}
+
+// Flatten each diagnostic's `fixes` into position-anchored marks for the
+// autocomplete source. A diagnostic without fixes contributes nothing.
+function collectFixMarks(doc, diagnostics) {
+  const marks = [];
+  for (const d of diagnostics) {
+    if (!d.fixes) continue;
+    for (const f of d.fixes) {
+      const from = posOf(doc, f.line, f.col);
+      const to = posOf(doc, f.end_line, f.end_col);
+      marks.push({ from, to, title: f.title, replacement: f.replacement });
+    }
+  }
+  return marks;
 }

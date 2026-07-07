@@ -5,7 +5,7 @@ use crate::core::rewrite::RewriteSystem;
 use crate::core::rule::{Arg, InlinedRule, Param, Step};
 use crate::core::sequent::{CtxEntry, Sequent};
 use crate::core::term::Expr;
-use crate::diagnostics::{Diagnostic, Span};
+use crate::diagnostics::{Diagnostic, Fix, Span};
 use crate::elaborate::{
     build_fact_rule, build_rule, ctx_to_param, Elab, IncludeSig, LawSig, Scope, TheorySig,
 };
@@ -45,6 +45,7 @@ pub fn elaborate_unit(
 ) -> Result<CompiledUnit, Vec<Diagnostic>> {
     let module = parse::parse(source)?;
     let mut elab = Elab::new();
+    elab.source = source.to_string();
     let mut loaded = HashSet::new();
     // Pass 1: build the full signature (local declarations + imports).
     process_decls(&mut elab, &module.decls, module_name, resolver, true, &mut loaded);
@@ -548,7 +549,18 @@ fn elaborate_proof(
 ) -> Option<(Step, bool)> {
     let (step, tainted) = elaborate_step(elab, ctx, goal, &block.stmt, span, rs)?;
     if tainted != block.close.is_wip() {
-        elab.err(terminator_msg(tainted, "proof"), block.span);
+        // Precise fix: swap just the terminator keyword to match the taint.
+        let (title, replacement) = if tainted {
+            ("Replace `qed` with `wip`", "wip")
+        } else {
+            ("Replace `wip` with `qed`", "qed")
+        };
+        let fix = Fix {
+            title: title.to_string(),
+            replacement: replacement.to_string(),
+            span: block.close_span,
+        };
+        elab.err_with_fixes(terminator_msg(tainted, "proof"), block.span, vec![fix]);
         return None;
     }
     Some((step, tainted))
@@ -882,10 +894,29 @@ fn report_tactic_hole(
     let mut msg = format!("found tactic hole in `by {tname}`\n\nGoal:\n  {}\n", show(goal, &elab.interner));
 
     if holes.is_empty() {
+        // The concrete tactic application, spelled as in the source but without
+        // the trailing inspect `?` (and its `;`) — the basis of a paste-able
+        // continuation fix. The statement span covers `by …?;`, so peel the
+        // terminating `;`, then the inspect `?`.
+        let concrete_by = elab.span_text(stmt.span).map(|t| {
+            let t = t.trim_end();
+            let t = t.strip_suffix(';').unwrap_or(t).trim_end();
+            let t = t.strip_suffix('?').unwrap_or(t).trim_end();
+            t.to_string()
+        });
+        let mut fixes: Vec<Fix> = Vec::new();
+
         // Fully concrete: apply for real and suggest the next step.
         match apply(&rule, &args, goal, ctx, rs) {
             Ok(next) if next.is_empty() => {
                 msg.push_str("\nThis closes the goal — replace the `?` with `;`.\n");
+                if let Some(by) = &concrete_by {
+                    fixes.push(Fix {
+                        title: "Close the goal".to_string(),
+                        replacement: format!("{by};"),
+                        span: stmt.span,
+                    });
+                }
             }
             Ok(next) => {
                 msg.push_str("\nApplying it leaves:\n");
@@ -911,17 +942,32 @@ fn report_tactic_hole(
                     msg.push_str(&format!(
                         "\nContinue with:\n  then {sequent};\n  by wip(?{name});\n"
                     ));
+                    if let Some(by) = &concrete_by {
+                        fixes.push(Fix {
+                            title: "Continue with `then`".to_string(),
+                            replacement: format!("{by}\n  then {sequent};\n  by wip(?{name});"),
+                            span: stmt.span,
+                        });
+                    }
                 } else {
                     // Paste-able `cases` skeleton, one `case` per subgoal, each
                     // branch left as a named hole to fill in.
-                    msg.push_str("\nContinue with:\n  cases\n");
+                    let mut skel = String::from("cases\n");
                     for (k, sq) in next.iter().enumerate() {
                         let ext = show_ctx_ext(&sq.ctx[ctx.len().min(sq.ctx.len())..], &elab.interner);
                         let g = show(&sq.goal, &elab.interner);
                         let sequent = if ext.is_empty() { format!("⊢ {g}") } else { format!("{ext} ⊢ {g}") };
-                        msg.push_str(&format!("    case {sequent};\n      by wip(?g{});\n    wip;\n", k + 1));
+                        skel.push_str(&format!("    case {sequent};\n      by wip(?g{});\n    wip;\n", k + 1));
                     }
-                    msg.push_str("  wip;\n");
+                    skel.push_str("  wip;");
+                    msg.push_str(&format!("\nContinue with:\n  {skel}\n"));
+                    if let Some(by) = &concrete_by {
+                        fixes.push(Fix {
+                            title: "Continue with `cases`".to_string(),
+                            replacement: format!("{by}\n  {skel}"),
+                            span: stmt.span,
+                        });
+                    }
                 }
             }
             Err(e) => {
@@ -930,7 +976,7 @@ fn report_tactic_hole(
                 return;
             }
         }
-        elab.err(msg.trim_end().to_string(), stmt.span);
+        elab.err_with_fixes(msg.trim_end().to_string(), stmt.span, fixes);
         return;
     }
 
@@ -1023,6 +1069,43 @@ fn report_tactic_hole(
         }
     }
 
+    // If *every* hole is a term hole that got solved from the goal, offer the
+    // fully-applied tactic as a fix: substitute each solved value in parameter
+    // order, e.g. `by refl?` with `?T = T`, `?x = a` becomes `by refl(T, a)?;`.
+    // The inspect `?` is kept so the next check refines it further (its holes are
+    // now empty → "replace the `?` with `;`"). Proof holes can't be auto-filled,
+    // so their presence suppresses this fix.
+    let fillable = !holes.is_empty()
+        && holes.iter().all(|(i, _)| {
+            matches!(&rule.params[*i], Param::Term { name, .. } if solved.iter().any(|(s, _)| s == name))
+        });
+    if fillable {
+        let mut arg_strs: Vec<String> = Vec::new();
+        for (i, p) in rule.params.iter().enumerate() {
+            let is_hole = holes.iter().any(|(hi, _)| *hi == i);
+            match (p, &args[i]) {
+                (Param::Term { name, .. }, _) if is_hole => {
+                    if let Some((_, v)) = solved.iter().find(|(s, _)| s == name) {
+                        arg_strs.push(show(v, &elab.interner));
+                    }
+                }
+                (Param::Term { .. }, Arg::Term(e)) => arg_strs.push(show(e, &elab.interner)),
+                (Param::Proof { .. }, Arg::Proof(e)) => arg_strs.push(show(e, &elab.interner)),
+                _ => {}
+            }
+        }
+        if arg_strs.len() == rule.params.len() {
+            let call = format!("{tname}({})?", arg_strs.join(", "));
+            let fix = Fix {
+                title: call.clone(),
+                replacement: format!("by {call};"),
+                span: stmt.span,
+            };
+            elab.err_with_fixes(msg.trim_end().to_string(), stmt.span, vec![fix]);
+            return;
+        }
+    }
+
     elab.err(msg.trim_end().to_string(), stmt.span);
 }
 
@@ -1069,31 +1152,55 @@ fn report_hole(elab: &mut Elab, ctx: &[CtxEntry], goal: &Expr, name: &str, span:
         msg.push_str("  (none found — try a rewrite or introduce a variable)\n");
     } else {
         for c in &cands {
-            msg.push_str(&format!("  {c}\n"));
+            msg.push_str(&format!("  {}\n", c.label));
         }
     }
-    elab.err(msg.trim_end().to_string(), span);
+    // Each candidate becomes a fix that seeds the hole with a complete,
+    // re-checkable step: `by <name>?;`. The trailing `?` inspects the tactic, so
+    // the next check reports the arguments it needs (or that it closes the
+    // goal). The fix replaces the whole `by wip(?…);` statement, including its
+    // `;`, so the result is syntactically complete.
+    let fixes: Vec<Fix> = cands
+        .iter()
+        .map(|c| Fix {
+            title: format!("{}?", c.name),
+            replacement: format!("by {}?;", c.name),
+            span,
+        })
+        .collect();
+    elab.err_with_fixes(msg.trim_end().to_string(), span, fixes);
+}
+
+/// A candidate step for a hole: `name` is the bare identifier to insert (as
+/// `by <name>`); `label` is the human-facing description shown in the report.
+struct Candidate {
+    name: String,
+    label: String,
 }
 
 /// Candidate tactics/assumptions for a hole's goal: matching local hypotheses,
 /// signature facts/rules whose conclusion matches the goal shape, and `refl`
 /// when the goal is a reflexive equation.
-fn hole_candidates(elab: &Elab, ctx: &[CtxEntry], goal: &Expr, rs: &RewriteSystem) -> Vec<String> {
+fn hole_candidates(elab: &Elab, ctx: &[CtxEntry], goal: &Expr, rs: &RewriteSystem) -> Vec<Candidate> {
     use crate::core::rewrite::match_pattern;
-    let mut out = Vec::new();
+    let mut out: Vec<Candidate> = Vec::new();
     // 1. Local proof hypotheses that already prove the goal.
     for e in ctx {
         if let CtxEntry::Proof { name, prop } = e {
             if rs.defeq(prop, goal) {
-                out.push(format!("{} (local assumption)", elab.interner.resolve(*name)));
+                let n = elab.interner.resolve(*name).to_string();
+                out.push(Candidate {
+                    label: format!("{n} (local assumption)"),
+                    name: n,
+                });
             }
         }
     }
     // 2. Signature facts/rules whose conclusion matches the goal shape. Skip
     //    rules whose conclusion is a bare metavariable (they match every goal),
     //    and dedup qualified/unqualified aliases by their base name.
-    let mut facts: Vec<String> = Vec::new();
-    let mut rules: Vec<String> = Vec::new();
+    let mut facts: Vec<Candidate> = Vec::new();
+    let mut rules: Vec<Candidate> = Vec::new();
     let mut seen: HashSet<String> = HashSet::new();
     for (sym, rule) in &elab.sig.tactics {
         let metas: Vec<Sym> = rule
@@ -1119,21 +1226,24 @@ fn hole_candidates(elab: &Elab, ctx: &[CtxEntry], goal: &Expr, rs: &RewriteSyste
             }
             if seen.insert(base.clone()) {
                 if rule.premises.is_empty() {
-                    facts.push(format!("{base} (fact)"));
+                    facts.push(Candidate { label: format!("{base} (fact)"), name: base });
                 } else {
-                    rules.push(format!("{base} (rule)"));
+                    rules.push(Candidate { label: format!("{base} (rule)"), name: base });
                 }
             }
         }
     }
-    facts.sort();
-    rules.sort();
+    facts.sort_by(|a, b| a.label.cmp(&b.label));
+    rules.sort_by(|a, b| a.label.cmp(&b.label));
     out.extend(facts);
     out.extend(rules);
     // 3. Reflexivity, when the two sides coincide up to α/β.
     if let Expr::Eq(a, b) = goal {
-        if rs.defeq(a, b) && !out.iter().any(|c| c.starts_with("refl ")) {
-            out.push("refl (both sides are definitionally equal)".to_string());
+        if rs.defeq(a, b) && !out.iter().any(|c| c.name == "refl") {
+            out.push(Candidate {
+                name: "refl".to_string(),
+                label: "refl (both sides are definitionally equal)".to_string(),
+            });
         }
     }
     out.truncate(12);
@@ -1403,5 +1513,121 @@ fn collect_expr_frees(elab: &Elab, e: &ast::Expr, out: &mut Vec<String>) {
         | ast::ExprNode::False
         | ast::ExprNode::Hole
         | ast::ExprNode::NamedHole(_) => {}
+    }
+}
+
+#[cfg(test)]
+mod fix_tests {
+    //! Structured fix suggestions attached to diagnostics (surfaced as
+    //! CodeMirror autocomplete completions by the web editor).
+    use super::*;
+    use std::path::PathBuf;
+
+    /// Resolves `import`s against the real `algae/stdlib/v1` sources on disk.
+    struct StdlibResolver;
+    impl SourceResolver for StdlibResolver {
+        fn resolve(&self, module: &str) -> Result<String, String> {
+            let p = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../algae/stdlib/v1")
+                .join(format!("{module}.alg"));
+            std::fs::read_to_string(&p).map_err(|e| e.to_string())
+        }
+    }
+
+    fn diags(src: &str) -> Vec<Diagnostic> {
+        match elaborate_unit(src, "t", &StdlibResolver, true) {
+            Ok(_) => Vec::new(),
+            Err(d) => d,
+        }
+    }
+
+    /// Every fix's span must slice back to valid source (so an editor can apply
+    /// it) and be non-empty.
+    fn assert_spans_valid(src: &str, ds: &[Diagnostic]) {
+        for d in ds {
+            for f in &d.fixes {
+                assert!(
+                    src.get(f.span.start..f.span.end).is_some(),
+                    "fix span out of bounds: {:?}",
+                    f
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn wip_on_complete_proof_offers_qed_fix() {
+        let src = "sort T : Sort;\nop a : -> T;\naxiom ax |- a = a;\nlemma l\n  |- a = a;\nproof\n  by ax;\nwip;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement == "qed")
+            .expect("expected a `qed` terminator fix");
+        // The fix targets exactly the `wip` keyword.
+        assert_eq!(&src[fix.span.start..fix.span.end], "wip");
+    }
+
+    #[test]
+    fn qed_on_admitted_proof_offers_wip_fix() {
+        let src = "sort T : Sort;\nop a : -> T;\nlemma l\n  |- a = a;\nproof\n  by wip;\nqed;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement == "wip")
+            .expect("expected a `wip` terminator fix");
+        assert_eq!(&src[fix.span.start..fix.span.end], "qed");
+    }
+
+    #[test]
+    fn hole_offers_candidate_fixes() {
+        let src = "sort T : Sort;\nop a : -> T;\naxiom ax |- a = a;\nlemma l\n  |- a = a;\nproof\n  by wip(?goal);\nwip;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        let fixes: Vec<&Fix> = ds.iter().flat_map(|d| &d.fixes).collect();
+        assert!(!fixes.is_empty(), "hole should offer candidate fixes: {ds:?}");
+        // Candidates are inserted as a complete, inspectable `by <name>?;` step.
+        assert!(fixes.iter().all(|f| f.replacement.starts_with("by ") && f.replacement.ends_with("?;")));
+        assert!(fixes.iter().any(|f| f.replacement == "by refl?;" || f.replacement == "by ax?;"));
+    }
+
+    #[test]
+    fn tactic_hole_offers_continuation_fix() {
+        let src = "import core(symmetry);\nsort T : Sort;\nop a : -> T;\nop b : -> T;\naxiom ab |- a = b;\nlemma flip\n  |- b = a;\nproof\n  by symmetry(T, a, b)?;\nwip;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement.starts_with("by symmetry"))
+            .expect("tactic hole should offer a continuation fix");
+        // The concrete `by …` drops the inspect `?;`; the only `?` left is the
+        // fresh `wip(?…)` hole the continuation introduces.
+        assert!(
+            fix.replacement.starts_with("by symmetry(T, a, b)\n"),
+            "continuation should re-spell the concrete tactic, got: {:?}",
+            fix.replacement
+        );
+        assert!(!fix.replacement.contains("?;"), "inspect `?;` must be stripped: {:?}", fix.replacement);
+        assert!(fix.replacement.contains("then"));
+    }
+
+    #[test]
+    fn tactic_hole_with_solved_holes_offers_full_application() {
+        // `by refl?` on `a = a` solves both holes (?T = T, ?x = a); the fix
+        // should be the fully-applied `by refl(T, a)?;`.
+        let src = "import core(refl);\nsort T : Sort;\nop a : -> T;\nlemma l\n  |- a = a;\nproof\n  by refl?;\nwip;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement.starts_with("by refl("))
+            .expect("solved tactic holes should offer a full application");
+        assert_eq!(fix.replacement, "by refl(T, a)?;");
+        assert_eq!(fix.title, "refl(T, a)?");
     }
 }

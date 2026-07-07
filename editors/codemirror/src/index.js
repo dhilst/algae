@@ -14,11 +14,45 @@ import {
 import { history, defaultKeymap, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { bracketMatching } from "@codemirror/language";
 import { lintGutter, lintKeymap } from "@codemirror/lint";
+import { autocompletion, completionKeymap, startCompletion, pickedCompletion } from "@codemirror/autocomplete";
 import { algae } from "./algae-lang.js";
-import { runAlgaeCheck } from "./lint.js";
+import { runAlgaeCheck, algaeFixesField } from "./lint.js";
+
+// True when the cursor sits inside a fix span from the last check.
+function cursorHasFix(state) {
+  const marks = state.field(algaeFixesField, false) || [];
+  const pos = state.selection.main.head;
+  return marks.some((m) => pos >= m.from && pos <= m.to);
+}
 
 export { algae, algaeStreamLanguage, algaeHighlightStyle } from "./algae-lang.js";
-export { runAlgaeCheck } from "./lint.js";
+export { runAlgaeCheck, algaeFixesField } from "./lint.js";
+
+// Autocomplete source that offers the fixes attached to the last check's
+// diagnostics (terminator swaps, `by wip(?…)` hole candidates, tactic-hole
+// continuations). It only fires on an **explicit** invocation (Ctrl-Space), so
+// it never pops up while typing — the suggestions are opt-in per position.
+function algaeFixSource(context) {
+  if (!context.explicit) return null;
+  const marks = context.state.field(algaeFixesField, false) || [];
+  const hits = marks.filter((m) => context.pos >= m.from && context.pos <= m.to);
+  if (hits.length === 0) return null;
+  // All fixes at a position share the diagnostic's span; replace that whole
+  // range with the chosen suggestion.
+  const from = Math.min(...hits.map((m) => m.from));
+  const to = Math.max(...hits.map((m) => m.to));
+  return {
+    from,
+    to,
+    filter: false, // show every fix; they aren't prefix-matched to the token
+    options: hits.map((m) => ({
+      label: m.title,
+      apply: m.replacement,
+      type: "quickfix",
+      boost: 99,
+    })),
+  };
+}
 
 // A compact, light editor surface. The highlight palette in algae-lang.js is
 // tuned for a light background; we keep the editor light even on dark pages so
@@ -104,7 +138,10 @@ function renderResult(pane, result) {
   }
   pane.className = "algae-result algae-result-error";
   const n = result.diagnostics.length;
-  const header = el("div", null, "✗ " + n + " error" + (n === 1 ? "" : "s"));
+  const hasFixes = result.diagnostics.some((d) => d.fixes && d.fixes.length > 0);
+  const headerText =
+    "✗ " + n + " error" + (n === 1 ? "" : "s") + (hasFixes ? "  ·  Ctrl-Space for suggested fixes" : "");
+  const header = el("div", null, headerText);
   pane.appendChild(header);
   for (const d of result.diagnostics) {
     const where = d.has_span ? d.line + ":" + d.col + "  " : "";
@@ -144,6 +181,21 @@ export function mountAlgaeEditor(parent, opts = {}) {
     }
   };
 
+  // Two automatic behaviours, both deferred out of the update cycle since they
+  // dispatch transactions:
+  //   • open the fix suggestions when the caret lands inside a flagged span via
+  //     a click or cursor move (not while typing);
+  //   • re-run the checker right after a suggestion is accepted, so the results
+  //     pane and the next round of fixes reflect the edit immediately.
+  const fixUpdateListener = EditorView.updateListener.of((update) => {
+    if (update.selectionSet && !update.docChanged && cursorHasFix(update.state)) {
+      Promise.resolve().then(() => startCompletion(update.view));
+    }
+    if (update.transactions.some((tr) => tr.annotation(pickedCompletion))) {
+      Promise.resolve().then(() => doCheck(update.view));
+    }
+  });
+
   const extensions = [
     lineNumbers(),
     highlightActiveLineGutter(),
@@ -156,6 +208,10 @@ export function mountAlgaeEditor(parent, opts = {}) {
     keymap.of([
       { key: "Mod-Enter", run: (v) => { doCheck(v); return true; } },
     ]),
+    // Completion keys (Enter accepts, Ctrl-Space opens) must outrank the default
+    // keymap, or the default Enter → newline swallows the accept. Each binding
+    // no-ops (returns false) when no completion is active, falling through.
+    keymap.of(completionKeymap),
     keymap.of([...defaultKeymap, ...historyKeymap, ...lintKeymap, indentWithTab]),
     algae(),
     baseTheme,
@@ -163,10 +219,14 @@ export function mountAlgaeEditor(parent, opts = {}) {
     EditorView.editable.of(!opts.readOnly),
   ];
 
-  // Gutter markers for diagnostics (populated by manual checks). Only wired when
-  // a wasm module is supplied; highlighting-only doc blocks omit it.
+  // Gutter markers for diagnostics plus fix-suggestion autocomplete (populated
+  // by manual checks). Only wired when a wasm module is supplied;
+  // highlighting-only doc blocks omit them.
   if (wasm) {
     extensions.push(lintGutter());
+    extensions.push(algaeFixesField);
+    extensions.push(autocompletion({ override: [algaeFixSource] }));
+    extensions.push(fixUpdateListener);
   }
 
   const view = new EditorView({

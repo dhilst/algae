@@ -804,8 +804,9 @@ fn proof_segments(input: &mut In) -> ModalResult<Vec<Seg>> {
 /// Fold a parsed chain into the nested `ProofStmt` shape. Each `then` step
 /// becomes a one-element `cases` whose single case's proof is the rest of the
 /// chain; all synthetic terminators inherit the block's physical `close` (taint
-/// is uniform along a linear chain).
-fn fold_segments(mut segs: Vec<Seg>, close: Close) -> ProofStmt {
+/// is uniform along a linear chain) and its `close_span` (the shared `qed`/`wip`
+/// keyword the whole chain ends on).
+fn fold_segments(mut segs: Vec<Seg>, close: Close, close_span: Span) -> ProofStmt {
     let terminal = segs.pop().expect("proof body has at least one step");
     let mut current = match terminal {
         Seg::Zero { reference, span } => ProofStmt {
@@ -878,6 +879,7 @@ fn fold_segments(mut segs: Vec<Seg>, close: Close) -> ProofStmt {
             span: current.span,
             stmt: current,
             close,
+            close_span,
         };
         let case_span = by_span.merge(end_span);
         let case = CaseBlock {
@@ -912,10 +914,11 @@ fn proof_body(input: &mut In, start: Span) -> ModalResult<ProofBlock> {
         (Close::Qed, expect(input, T::KwQed)?)
     };
     semi(input)?;
-    let stmt = fold_segments(segs, close);
+    let stmt = fold_segments(segs, close, end);
     Ok(ProofBlock {
         stmt,
         close,
+        close_span: end,
         span: start.merge(end),
     })
 }

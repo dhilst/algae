@@ -10,6 +10,7 @@
     "build:dev": "esbuild src/index.js --bundle --format=esm --outfile=dist/algae-editor.js --sourcemap"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.0.0",
     "@codemirror/commands": "^6.0.0",
     "@codemirror/language": "^6.0.0",
     "@codemirror/lint": "^6.0.0",

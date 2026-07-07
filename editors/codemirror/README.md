@@ -11,6 +11,14 @@ provides:
   WebAssembly by the [`algae-wasm`](../../algae-wasm) crate.
 - **Error reporting** — kernel diagnostics rendered as inline squiggles, gutter
   markers, and a results pane.
+- **Fix suggestions** — diagnostics that carry a machine-applicable fix
+  (terminator `wip`↔`qed` swaps, `by wip(?…)` hole candidates that seed a
+  complete `by <tactic>?;` step, tactic-hole continuations) surface as
+  autocomplete completions. After a check, **click the flagged span** (or press
+  **Ctrl-Space**) to see the fixes; accepting one rewrites the source and
+  re-runs the checker automatically, so the next round of suggestions is ready.
+  The popup opens on a click/cursor move into a fixable span — never while
+  typing.
 
 ## Build
 
