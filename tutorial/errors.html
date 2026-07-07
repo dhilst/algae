@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Theories, laws, and models" href="theories.html"><link rel="prev" title="Specifying a stack" href="stack.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Theories, laws, and models" href="theories.html"><link rel="prev" title="Induction and friends" href="induction.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
         <title>Specifying error behavior - Algae</title>
@@ -198,11 +198,10 @@
 <li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Algebraic specification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Specifying error behavior</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theories.html">Theories, laws, and models</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><input aria-label="Toggle navigation of A tour of the standard library" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -211,7 +210,6 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -257,10 +255,15 @@
         <article role="main" id="furo-main-content">
           <section id="specifying-error-behavior">
 <h1>Specifying error behavior<a class="headerlink" href="#specifying-error-behavior" title="Link to this heading">¶</a></h1>
-<p>The stack chapter left a loose thread: what <em>is</em> <code class="docutils literal notranslate"><span class="pre">top(empty)</span></code>? Algae has no
-partial functions — <code class="docutils literal notranslate"><span class="pre">top</span></code> is total, so <code class="docutils literal notranslate"><span class="pre">top(empty)</span></code> is some element, we just
-never said which. That’s a real gap. A caller who pops one element too many
-deserves a defined answer, not a shrug.</p>
+<p>Remember the warning back in <a class="reference internal" href="specs.html"><span class="doc">Algebraic specification</span></a>, that our stack specification was
+<strong>incomplete</strong>? Here is exactly how. What is <code class="docutils literal notranslate"><span class="pre">top(empty)</span></code> — the top of an
+<em>empty</em> stack? The two axioms never say. A programmer implementing that spec would
+have to decide something on the spot — perhaps throw an exception — for a case the
+specification simply left open. We usually want to <em>avoid</em> runtime errors, or at
+the very least pin down in the specification where they may occur.</p>
+<p>So this is a real gap. Algae has no partial functions — <code class="docutils literal notranslate"><span class="pre">top</span></code> is total, so
+<code class="docutils literal notranslate"><span class="pre">top(empty)</span></code> <em>is</em> some element, we just never said which. A caller who pops one
+element too many deserves a defined answer, not a shrug.</p>
 <p>Algae’s motto is <em>failure is modeled with sum types</em>. So we give <code class="docutils literal notranslate"><span class="pre">pop</span></code> and
 <code class="docutils literal notranslate"><span class="pre">top</span></code> a second possible outcome — an <code class="docutils literal notranslate"><span class="pre">Error</span></code> — and specify the empty case
 outright:</p>
@@ -368,14 +371,14 @@ specification.</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="stack.html">
+          <a class="prev-page" href="induction.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Specifying a stack</div>
+                <div class="title">Induction and friends</div>
                 
               </div>
             </a>

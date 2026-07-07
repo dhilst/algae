@@ -198,11 +198,10 @@
 <li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Algebraic specification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theories.html">Theories, laws, and models</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><input aria-label="Toggle navigation of A tour of the standard library" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -211,7 +210,6 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -316,35 +314,42 @@ you went wrong. And when you’re not sure what to write next, leave a
 <li class="toctree-l2"><a class="reference internal" href="proofs.html#what-the-checker-actually-checks">What the checker actually checks</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="specs.html#sorts-and-operations">Sorts and operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="specs.html">Algebraic specification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="specs.html#types-from-types">Types from types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html#declare-don-t-define">Declare, don’t define</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html#sorts-and-operations-precisely">Sorts and operations, precisely</a></li>
 <li class="toctree-l2"><a class="reference internal" href="specs.html#axioms-give-operators-meaning">Axioms give operators meaning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="specs.html#equational-reasoning">Equational reasoning</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#reflexivity">Reflexivity</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#rewriting-with-a-motive">Rewriting with a motive</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#the-sugar">The <code class="docutils literal notranslate"><span class="pre">_</span></code> sugar</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#when-the-motive-misses">When the motive misses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#what-the-same-term-means">What “the same term” means</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#the-rewrite-rules-and-the-placeholder">The rewrite rules and the placeholder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#equational-reasoning-on-the-stack">Equational reasoning on the stack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#when-the-placeholder-misses">When the placeholder misses</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html#the-other-direction-backward">The other direction: <code class="docutils literal notranslate"><span class="pre">backward</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html#running-the-checker">Running the checker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html#sorts-operators-types">Sorts, operators, types</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html#propositions-and-sequents">Propositions and sequents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#direct-proof">1. Direct proof</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#conditional-proof-implication">2. Conditional proof (implication)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#proof-by-cases">3. Proof by cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#mathematical-induction">4. Mathematical induction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#proof-by-contradiction">5. Proof by contradiction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#proof-by-contrapositive">6. Proof by contrapositive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#universal-proof">7. Universal proof</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#existential-proof-a-witness">8. Existential proof (a witness)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#existential-elimination-use-a-witness">9. Existential elimination (use a witness)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#equational-reasoning-rewriting">10. Equational reasoning (rewriting)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="induction.html">Induction and friends</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="induction.html#numbers-nest-like-pushes">Numbers nest like pushes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="induction.html#the-induction-rule">The induction rule</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html#eigenvariables">Eigenvariables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html#the-shorthand">The <code class="docutils literal notranslate"><span class="pre">_</span></code> shorthand</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html#parameters-vs-forall">Parameters vs. <code class="docutils literal notranslate"><span class="pre">forall</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html#the-two-namespaces-made-concrete">The two namespaces, made concrete</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="stack.html">Specifying a stack</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="stack.html#cool-proofs-for-free">Cool proofs, for free</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Specifying error behavior</a><ul>
@@ -359,19 +364,6 @@ you went wrong. And when you’re not sure what to write next, leave a
 <li class="toctree-l1"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tour/index.html#how-to-read-a-rule">How to read a rule</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tour/index.html#the-modules">The modules</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#direct-proof">1. Direct proof</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#conditional-proof-implication">2. Conditional proof (implication)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#proof-by-cases">3. Proof by cases</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#mathematical-induction">4. Mathematical induction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#proof-by-contradiction">5. Proof by contradiction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#proof-by-contrapositive">6. Proof by contrapositive</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#universal-proof">7. Universal proof</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#existential-proof-a-witness">8. Existential proof (a witness)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#existential-elimination-use-a-witness">9. Existential elimination (use a witness)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html#equational-reasoning-rewriting">10. Equational reasoning (rewriting)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a><ul>

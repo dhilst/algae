@@ -42,7 +42,7 @@ as an obligation. Here's the ``Monad`` interface from ``monad.alg``:
 proving their type satisfies ``Monad``. Let's build a smaller one, end to end, that
 you can actually run.
 
-Remember the stack from :doc:`stack`? Those two axioms are really an *interface* —
+Remember the stack from :doc:`specs`? Those two axioms are really an *interface* —
 any type with ``push`` / ``pop`` / ``top`` obeying them is a stack. So make that a
 theory, then prove our concrete stack is a **model** of it:
 

@@ -5,5 +5,5 @@ sort T : Sort;
 lemma refl_all
   ⊢ ∀ (x : T) st x = x;
 proof
-  by wip;
+  by wip(?goal);
 wip;

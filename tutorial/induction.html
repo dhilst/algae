@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Specifying a stack" href="stack.html"><link rel="prev" title="Two worlds and a vocabulary" href="worlds.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Specifying error behavior" href="errors.html"><link rel="prev" title="Proof techniques crash course" href="proof-techniques.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
         <title>Induction and friends - Algae</title>
@@ -198,11 +198,10 @@
 <li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Algebraic specification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Induction and friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theories.html">Theories, laws, and models</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><input aria-label="Toggle navigation of A tour of the standard library" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -211,7 +210,6 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -257,8 +255,36 @@
         <article role="main" id="furo-main-content">
           <section id="induction-and-friends">
 <h1>Induction and friends<a class="headerlink" href="#induction-and-friends" title="Link to this heading">¶</a></h1>
-<p>Time for the real thing. <code class="docutils literal notranslate"><span class="pre">nat</span></code> defines addition and an induction rule whose
-conclusion is a <em>universally quantified</em> proposition:</p>
+<p>At the end of <a class="reference internal" href="rewrite-reflexivity.html"><span class="doc">Reflexivity and rewriting</span></a> we hit a wall. We could prove
+“pop through <code class="docutils literal notranslate"><span class="pre">n</span></code> pushes and the right element is on top” for <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">3</span></code> — but every depth was a <em>separate</em> proof, one rewrite per push. A stack can
+hold arbitrarily many elements, and there’s no way to spell out infinitely many
+rewrites. To reason about <strong>arbitrarily large values</strong> we need a new tool:
+<strong>induction</strong>.</p>
+<section id="numbers-nest-like-pushes">
+<h2>Numbers nest like pushes<a class="headerlink" href="#numbers-nest-like-pushes" title="Link to this heading">¶</a></h2>
+<p>The cleanest place to meet induction is the natural numbers, in the <code class="docutils literal notranslate"><span class="pre">nat</span></code>
+module. They’re built from just two operators — a constant and a successor:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>          <span class="c1"># zero</span>
+<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>      <span class="c1"># successor: &quot;one more than&quot;</span>
+</pre></div>
+</div>
+<p>Every number is <code class="docutils literal notranslate"><span class="pre">s</span></code> nested over <code class="docutils literal notranslate"><span class="pre">0</span></code>: <code class="docutils literal notranslate"><span class="pre">s(0)</span></code> is one, <code class="docutils literal notranslate"><span class="pre">s(s(0))</span></code> is two,
+<code class="docutils literal notranslate"><span class="pre">s(s(s(0)))</span></code> is three, and so on. Just like a stack is <code class="docutils literal notranslate"><span class="pre">push</span></code> nested over
+<code class="docutils literal notranslate"><span class="pre">empty</span></code>, a number is <code class="docutils literal notranslate"><span class="pre">s</span></code> nested over <code class="docutils literal notranslate"><span class="pre">0</span></code> — and <code class="docutils literal notranslate"><span class="pre">s</span></code> can nest <strong>arbitrarily
+deep</strong>, so there are infinitely many naturals.</p>
+<p>That’s the crux. To prove some <code class="docutils literal notranslate"><span class="pre">P(n)</span></code> holds for <em>every</em> <code class="docutils literal notranslate"><span class="pre">n</span></code>, you cannot check
+them one at a time — there are infinitely many. Induction gives you a finite way
+to cover them all: prove <code class="docutils literal notranslate"><span class="pre">P(0)</span></code>, and prove that <em>whenever</em> <code class="docutils literal notranslate"><span class="pre">P(k)</span></code> holds so
+does <code class="docutils literal notranslate"><span class="pre">P(s(k))</span></code>. Those two facts, chained, reach every number — knock over the
+first domino and show each knocks over the next, and the whole infinite line
+falls.</p>
+</section>
+<section id="the-induction-rule">
+<h2>The induction rule<a class="headerlink" href="#the-induction-rule" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">nat</span></code> packages exactly that reasoning as a rule whose conclusion is a
+<em>universally quantified</em> proposition:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">induction</span><span class="p">(</span><span class="n">P</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>
   <span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">,</span> <span class="n">ih</span> <span class="o">:=</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
@@ -323,6 +349,7 @@ It uses <code class="docutils literal notranslate"><span class="pre">ih</span></
 <p>Notice <code class="docutils literal notranslate"><span class="pre">ih</span></code> — a <strong>hypothesis</strong> introduced by the step case — being handed to
 <code class="docutils literal notranslate"><span class="pre">backward</span></code> as a proof argument. That’s the proof namespace at work: <code class="docutils literal notranslate"><span class="pre">ih</span></code> is
 not a term, it’s <em>evidence</em>.</p>
+</section>
 <section id="eigenvariables">
 <h2>Eigenvariables<a class="headerlink" href="#eigenvariables" title="Link to this heading">¶</a></h2>
 <p>In the step case, <code class="docutils literal notranslate"><span class="pre">k</span></code> is an <strong>eigenvariable</strong>: a fresh variable standing for an
@@ -420,23 +447,23 @@ can’t put them in a proposition or quantify over them.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="stack.html">
+          <a class="next-page" href="errors.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Specifying a stack</div>
+                <div class="title">Specifying error behavior</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="worlds.html">
+          <a class="prev-page" href="proof-techniques.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Two worlds and a vocabulary</div>
+                <div class="title">Proof techniques crash course</div>
                 
               </div>
             </a>
@@ -471,6 +498,8 @@ can’t put them in a proposition or quantify over them.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Induction and friends</a><ul>
+<li><a class="reference internal" href="#numbers-nest-like-pushes">Numbers nest like pushes</a></li>
+<li><a class="reference internal" href="#the-induction-rule">The induction rule</a></li>
 <li><a class="reference internal" href="#eigenvariables">Eigenvariables</a></li>
 <li><a class="reference internal" href="#the-shorthand">The <code class="docutils literal notranslate"><span class="pre">_</span></code> shorthand</a></li>
 <li><a class="reference internal" href="#parameters-vs-forall">Parameters vs. <code class="docutils literal notranslate"><span class="pre">forall</span></code></a></li>

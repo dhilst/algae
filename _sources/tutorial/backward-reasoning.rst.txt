@@ -40,9 +40,18 @@ Let's prove a conjunction. Suppose we're *handed* a proof of ``A`` and a proof o
 parameters**: writing ``x := A`` in the parameter list means "``x`` is a proof of
 ``A``," and you discharge a goal that matches it by citing ``by x``.
 
+We'll spell the ``and_intro`` rule out right in the buffer, rather than
+``import``-ing it from ``core``, so the rule you're applying and the proof that
+applies it sit side by side:
+
 .. code-block:: alg
 
-   import core(and_intro);
+   rule and_intro(P Q : Prop)
+     ⊢ P;
+     ⊢ Q
+     ────────────────────────
+     ⊢ P ∧ Q
+   end;
 
    lemma both(A B : Prop, x := A, y := B)
      ⊢ A ∧ B;
@@ -94,22 +103,28 @@ Four keywords carry every proof:
    :class: tip
 
    ``and_left`` has a *single* premise (the conjunction), so it continues with
-   ``then``. Given a proof ``h`` of ``A ∧ B``, pull out the left half. Fill the
-   hole — press **Check ▶**, and if you're stuck, click the hole for a
-   suggestion.
+   ``then``. Given a proof ``h`` of ``A ∧ B``, pull out the left half. The buffer
+   already applies ``and_left(A, B)`` — but with a trailing ``?``, which
+   *inspects* the step instead of committing to it. Press **Check ▶** and the
+   kernel reports the subgoal that ``and_left`` leaves; take it from there.
 
    .. code-block:: alg
 
-      import core(and_left);
+      rule and_left(P Q : Prop)
+        ⊢ P ∧ Q
+        ────────────────────────
+        ⊢ P
+      end;
 
       lemma left_half(A B : Prop, h := A ∧ B)
         ⊢ A;
       proof
-        by wip(?goal);
+        by and_left(A, B)?;
       wip;
 
    .. hint::
 
-      ``by and_left(A, B)`` matches the goal ``⊢ A`` (the rule's conclusion is
-      ``⊢ P`` with ``P = A``), and leaves its one premise ``⊢ A ∧ B`` — continue
-      ``then ⊢ A ∧ B;`` and close it ``by h;``.
+      ``and_left(A, B)`` matches the goal ``⊢ A`` (the rule's conclusion is
+      ``⊢ P`` with ``P = A``), and its one premise ``⊢ A ∧ B`` is what the ``?``
+      report shows you. Drop the ``?``, continue ``then ⊢ A ∧ B;``, close it
+      ``by h;``, and turn the block's ``wip`` into ``qed``.

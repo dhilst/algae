@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Sorts, operations, and equations" href="specs.html"><link rel="prev" title="Reasoning backward" href="backward-reasoning.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Algebraic specification" href="specs.html"><link rel="prev" title="Reasoning backward" href="backward-reasoning.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
         <title>Building proofs - Algae</title>
@@ -198,11 +198,10 @@
 <li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Building proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Algebraic specification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theories.html">Theories, laws, and models</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><input aria-label="Toggle navigation of A tour of the standard library" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -211,7 +210,6 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -275,13 +273,37 @@ closes.</p>
 <p>That’s why the number of premises drives everything: a one-premise rule extends
 a single line (<code class="docutils literal notranslate"><span class="pre">then</span></code>), a many-premise rule forks it (<code class="docutils literal notranslate"><span class="pre">cases</span></code>), and a
 zero-premise fact caps the line it’s on.</p>
+<p>Because each step hangs its subgoals <em>beneath</em> it and every branch ends in a cap,
+the finished structure is a <strong>tree</strong>: the goal at the root, rule applications for
+nodes, and axioms or assumptions for leaves. This is the <strong>proof tree</strong>, and it’s
+the thing the kernel actually checks. A proof written in Algae is just that tree,
+laid out in text.</p>
 </section>
 <section id="a-branching-proof-end-to-end">
 <h2>A branching proof, end to end<a class="headerlink" href="#a-branching-proof-end-to-end" title="Link to this heading">¶</a></h2>
 <p>Let’s prove that conjunction doesn’t care about order: from a proof of <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code>
 we build <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">∧</span> <span class="pre">A</span></code>. This uses all three conjunction rules at once — a nice
-domino chain that forks and then caps each branch.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_intro</span><span class="p">,</span> <span class="n">and_left</span><span class="p">,</span> <span class="n">and_right</span><span class="p">);</span>
+domino chain that forks and then caps each branch. We spell the rules out in the
+buffer instead of <code class="docutils literal notranslate"><span class="pre">import</span></code>-ing them, so you can see exactly what each <code class="docutils literal notranslate"><span class="pre">by</span></code>
+step is matching against:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">and_intro</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∧</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">and_left</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∧</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+<span class="k">end</span><span class="p">;</span>
+
+<span class="k">rule</span> <span class="n">and_right</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∧</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">and_comm</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">both</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">B</span> <span class="o">∧</span> <span class="n">A</span><span class="p">;</span>
@@ -307,6 +329,24 @@ premises, so the line <strong>forks</strong> into <code class="docutils literal 
 <p>Both branches capped, both <code class="docutils literal notranslate"><span class="pre">cases</span></code> closed, <code class="docutils literal notranslate"><span class="pre">qed</span></code>. Notice how <code class="docutils literal notranslate"><span class="pre">both</span> <span class="pre">:=</span> <span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code>
 — the whole conjunction we were handed — caps <em>both</em> branches; it’s evidence we
 can cite as many times as we like.</p>
+<p>Draw the same proof as a tree and its shape jumps out — the goal at the root,
+each <code class="docutils literal notranslate"><span class="pre">by</span></code> a node that hangs its subgoals below, and every leaf an assumption
+that caps its branch:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>⊢ B ∧ A                              (the goal — root of the tree)
+└─ by and_intro(B, A)                two premises → the tree forks
+   ├─ ⊢ B
+   │  └─ by and_right(A, B)          one premise
+   │     └─ ⊢ A ∧ B
+   │        └─ by both               leaf: assumption caps the branch
+   └─ ⊢ A
+      └─ by and_left(A, B)           one premise
+         └─ ⊢ A ∧ B
+            └─ by both               leaf: assumption caps the branch
+</pre></div>
+</div>
+<p>Read top to bottom it’s the proof you wrote; read bottom to top it’s the logical
+argument — every branch climbs from the goal up to a fact you already hold. That
+tree <em>is</em> the proof; the <code class="docutils literal notranslate"><span class="pre">proof</span> <span class="pre">…</span> <span class="pre">qed</span></code> text is just one way of writing it down.</p>
 </section>
 <section id="what-the-checker-actually-checks">
 <h2>What the checker actually checks<a class="headerlink" href="#what-the-checker-actually-checks" title="Link to this heading">¶</a></h2>
@@ -326,6 +366,18 @@ premises <code class="docutils literal notranslate"><span class="pre">⊢</span>
 third, hidden step where the checker “runs” anything or guesses — a proof is
 correct only when every domino lines up under those two checks, all the way down.</p>
 <div class="note admonition">
+<p class="admonition-title">Everything is explicit — on purpose</p>
+<p>Unlike Lean 4 or Rocq (Coq), Algae keeps <em>all</em> the proof information in the
+syntax, and that was a deliberate design decision. Rocq, for example, drives
+proofs with a macro/tactic language that <em>generates</em> proof terms — which
+enables proof search, automation, and a great deal of power. That power comes
+at two costs: it is harder to learn, and you cannot read the proof off the
+source. (Rocq <em>can</em> print the underlying term, but it was never meant to be
+read.) Algae is built on two principles instead: <strong>be simple</strong>, and <strong>be
+explicit</strong> — the context, the goal, and the rule being applied are all
+deliberately required in the syntax, right where you can see them.</p>
+</div>
+<div class="note admonition">
 <p class="admonition-title">Why so strict?</p>
 <p>Because a checker that guesses is a checker you can’t trust. Every gap is one
 you must close explicitly, which is exactly what makes a passing proof mean
@@ -337,20 +389,26 @@ end it’s still waiting on.</p>
 <p class="admonition-title">Your turn</p>
 <p>Disjunction has the mirror shape: <code class="docutils literal notranslate"><span class="pre">or_intro_left</span></code> proves <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code> from just
 <code class="docutils literal notranslate"><span class="pre">A</span></code> — a <em>single</em> premise, so <code class="docutils literal notranslate"><span class="pre">then</span></code>. Given a proof of <code class="docutils literal notranslate"><span class="pre">A</span></code>, prove
-<code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">or_intro_left</span><span class="p">);</span>
+<code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code>. The buffer inspects the step with a trailing <code class="docutils literal notranslate"><span class="pre">?</span></code>; <strong>Check ▶</strong> to
+see what it leaves.</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">or_intro_left</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∨</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">weaken</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span> <span class="o">∨</span> <span class="n">B</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">or_intro_left</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>?<span class="p">;</span>
 <span class="kp">wip</span><span class="p">;</span>
 </pre></div>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p><code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">or_intro_left(A,</span> <span class="pre">B)</span></code> matches <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code> and leaves the one premise
-<code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span></code>; continue <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">A;</span></code> and close <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">x;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">or_intro_left(A,</span> <span class="pre">B)</span></code> matches <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span> <span class="pre">∨</span> <span class="pre">B</span></code> and leaves the one premise
+<code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span></code>. Drop the <code class="docutils literal notranslate"><span class="pre">?</span></code>, continue <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">A;</span></code>, close <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">x;</span></code>, and make
+the terminator <code class="docutils literal notranslate"><span class="pre">qed</span></code>.</p>
 </div>
 </div>
 </section>
@@ -366,7 +424,7 @@ end it’s still waiting on.</p>
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Sorts, operations, and equations</div>
+                <div class="title">Algebraic specification</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

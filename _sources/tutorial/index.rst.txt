@@ -34,11 +34,9 @@ all verifies.
    proofs
    specs
    rewrite-reflexivity
-   worlds
+   proof-techniques
    induction
-   stack
    errors
    theories
    tour/index
-   proof-techniques
    auxiliary-lemmas

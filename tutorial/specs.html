@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Reflexivity and rewriting" href="rewrite-reflexivity.html"><link rel="prev" title="Building proofs" href="proofs.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
-        <title>Sorts, operations, and equations - Algae</title>
+        <title>Algebraic specification - Algae</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -198,11 +198,10 @@
 <li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Sorts, operations, and equations</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Algebraic specification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theories.html">Theories, laws, and models</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><input aria-label="Toggle navigation of A tour of the standard library" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -211,7 +210,6 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -255,36 +253,115 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="sorts-operations-and-equations">
-<h1>Sorts, operations, and equations<a class="headerlink" href="#sorts-operations-and-equations" title="Link to this heading">¶</a></h1>
+          <section id="algebraic-specification">
+<h1>Algebraic specification<a class="headerlink" href="#algebraic-specification" title="Link to this heading">¶</a></h1>
 <p>So far the propositions were abstract — bare <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">:</span> <span class="pre">Prop</span></code>. Now let’s give
-ourselves something concrete to talk <em>about</em>. That’s the <strong>algebraic
-specification</strong> side of Algae: you name a little world and pin down how it
-behaves, then prove things in it. This chapter is a brief tour; the later
-chapters (<a class="reference internal" href="worlds.html"><span class="doc">Two worlds and a vocabulary</span></a>, <a class="reference internal" href="stack.html"><span class="doc">Specifying a stack</span></a>, <a class="reference internal" href="theories.html"><span class="doc">Theories, laws, and models</span></a>) go deeper.</p>
-<section id="sorts-and-operations">
-<h2>Sorts and operations<a class="headerlink" href="#sorts-and-operations" title="Link to this heading">¶</a></h2>
-<p>A <strong>sort</strong> is a base type. An <strong>operation</strong> (<code class="docutils literal notranslate"><span class="pre">op</span></code>) is a function symbol with a
-signature — the arrow <code class="docutils literal notranslate"><span class="pre">→</span></code> gives the result type, <code class="docutils literal notranslate"><span class="pre">*</span></code> builds a tuple of
-arguments. Here’s the opening of the standard library’s <code class="docutils literal notranslate"><span class="pre">nat</span></code>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>            <span class="c1"># a base sort</span>
-
-<span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>               <span class="c1"># a constant (no arguments, so just → Nat)</span>
-<span class="k">op</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>           <span class="c1"># successor: takes a Nat, returns a Nat</span>
-<span class="k">op</span> <span class="o">+</span> <span class="p">:</span> <span class="n">Nat</span> <span class="o">*</span> <span class="n">Nat</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>     <span class="c1"># addition: takes two Nats, written infix as x + y</span>
+ourselves something concrete to talk <em>about</em>. This is the other half of Algae: it
+is not only a proof language but an <strong>algebraic specification</strong> language, and this
+chapter is about what that means.</p>
+<section id="types-from-types">
+<h2>Types from types<a class="headerlink" href="#types-from-types" title="Link to this heading">¶</a></h2>
+<p>Before the vocabulary, four ways Algae builds a type out of simpler ones:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">*</span> <span class="pre">B</span></code> — a <strong>pair</strong>: one value of type <code class="docutils literal notranslate"><span class="pre">A</span></code> together with one of type
+<code class="docutils literal notranslate"><span class="pre">B</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">|</span> <span class="pre">B</span></code> — a <strong>sum</strong>: a value that is <em>either</em> an <code class="docutils literal notranslate"><span class="pre">A</span></code> <em>or</em> a <code class="docutils literal notranslate"><span class="pre">B</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">→</span> <span class="pre">B</span></code> — a <strong>function</strong> that takes an <code class="docutils literal notranslate"><span class="pre">A</span></code> and returns a <code class="docutils literal notranslate"><span class="pre">B</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">*</span> <span class="pre">B</span> <span class="pre">→</span> <span class="pre">C</span></code> — a <strong>function of two arguments</strong>: it takes an <code class="docutils literal notranslate"><span class="pre">A</span></code> <em>and</em> a
+<code class="docutils literal notranslate"><span class="pre">B</span></code>, and returns a <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p></li>
+</ul>
+<p>That last one matters because Algae has <strong>no currying</strong>. A function states exactly
+how many arguments it takes: <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">*</span> <span class="pre">B</span> <span class="pre">→</span> <span class="pre">C</span></code> is a genuine two-argument function, not
+a one-argument function that returns another function (<code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">→</span> <span class="pre">(B</span> <span class="pre">→</span> <span class="pre">C)</span></code>). When you
+apply it you supply <em>both</em> arguments at once — <code class="docutils literal notranslate"><span class="pre">f(a,</span> <span class="pre">b)</span></code>.</p>
+</section>
+<section id="declare-don-t-define">
+<h2>Declare, don’t define<a class="headerlink" href="#declare-don-t-define" title="Link to this heading">¶</a></h2>
+<p>The idea behind algebraic specification is this: instead of describing your code
+with a programming language (or pseudocode), you <strong>declare</strong> the <em>types</em> — here
+called <strong>sorts</strong> — and the <em>operations</em> that act on them. Note the word: declare,
+not <em>define</em>. You name the sorts and operations <strong>abstractly</strong>. You say nothing
+about what the values of a sort actually <em>are</em>, or how an operation is
+<em>implemented</em> — you just declare that they exist and what their shapes are.</p>
+<p>Then you give them meaning by specifying how the operations <strong>relate to each
+other</strong>, and you do that with <strong>equations</strong>.</p>
+<p>In the idiom of set theory, a tiny stack specification would read something like:</p>
+<blockquote class="epigraph">
+<div><p>Let <code class="docutils literal notranslate"><span class="pre">S</span></code> be the set of stacks and <code class="docutils literal notranslate"><span class="pre">E</span></code> the set of elements.
+Let <code class="docutils literal notranslate"><span class="pre">push</span> <span class="pre">:</span> <span class="pre">E</span> <span class="pre">*</span> <span class="pre">S</span> <span class="pre">→</span> <span class="pre">S</span></code> be the operation taking an element and a stack and
+returning the stack with that element on top.
+Let <code class="docutils literal notranslate"><span class="pre">top</span> <span class="pre">:</span> <span class="pre">S</span> <span class="pre">→</span> <span class="pre">E</span></code> return the top element.
+Then for every <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">:</span> <span class="pre">S</span></code> and <code class="docutils literal notranslate"><span class="pre">e</span> <span class="pre">:</span> <span class="pre">E</span></code> the following must hold:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>top(push(e, s)) = e
 </pre></div>
 </div>
-<p>That’s a <em>vocabulary</em> and nothing more. <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span></code>, and <code class="docutils literal notranslate"><span class="pre">+</span></code> are just symbols;
-nothing yet says <code class="docutils literal notranslate"><span class="pre">s(0)</span></code> is “one” or that <code class="docutils literal notranslate"><span class="pre">+</span></code> adds. In Algae, operators are
-<strong>inert</strong> — the checker never evaluates them. <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span></code> does not quietly become
-<code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+</div></blockquote>
+<p>Algae, as a specification language, is meant to express <em>exactly this</em> — but
+instead of prose in a <code class="docutils literal notranslate"><span class="pre">.txt</span></code> file you write it in a <code class="docutils literal notranslate"><span class="pre">.alg</span></code> file, and the
+checker can parse, typecheck, and verify it for you:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">sort</span> <span class="n">Stack</span> <span class="p">:</span> <span class="kt">Sort</span> <span class="o">→</span> <span class="kt">Sort</span><span class="p">;</span>   <span class="c1"># stacks of some element type</span>
+
+<span class="k">op</span> <span class="n">empty</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>      <span class="c1"># the empty stack</span>
+<span class="k">op</span> <span class="n">push</span>  <span class="p">:</span> <span class="n">A</span> <span class="o">*</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+<span class="k">op</span> <span class="n">top</span>   <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">A</span><span class="p">;</span>
+
+<span class="k">axiom</span> <span class="n">top_push</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+  <span class="o">⊢</span> <span class="n">top</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="note admonition">
+<p class="admonition-title">Constructors <em>are</em> operations</p>
+<p>You might expect a distinction between <em>constructors</em> (which build values) and
+<em>operations</em> (which consume them). Algae makes none. <code class="docutils literal notranslate"><span class="pre">op</span> <span class="pre">empty</span> <span class="pre">:</span> <span class="pre">→</span> <span class="pre">Stack(A)</span></code>
+looks like a constructor and <code class="docutils literal notranslate"><span class="pre">op</span> <span class="pre">push</span> <span class="pre">:</span> <span class="pre">A</span> <span class="pre">*</span> <span class="pre">Stack(A)</span> <span class="pre">→</span> <span class="pre">Stack(A)</span></code> like an
+operation, but to Algae they are both just operators — symbols with a
+signature. There is no privileged set of “the real values”; there are only the
+operators and the equations that relate them.</p>
+</div>
+<p>Why declare and not define? Because at specification time you don’t want to be
+distracted by implementation. <em>Which data structure should back the stack — a
+linked list? an array?</em> Not yet your concern; you’re pinning down the <em>behaviour</em>,
+rigorously and abstractly. That means less to write and less to read.</p>
+<p>And the result is a real artifact. You can commit that <code class="docutils literal notranslate"><span class="pre">.alg</span></code> file to a
+repository as the <em>true specification</em> of a module in your codebase — hand it to
+another engineer, feed it to an LLM, or implement it yourself. Problems can still
+surface during implementation (there’s no silver bullet), but an unambiguous,
+machine-checked source of truth for <em>what your code must do</em> has real advantages:
+you can fix the spec the way you fix code, and there’s no informal prose left to
+hide ambiguity in.</p>
+<div class="warning admonition">
+<p class="admonition-title">This stack is incomplete</p>
+<p>Look again at what the spec above says — and doesn’t. It never mentions
+<code class="docutils literal notranslate"><span class="pre">top(empty)</span></code>: what is the top of an <em>empty</em> stack? Nothing here pins it down.
+We’ll return to this exact gap in <a class="reference internal" href="errors.html"><span class="doc">Specifying error behavior</span></a> and see how to close it.</p>
+</div>
+</section>
+<section id="sorts-and-operations-precisely">
+<h2>Sorts and operations, precisely<a class="headerlink" href="#sorts-and-operations-precisely" title="Link to this heading">¶</a></h2>
+<p>To restate the vocabulary now that you’ve seen it in use. A <strong>sort</strong> is a base
+type; <code class="docutils literal notranslate"><span class="pre">Stack</span> <span class="pre">:</span> <span class="pre">Sort</span> <span class="pre">→</span> <span class="pre">Sort</span></code> is a sort <em>constructor</em> — <code class="docutils literal notranslate"><span class="pre">Stack(A)</span></code> is a sort for
+each element sort <code class="docutils literal notranslate"><span class="pre">A</span></code>. An <strong>operation</strong> (<code class="docutils literal notranslate"><span class="pre">op</span></code>) is a function symbol with a
+signature, built from the type formers above — <code class="docutils literal notranslate"><span class="pre">→</span></code> for the result, <code class="docutils literal notranslate"><span class="pre">*</span></code> for a
+tuple of arguments:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">op</span> <span class="n">empty</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>            <span class="c1"># no arguments — just a result</span>
+<span class="k">op</span> <span class="n">push</span>  <span class="p">:</span> <span class="n">A</span> <span class="o">*</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>  <span class="c1"># two arguments: an A and a Stack(A)</span>
+<span class="k">op</span> <span class="n">pop</span>   <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>   <span class="c1"># one argument</span>
+<span class="k">op</span> <span class="n">top</span>   <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">A</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>That’s a <em>vocabulary</em> and nothing more. <code class="docutils literal notranslate"><span class="pre">empty</span></code>, <code class="docutils literal notranslate"><span class="pre">push</span></code>, <code class="docutils literal notranslate"><span class="pre">pop</span></code>, and <code class="docutils literal notranslate"><span class="pre">top</span></code>
+are just symbols; nothing yet says what popping does. In Algae, operators are
+<strong>inert</strong> — the checker never evaluates them, so <code class="docutils literal notranslate"><span class="pre">pop(push(x,</span> <span class="pre">empty))</span></code> does not
+quietly collapse to <code class="docutils literal notranslate"><span class="pre">empty</span></code> on its own.</p>
 </section>
 <section id="axioms-give-operators-meaning">
 <h2>Axioms give operators meaning<a class="headerlink" href="#axioms-give-operators-meaning" title="Link to this heading">¶</a></h2>
 <p>Operators earn their meaning from <strong>axioms</strong> — sequents asserted true with no
-proof. <code class="docutils literal notranslate"><span class="pre">nat</span></code> gives <code class="docutils literal notranslate"><span class="pre">+</span></code> its personality with two equations:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">axiom</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>     <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
-<span class="k">axiom</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">n</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>   <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">);</span>
+proof. Two equations are enough to make these symbols behave like a stack:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">axiom</span> <span class="n">top_push</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+  <span class="o">⊢</span> <span class="n">top</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>   <span class="c1"># the top of a push is what you pushed</span>
+<span class="k">axiom</span> <span class="n">pop_push</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+  <span class="o">⊢</span> <span class="n">pop</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="o">=</span> <span class="n">s</span><span class="p">;</span>   <span class="c1"># popping a push undoes it</span>
 </pre></div>
 </div>
 <p>An axiom is exactly a <strong>zero-premise rule</strong> (recall <a class="reference internal" href="backward-reasoning.html"><span class="doc">Reasoning backward</span></a>):
@@ -292,37 +369,9 @@ nothing to establish, so wherever its conclusion matches your goal, it closes it
 Describing a structure by its operations plus a handful of such equations is what
 “algebraic specification” means — and because the axioms are all you assume, a
 proof from them holds for <em>every</em> structure that satisfies them.</p>
-</section>
-<section id="equational-reasoning">
-<h2>Equational reasoning<a class="headerlink" href="#equational-reasoning" title="Link to this heading">¶</a></h2>
-<p>Because <code class="docutils literal notranslate"><span class="pre">add_zero_left</span></code> is an equation whose conclusion is <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>, we can
-close any goal that matches it. Instantiate at <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span></code> and the conclusion reads
-<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code> — precisely a goal we might have:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-
-<span class="k">lemma</span> <span class="n">zero_plus_zero</span>
-  <span class="o">⊢</span> <span class="m">0</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
-<span class="k">proof</span>
-  <span class="k">by</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="m">0</span><span class="p">);</span>
-<span class="k">qed</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>One <code class="docutils literal notranslate"><span class="pre">by</span></code>, and it closes — the axiom is premise-free. This is <em>equational
-reasoning</em>: you prove things by lining goals up with equations you’ve assumed
-(or already proved).</p>
-<div class="note admonition">
-<p class="admonition-title">Definitional equality is α/β only</p>
-<p>There’s one rule newcomers trip on. Algae’s built-in notion of “the same
-term” — <strong>definitional equality</strong> — is <em>α/β-equivalence only</em>: two terms are
-the same when they share a normal form after renaming bound variables and
-applying lambdas, full stop. Operators are inert, so <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span></code> is <strong>not</strong>
-definitionally <code class="docutils literal notranslate"><span class="pre">0</span></code>. That’s why <code class="docutils literal notranslate"><span class="pre">zero_plus_zero</span></code> needs <code class="docutils literal notranslate"><span class="pre">add_zero_left</span></code> and
-can’t be closed by “they’re obviously equal.” Every use of an equation is a
-step you can point to — there is no hidden computation.</p>
-</div>
-<p>Applying an equation to a <em>part</em> of a goal — rewriting <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code> buried
-<em>inside</em> a larger proposition, rather than matching the whole thing — is the job
-of the next chapter: reflexivity and the rewrite rules.</p>
+<p>How you actually <em>use</em> these equations to prove things — closing <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code> and
+rewriting one subterm of a goal with an equation — is the subject of the next
+chapter.</p>
 </section>
 </section>
 
@@ -381,10 +430,11 @@ of the next chapter: reflexivity and the rewrite rules.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Sorts, operations, and equations</a><ul>
-<li><a class="reference internal" href="#sorts-and-operations">Sorts and operations</a></li>
+<li><a class="reference internal" href="#">Algebraic specification</a><ul>
+<li><a class="reference internal" href="#types-from-types">Types from types</a></li>
+<li><a class="reference internal" href="#declare-don-t-define">Declare, don’t define</a></li>
+<li><a class="reference internal" href="#sorts-and-operations-precisely">Sorts and operations, precisely</a></li>
 <li><a class="reference internal" href="#axioms-give-operators-meaning">Axioms give operators meaning</a></li>
-<li><a class="reference internal" href="#equational-reasoning">Equational reasoning</a></li>
 </ul>
 </li>
 </ul>

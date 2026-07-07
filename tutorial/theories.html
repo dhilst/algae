@@ -198,11 +198,10 @@
 <li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Algebraic specification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Theories, laws, and models</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><input aria-label="Toggle navigation of A tour of the standard library" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -211,7 +210,6 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -292,7 +290,7 @@ as an obligation. Here’s the <code class="docutils literal notranslate"><span 
 <p><code class="docutils literal notranslate"><span class="pre">option.alg</span></code>, <code class="docutils literal notranslate"><span class="pre">list.alg</span></code>, and <code class="docutils literal notranslate"><span class="pre">result.alg</span></code> each ship a verified <code class="docutils literal notranslate"><span class="pre">model</span></code>
 proving their type satisfies <code class="docutils literal notranslate"><span class="pre">Monad</span></code>. Let’s build a smaller one, end to end, that
 you can actually run.</p>
-<p>Remember the stack from <a class="reference internal" href="stack.html"><span class="doc">Specifying a stack</span></a>? Those two axioms are really an <em>interface</em> —
+<p>Remember the stack from <a class="reference internal" href="specs.html"><span class="doc">Algebraic specification</span></a>? Those two axioms are really an <em>interface</em> —
 any type with <code class="docutils literal notranslate"><span class="pre">push</span></code> / <code class="docutils literal notranslate"><span class="pre">pop</span></code> / <code class="docutils literal notranslate"><span class="pre">top</span></code> obeying them is a stack. So make that a
 theory, then prove our concrete stack is a <strong>model</strong> of it:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">;</span>
@@ -341,7 +339,7 @@ because <code class="docutils literal notranslate"><span class="pre">StackSpec</
 obligations discharged, and <code class="docutils literal notranslate"><span class="pre">ConcreteStack</span></code> is certified a stack.</p>
 <p>Every model has this shape, however big. <code class="docutils literal notranslate"><span class="pre">option.alg</span></code>’s <code class="docutils literal notranslate"><span class="pre">OptionMonad</span></code> is the
 same skeleton with three richer proofs — each threading <code class="docutils literal notranslate"><span class="pre">backward</span></code> to reach its
-equality, the <code class="docutils literal notranslate"><span class="pre">defeq</span></code> discipline from <a class="reference internal" href="specs.html"><span class="doc">Sorts, operations, and equations</span></a> at scale.</p>
+equality, the <code class="docutils literal notranslate"><span class="pre">defeq</span></code> discipline from <a class="reference internal" href="specs.html"><span class="doc">Algebraic specification</span></a> at scale.</p>
 <section id="imports-and-the-standard-library">
 <h2>Imports and the standard library<a class="headerlink" href="#imports-and-the-standard-library" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">module;</span></code> brings in <strong>everything</strong> a module declares — its sorts,

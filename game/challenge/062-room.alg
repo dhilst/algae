@@ -5,5 +5,5 @@ sort T : Sort;
 lemma repack(P : T → Prop, ex := ∃ (x : T) st P(x))
   ⊢ ∃ (x : T) st P(x);
 proof
-  by wip;
+  by wip(?goal);
 wip;

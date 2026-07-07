@@ -2,47 +2,64 @@
 Reflexivity and rewriting
 ===============================
 
-Equations are the heart of an algebraic specification, so Algae gives you three
-tools for them, all in ``core``: **reflexivity** to close ``x = x``, and the two
-**rewrite** rules to apply an equation to *part* of a goal.
+Equations are the heart of an algebraic specification, so this chapter is about
+*using* them: **reflexivity** to close ``x = x``, and the two **rewrite** rules to
+apply an equation to one part of a goal. We'll reason about the stack from
+:doc:`specs`.
 
 Reflexivity
 ===========
 
 ``refl`` proves anything equal to itself. It's an axiom — zero premises — so it
-closes a goal outright:
+closes a goal outright. We'll write it out in the buffer rather than importing it:
 
 .. code-block:: alg
 
-   axiom refl(
-     T : Sort,
-     x : T
-   )
+   axiom refl(T : Sort, x : T)
      ⊢ x = x;
 
-You instantiate it at the point of use: ``by refl(Nat, 0)`` closes ``0 = 0``.
+   sort Stack : Sort → Sort;
+   op push : A * Stack(A) → Stack(A);
 
-.. code-block:: alg
-
-   import nat;
-   import core(refl);
-
-   lemma zero_is_zero
-     ⊢ 0 = 0;
+   lemma same(A : Sort, x : A, s : Stack(A))
+     ⊢ push(x, s) = push(x, s);
    proof
-     by refl(Nat, 0);
+     by refl(Stack(A), push(x, s));
    qed;
 
-But remember from :doc:`specs` that definitional equality is **α/β only**.
-``refl`` closes ``a = b`` only when ``a`` and ``b`` are *already* α/β-equal, so
-``refl(Nat, 0)`` proves ``0 = 0`` but **not** ``0 + 0 = 0`` — the operator ``+``
-never evaluates. To bridge that gap you need an equation and a way to *apply* it.
+That looks trivial, and it is — but note *when* it works, because that's the one
+thing newcomers trip on.
 
-Rewriting with a motive
-=======================
+What "the same term" means
+==========================
 
-The workhorses of equational reasoning are the two congruence rules. Each takes
-an equation and rewrites **one chosen subterm** of the goal:
+Algae has a built-in notion of when two terms are **the same** — it's called
+**definitional equality**, and it is deliberately tiny. Two terms are definitionally
+equal only when they become *literally identical* after two harmless clean-ups:
+
+- **Renaming a local variable.** The bound name in a ``∀``, ``∃``, or ``λ`` is
+  arbitrary — ``∀ (x : T) st x = x`` and ``∀ (y : T) st y = y`` are the same
+  statement. (Logicians call this *α*.)
+- **Carrying out a function application.** If you apply a ``λ`` (a little inline
+  function) to an argument, you may substitute the argument in. So
+  ``(λ (x : T) st x = x)(a)`` *is* ``a = a``. (This one is called *β*.)
+
+And **that's all** — "α/β equivalence only." Crucially, the *operators* you
+declared (``push``, ``pop``, ``top``, ``+`` …) are **inert**: the kernel never
+runs them and never applies your axioms on its own. So ``pop(push(x, s))`` is
+**not** automatically ``s`` — even though your axiom says they're equal — and
+``top(push(x, s))`` is not automatically ``x``. To the kernel those are just
+different symbol trees until *you* apply the equation that relates them.
+
+That's why ``refl`` closes ``push(x, s) = push(x, s)`` (identical trees) but would
+**not** close ``top(push(x, s)) = x`` (two different trees, equal only *by an
+axiom*). Bridging that gap is exactly what rewriting is for.
+
+The rewrite rules and the placeholder
+======================================
+
+The workhorses of equational reasoning are the two congruence rules. Each takes an
+equation and rewrites **one chosen subterm** of the goal:
 
 .. code-block:: alg
 
@@ -58,133 +75,132 @@ an equation and rewrites **one chosen subterm** of the goal:
      ⊢ P(b)
    end;
 
-The interesting argument is the last one, ``P`` — the **motive**. It's a function
-``T → Prop``: a proposition with a *hole*, and the hole marks exactly where the
-equation lands. The names say which way the equation runs *at proof time*:
+The interesting argument is the last one, ``P`` — a function ``T → Prop`` that is
+your goal *with a hole in it*. That hole marks exactly which subterm the equation
+lands on; it is a **placeholder** for the term being replaced. The names say which
+way the equation runs, reading it as ``a = b``:
 
-- **``forward``** takes ``eq : a = b`` and replaces ``a`` with ``b`` in the goal
-  — following the equation the way you read it, left to right.
-- **``backward``** takes ``eq : a = b`` and replaces ``b`` with ``a`` — using the
-  equation right to left, against its natural reading.
+- **``forward``** replaces ``a`` with ``b`` in the goal — following the equation
+  left to right, the way you read it.
+- **``backward``** replaces ``b`` with ``a`` — using the equation right to left.
 
-The ``_`` sugar
-===============
+You write the placeholder with ``_``. Writing the whole function as
+``λ (x : T) st …`` gets old fast, so ``_`` is sugar for it: ``top(_) = b`` means
+``λ (x : Stack(A)) st top(x) = b``. The ``_`` is the slot the equation's two sides
+plug into.
 
-Writing motives as ``λ (x : T) st …`` gets old fast, so ``_`` is sugar for that
-lambda: the motive ``n = _`` means ``λ (x : Nat) st n = x``. The ``_`` is the
-slot the equation's sides plug into.
+.. admonition:: Sugar on the way
+   :class: note
 
-Let's prove ``n = 0 + n``. We have ``add_zero_left(n) : 0 + n = n``, and we want
-to turn the ``0 + n`` on the right into ``n`` — replacing ``a`` (``0 + n``) with
-``b`` (``n``), which is **``forward``**:
+   A lighter surface syntax for rewriting is planned for Algae — one that will
+   read closer to "rewrite this equation here" and expand to an application of the
+   ``forward`` rule under the hood. The *mechanics* won't change: it will still be
+   ``forward`` doing the work, and everything you learn here will carry straight
+   over.
 
-.. code-block:: alg
+Equational reasoning on the stack
+=================================
 
-   import nat;
-   import core(refl, forward);
-
-   lemma zero_left_flip(n : Nat)
-     ⊢ n = 0 + n;
-   proof
-     by forward(Nat, 0 + n, n, add_zero_left(n), n = _)
-     then ⊢ n = n;
-     by refl(Nat, n);
-   qed;
-
-Read the call as: with the equation ``0 + n = n`` (so ``a = 0 + n`` and
-``b = n``) and the motive ``n = _``, rewrite ``0 + n`` to ``n``. Plug each side
-into the hole to see what it does:
-
-- ``a`` in the hole → ``n = 0 + n`` — our current goal.
-- ``b`` in the hole → ``n = n`` — the new goal after the rewrite.
-
-So the step turns ``n = 0 + n`` into ``n = n``, which ``refl`` closes. The motive
-is how you *point* at the ``0 + n`` on the right rather than the ``n`` on the
-left.
-
-``_`` is only shorthand — the motive is a plain lambda, and spelling it out
-long-hand checks identically. These two lines are the same step:
+Here's the smallest real rewrite. Push ``b`` then ``a`` onto the empty stack, pop
+once, and the top is ``b``. We know ``pop(push(a, …)) = …`` from ``pop_push``, so we
+rewrite that ``pop(push(a, …))`` **forward** into the stack underneath, then read
+off the top:
 
 .. code-block:: alg
 
-   import nat;
-   import core(refl, forward);
+   rule forward(T : Sort, a b : T, eq := a = b, P : T → Prop)
+     ⊢ P(b)
+     ────────────────────────
+     ⊢ P(a)
+   end;
 
-   lemma zero_left_flip(n : Nat)
-     ⊢ n = 0 + n;
+   sort Stack : Sort → Sort;
+   op empty : → Stack(A);
+   op push  : A * Stack(A) → Stack(A);
+   op pop   : Stack(A) → Stack(A);
+   op top   : Stack(A) → A;
+   axiom top_push(A : Sort, x : A, s : Stack(A))  ⊢ top(push(x, s)) = x;
+   axiom pop_push(A : Sort, x : A, s : Stack(A))  ⊢ pop(push(x, s)) = s;
+
+   lemma one_pop(A : Sort, a b : A)
+     ⊢ top(pop(push(a, push(b, empty)))) = b;
    proof
-     by forward(Nat, 0 + n, n, add_zero_left(n), λ (x : Nat) st n = x)
-     then ⊢ n = n;
-     by refl(Nat, n);
+     by forward(Stack(A), pop(push(a, push(b, empty))), push(b, empty),
+                pop_push(A, a, push(b, empty)), top(_) = b)
+     then ⊢ top(push(b, empty)) = b;
+     by top_push(A, b, empty);
    qed;
 
-Reach for ``_`` when the motive is obvious, and write the lambda when you want to
-be explicit about the bound variable.
+Read the placeholder ``top(_) = b`` by plugging each side of the equation
+``pop(push(a, …)) = push(b, empty)`` into the ``_``:
 
-When the motive misses
-======================
+- ``a`` side in the hole → ``top(pop(push(a, …))) = b`` — our current goal.
+- ``b`` side in the hole → ``top(push(b, empty)) = b`` — the goal after the
+  rewrite, which ``top_push`` closes.
 
-The motive has to reproduce the goal when the equation's ``a`` side fills the
-hole. Aim it at the wrong subterm and you get a very common error. Suppose we
-write ``_ = n`` by mistake:
+Deeper stacks work the same way — just more rewrites. Three pushes and two pops:
 
 .. code-block:: alg
 
-   import nat;
-   import core(refl, forward);
+   rule forward(T : Sort, a b : T, eq := a = b, P : T → Prop)
+     ⊢ P(b)
+     ────────────────────────
+     ⊢ P(a)
+   end;
 
-   lemma zero_left_flip(n : Nat)
-     ⊢ n = 0 + n;
+   sort Stack : Sort → Sort;
+   op empty : → Stack(A);
+   op push  : A * Stack(A) → Stack(A);
+   op pop   : Stack(A) → Stack(A);
+   op top   : Stack(A) → A;
+   axiom top_push(A : Sort, x : A, s : Stack(A))  ⊢ top(push(x, s)) = x;
+   axiom pop_push(A : Sort, x : A, s : Stack(A))  ⊢ pop(push(x, s)) = s;
+
+   lemma three_deep(A : Sort, a b c : A)
+     ⊢ top(pop(pop(push(a, push(b, push(c, empty)))))) = c;
    proof
-     by forward(Nat, 0 + n, n, add_zero_left(n), _ = n)
-     then ⊢ n = n;
-     by refl(Nat, n);
+     by forward(Stack(A), pop(push(a, push(b, push(c, empty)))), push(b, push(c, empty)),
+                pop_push(A, a, push(b, push(c, empty))), top(pop(_)) = c)
+     then ⊢ top(pop(push(b, push(c, empty)))) = c;
+     by forward(Stack(A), pop(push(b, push(c, empty))), push(c, empty),
+                pop_push(A, b, push(c, empty)), top(_) = c)
+     then ⊢ top(push(c, empty)) = c;
+     by top_push(A, c, empty);
    qed;
+
+.. admonition:: This only reaches *fixed* depths
+   :class: warning
+
+   Notice what we can and can't do. We can prove the pop-through-``n``-pushes fact
+   for ``n = 1``, ``n = 2``, ``n = 3`` — but each is a *separate* proof, spelled
+   out one rewrite per push. There is no way, with rewriting alone, to prove the
+   statement for a stack of **arbitrary** length in one go — you'd need to write
+   infinitely many rewrites. Reasoning about arbitrarily large values is exactly
+   what **induction** is for, and it's the subject of the next chapter.
+
+When the placeholder misses
+===========================
+
+The placeholder has to reproduce the goal when the equation's ``a`` side fills the
+hole. Aim it at the wrong subterm and you get a very common error. In ``one_pop``,
+suppose we wrote ``_ = b`` — a hole over the *whole* left side — instead of
+``top(_) = b``:
 
 .. code-block:: text
 
    error: tactic `forward`: rule conclusion does not match the current goal
-     the rule concludes:  (λ (x : Nat) st x = n)(0 + n)
-     but the goal is:     n = 0 + n
+     the rule concludes:  (λ (x : Stack(A)) st x = b)(pop(push(a, push(b, empty))))
+     but the goal is:     top(pop(push(a, push(b, empty)))) = b
 
-Here ``_ = n`` is ``λ (x : Nat) st x = n``. With ``a = 0 + n`` in the hole it
-produces ``0 + n = n`` — *not* the goal ``n = 0 + n``. When you hit "rule
-conclusion does not match the current goal" on a rewrite, the motive is almost
-always the culprit: move the ``_`` to the subterm you actually mean to touch.
+With ``_ = b`` the hole swallows the ``top(…)`` as well, so filling it produces
+``pop(push(a, …)) = b`` — *not* the goal. When you hit "rule conclusion does not
+match the current goal" on a rewrite, the placeholder is almost always the culprit:
+move the ``_`` to the subterm you actually mean to touch.
 
 The other direction: ``backward``
 =================================
 
-Use ``backward`` when you need to go the other way — expand a term to match an
-equation's *right*-hand side. This is the everyday move in an induction step.
-Here we're given the induction hypothesis ``ih : k + 0 = k`` and must prove
-``s(k) + 0 = s(k)``; we rewrite the ``k`` inside ``s(_)`` *backward* into
-``k + 0`` (replacing ``b = k`` with ``a = k + 0``) so that ``add_succ_left`` can
-finish it:
-
-.. code-block:: alg
-
-   import nat;
-   import core(backward);
-
-   lemma succ_step(k : Nat, ih := k + 0 = k)
-     ⊢ s(k) + 0 = s(k);
-   proof
-     by backward(Nat, k + 0, k, ih, s(k) + 0 = s(_))
-     then ⊢ s(k) + 0 = s(k + 0);
-     by add_succ_left(k, 0);
-   qed;
-
-Notice the equation here is ``ih`` — a *hypothesis*, not an axiom. Any proof of an
-equality will do as the ``eq`` argument, which is what makes rewriting with your
-induction hypothesis possible. You'll see this exact step inside a real induction
-in :doc:`induction`.
-
-.. admonition:: forward or backward?
-   :class: note
-
-   Pick by what you're doing to the goal, reading the equation as ``a = b``:
-   to turn an ``a`` you can see into ``b``, use ``forward``; to turn a ``b`` into
-   an ``a`` (usually to set up another rule), use ``backward``. If a rewrite is
-   rejected with "rule conclusion does not match," you've either aimed the motive
-   wrong or picked the wrong direction — try its mirror.
+``forward`` follows an equation left to right; ``backward`` runs it the other way,
+replacing ``b`` with ``a`` — usually to *expand* a term so another rule can fire.
+That move is the everyday shape of an induction step, so we'll meet ``backward``
+doing real work in the very next chapter, :doc:`induction`.

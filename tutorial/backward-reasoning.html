@@ -198,11 +198,10 @@
 <li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Reasoning backward</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Algebraic specification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rewrite-reflexivity.html">Reflexivity and rewriting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theories.html">Theories, laws, and models</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><input aria-label="Toggle navigation of A tour of the standard library" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -211,7 +210,6 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -291,7 +289,15 @@ has closed.</p>
 <code class="docutils literal notranslate"><span class="pre">B</span></code>; we’ll assemble <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code>. In Algae you take assumptions as <strong>lemma
 parameters</strong>: writing <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">:=</span> <span class="pre">A</span></code> in the parameter list means “<code class="docutils literal notranslate"><span class="pre">x</span></code> is a proof of
 <code class="docutils literal notranslate"><span class="pre">A</span></code>,” and you discharge a goal that matches it by citing <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">x</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_intro</span><span class="p">);</span>
+<p>We’ll spell the <code class="docutils literal notranslate"><span class="pre">and_intro</span></code> rule out right in the buffer, rather than
+<code class="docutils literal notranslate"><span class="pre">import</span></code>-ing it from <code class="docutils literal notranslate"><span class="pre">core</span></code>, so the rule you’re applying and the proof that
+applies it sit side by side:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">and_intro</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∧</span> <span class="n">Q</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">both</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="o">:=</span> <span class="n">A</span><span class="p">,</span> <span class="n">y</span> <span class="o">:=</span> <span class="n">B</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">;</span>
@@ -342,23 +348,29 @@ continuation to the number of premises and the proof writes itself.</p>
 <div class="tip admonition">
 <p class="admonition-title">Your turn</p>
 <p><code class="docutils literal notranslate"><span class="pre">and_left</span></code> has a <em>single</em> premise (the conjunction), so it continues with
-<code class="docutils literal notranslate"><span class="pre">then</span></code>. Given a proof <code class="docutils literal notranslate"><span class="pre">h</span></code> of <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code>, pull out the left half. Fill the
-hole — press <strong>Check ▶</strong>, and if you’re stuck, click the hole for a
-suggestion.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">and_left</span><span class="p">);</span>
+<code class="docutils literal notranslate"><span class="pre">then</span></code>. Given a proof <code class="docutils literal notranslate"><span class="pre">h</span></code> of <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code>, pull out the left half. The buffer
+already applies <code class="docutils literal notranslate"><span class="pre">and_left(A,</span> <span class="pre">B)</span></code> — but with a trailing <code class="docutils literal notranslate"><span class="pre">?</span></code>, which
+<em>inspects</em> the step instead of committing to it. Press <strong>Check ▶</strong> and the
+kernel reports the subgoal that <code class="docutils literal notranslate"><span class="pre">and_left</span></code> leaves; take it from there.</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">and_left</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span> <span class="o">∧</span> <span class="n">Q</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span>
+<span class="k">end</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">left_half</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">h</span> <span class="o">:=</span> <span class="n">A</span> <span class="o">∧</span> <span class="n">B</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">A</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">and_left</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>?<span class="p">;</span>
 <span class="kp">wip</span><span class="p">;</span>
 </pre></div>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p><code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">and_left(A,</span> <span class="pre">B)</span></code> matches the goal <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span></code> (the rule’s conclusion is
-<code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">P</span></code> with <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">=</span> <span class="pre">A</span></code>), and leaves its one premise <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code> — continue
-<code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B;</span></code> and close it <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">h;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">and_left(A,</span> <span class="pre">B)</span></code> matches the goal <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span></code> (the rule’s conclusion is
+<code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">P</span></code> with <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">=</span> <span class="pre">A</span></code>), and its one premise <code class="docutils literal notranslate"><span class="pre">⊢</span> <span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B</span></code> is what the <code class="docutils literal notranslate"><span class="pre">?</span></code>
+report shows you. Drop the <code class="docutils literal notranslate"><span class="pre">?</span></code>, continue <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">A</span> <span class="pre">∧</span> <span class="pre">B;</span></code>, close it
+<code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">h;</span></code>, and turn the block’s <code class="docutils literal notranslate"><span class="pre">wip</span></code> into <code class="docutils literal notranslate"><span class="pre">qed</span></code>.</p>
 </div>
 </div>
 </section>

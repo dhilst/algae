@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Two worlds and a vocabulary" href="worlds.html"><link rel="prev" title="Sorts, operations, and equations" href="specs.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Proof techniques crash course" href="proof-techniques.html"><link rel="prev" title="Algebraic specification" href="specs.html">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
         <title>Reflexivity and rewriting - Algae</title>
@@ -198,11 +198,10 @@
 <li class="toctree-l2"><a class="reference internal" href="inference-rules.html">Inference rules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="backward-reasoning.html">Reasoning backward</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofs.html">Building proofs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="specs.html">Sorts, operations, and equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specs.html">Algebraic specification</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Reflexivity and rewriting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="worlds.html">Two worlds and a vocabulary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="induction.html">Induction and friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="stack.html">Specifying a stack</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Specifying error behavior</a></li>
 <li class="toctree-l2"><a class="reference internal" href="theories.html">Theories, laws, and models</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="tour/index.html">A tour of the standard library</a><input aria-label="Toggle navigation of A tour of the standard library" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -211,7 +210,6 @@
 <li class="toctree-l3"><a class="reference internal" href="tour/data.html">Reasoning about data</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="proof-techniques.html">Proof techniques crash course</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliary-lemmas.html">Proving with auxiliary lemmas</a></li>
 </ul>
 </li>
@@ -257,40 +255,57 @@
         <article role="main" id="furo-main-content">
           <section id="reflexivity-and-rewriting">
 <h1>Reflexivity and rewriting<a class="headerlink" href="#reflexivity-and-rewriting" title="Link to this heading">¶</a></h1>
-<p>Equations are the heart of an algebraic specification, so Algae gives you three
-tools for them, all in <code class="docutils literal notranslate"><span class="pre">core</span></code>: <strong>reflexivity</strong> to close <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code>, and the two
-<strong>rewrite</strong> rules to apply an equation to <em>part</em> of a goal.</p>
+<p>Equations are the heart of an algebraic specification, so this chapter is about
+<em>using</em> them: <strong>reflexivity</strong> to close <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code>, and the two <strong>rewrite</strong> rules to
+apply an equation to one part of a goal. We’ll reason about the stack from
+<a class="reference internal" href="specs.html"><span class="doc">Algebraic specification</span></a>.</p>
 <section id="reflexivity">
 <h2>Reflexivity<a class="headerlink" href="#reflexivity" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">refl</span></code> proves anything equal to itself. It’s an axiom — zero premises — so it
-closes a goal outright:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">axiom</span> <span class="n">refl</span><span class="p">(</span>
-  <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span>
-  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span>
-<span class="p">)</span>
+closes a goal outright. We’ll write it out in the buffer rather than importing it:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">axiom</span> <span class="n">refl</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>You instantiate it at the point of use: <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">refl(Nat,</span> <span class="pre">0)</span></code> closes <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">);</span>
 
-<span class="k">lemma</span> <span class="n">zero_is_zero</span>
-  <span class="o">⊢</span> <span class="m">0</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
+<span class="k">sort</span> <span class="n">Stack</span> <span class="p">:</span> <span class="kt">Sort</span> <span class="o">→</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">push</span> <span class="p">:</span> <span class="n">A</span> <span class="o">*</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+
+<span class="k">lemma</span> <span class="n">same</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
+  <span class="o">⊢</span> <span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">=</span> <span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">);</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">));</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>But remember from <a class="reference internal" href="specs.html"><span class="doc">Sorts, operations, and equations</span></a> that definitional equality is <strong>α/β only</strong>.
-<code class="docutils literal notranslate"><span class="pre">refl</span></code> closes <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code> only when <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> are <em>already</em> α/β-equal, so
-<code class="docutils literal notranslate"><span class="pre">refl(Nat,</span> <span class="pre">0)</span></code> proves <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code> but <strong>not</strong> <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code> — the operator <code class="docutils literal notranslate"><span class="pre">+</span></code>
-never evaluates. To bridge that gap you need an equation and a way to <em>apply</em> it.</p>
+<p>That looks trivial, and it is — but note <em>when</em> it works, because that’s the one
+thing newcomers trip on.</p>
 </section>
-<section id="rewriting-with-a-motive">
-<h2>Rewriting with a motive<a class="headerlink" href="#rewriting-with-a-motive" title="Link to this heading">¶</a></h2>
-<p>The workhorses of equational reasoning are the two congruence rules. Each takes
-an equation and rewrites <strong>one chosen subterm</strong> of the goal:</p>
+<section id="what-the-same-term-means">
+<h2>What “the same term” means<a class="headerlink" href="#what-the-same-term-means" title="Link to this heading">¶</a></h2>
+<p>Algae has a built-in notion of when two terms are <strong>the same</strong> — it’s called
+<strong>definitional equality</strong>, and it is deliberately tiny. Two terms are definitionally
+equal only when they become <em>literally identical</em> after two harmless clean-ups:</p>
+<ul class="simple">
+<li><p><strong>Renaming a local variable.</strong> The bound name in a <code class="docutils literal notranslate"><span class="pre">∀</span></code>, <code class="docutils literal notranslate"><span class="pre">∃</span></code>, or <code class="docutils literal notranslate"><span class="pre">λ</span></code> is
+arbitrary — <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">(y</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">y</span> <span class="pre">=</span> <span class="pre">y</span></code> are the same
+statement. (Logicians call this <em>α</em>.)</p></li>
+<li><p><strong>Carrying out a function application.</strong> If you apply a <code class="docutils literal notranslate"><span class="pre">λ</span></code> (a little inline
+function) to an argument, you may substitute the argument in. So
+<code class="docutils literal notranslate"><span class="pre">(λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">x)(a)</span></code> <em>is</em> <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">a</span></code>. (This one is called <em>β</em>.)</p></li>
+</ul>
+<p>And <strong>that’s all</strong> — “α/β equivalence only.” Crucially, the <em>operators</em> you
+declared (<code class="docutils literal notranslate"><span class="pre">push</span></code>, <code class="docutils literal notranslate"><span class="pre">pop</span></code>, <code class="docutils literal notranslate"><span class="pre">top</span></code>, <code class="docutils literal notranslate"><span class="pre">+</span></code> …) are <strong>inert</strong>: the kernel never
+runs them and never applies your axioms on its own. So <code class="docutils literal notranslate"><span class="pre">pop(push(x,</span> <span class="pre">s))</span></code> is
+<strong>not</strong> automatically <code class="docutils literal notranslate"><span class="pre">s</span></code> — even though your axiom says they’re equal — and
+<code class="docutils literal notranslate"><span class="pre">top(push(x,</span> <span class="pre">s))</span></code> is not automatically <code class="docutils literal notranslate"><span class="pre">x</span></code>. To the kernel those are just
+different symbol trees until <em>you</em> apply the equation that relates them.</p>
+<p>That’s why <code class="docutils literal notranslate"><span class="pre">refl</span></code> closes <code class="docutils literal notranslate"><span class="pre">push(x,</span> <span class="pre">s)</span> <span class="pre">=</span> <span class="pre">push(x,</span> <span class="pre">s)</span></code> (identical trees) but would
+<strong>not</strong> close <code class="docutils literal notranslate"><span class="pre">top(push(x,</span> <span class="pre">s))</span> <span class="pre">=</span> <span class="pre">x</span></code> (two different trees, equal only <em>by an
+axiom</em>). Bridging that gap is exactly what rewriting is for.</p>
+</section>
+<section id="the-rewrite-rules-and-the-placeholder">
+<h2>The rewrite rules and the placeholder<a class="headerlink" href="#the-rewrite-rules-and-the-placeholder" title="Link to this heading">¶</a></h2>
+<p>The workhorses of equational reasoning are the two congruence rules. Each takes an
+equation and rewrites <strong>one chosen subterm</strong> of the goal:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">forward</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
   <span class="p">────────────────────────</span>
@@ -304,122 +319,125 @@ an equation and rewrites <strong>one chosen subterm</strong> of the goal:</p>
 <span class="k">end</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>The interesting argument is the last one, <code class="docutils literal notranslate"><span class="pre">P</span></code> — the <strong>motive</strong>. It’s a function
-<code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">→</span> <span class="pre">Prop</span></code>: a proposition with a <em>hole</em>, and the hole marks exactly where the
-equation lands. The names say which way the equation runs <em>at proof time</em>:</p>
+<p>The interesting argument is the last one, <code class="docutils literal notranslate"><span class="pre">P</span></code> — a function <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">→</span> <span class="pre">Prop</span></code> that is
+your goal <em>with a hole in it</em>. That hole marks exactly which subterm the equation
+lands on; it is a <strong>placeholder</strong> for the term being replaced. The names say which
+way the equation runs, reading it as <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code>:</p>
 <ul class="simple">
-<li><p><strong>``forward``</strong> takes <code class="docutils literal notranslate"><span class="pre">eq</span> <span class="pre">:</span> <span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code> and replaces <code class="docutils literal notranslate"><span class="pre">a</span></code> with <code class="docutils literal notranslate"><span class="pre">b</span></code> in the goal
-— following the equation the way you read it, left to right.</p></li>
-<li><p><strong>``backward``</strong> takes <code class="docutils literal notranslate"><span class="pre">eq</span> <span class="pre">:</span> <span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code> and replaces <code class="docutils literal notranslate"><span class="pre">b</span></code> with <code class="docutils literal notranslate"><span class="pre">a</span></code> — using the
-equation right to left, against its natural reading.</p></li>
+<li><p><strong>``forward``</strong> replaces <code class="docutils literal notranslate"><span class="pre">a</span></code> with <code class="docutils literal notranslate"><span class="pre">b</span></code> in the goal — following the equation
+left to right, the way you read it.</p></li>
+<li><p><strong>``backward``</strong> replaces <code class="docutils literal notranslate"><span class="pre">b</span></code> with <code class="docutils literal notranslate"><span class="pre">a</span></code> — using the equation right to left.</p></li>
 </ul>
+<p>You write the placeholder with <code class="docutils literal notranslate"><span class="pre">_</span></code>. Writing the whole function as
+<code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">…</span></code> gets old fast, so <code class="docutils literal notranslate"><span class="pre">_</span></code> is sugar for it: <code class="docutils literal notranslate"><span class="pre">top(_)</span> <span class="pre">=</span> <span class="pre">b</span></code> means
+<code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">Stack(A))</span> <span class="pre">st</span> <span class="pre">top(x)</span> <span class="pre">=</span> <span class="pre">b</span></code>. The <code class="docutils literal notranslate"><span class="pre">_</span></code> is the slot the equation’s two sides
+plug into.</p>
+<div class="note admonition">
+<p class="admonition-title">Sugar on the way</p>
+<p>A lighter surface syntax for rewriting is planned for Algae — one that will
+read closer to “rewrite this equation here” and expand to an application of the
+<code class="docutils literal notranslate"><span class="pre">forward</span></code> rule under the hood. The <em>mechanics</em> won’t change: it will still be
+<code class="docutils literal notranslate"><span class="pre">forward</span></code> doing the work, and everything you learn here will carry straight
+over.</p>
+</div>
 </section>
-<section id="the-sugar">
-<h2>The <code class="docutils literal notranslate"><span class="pre">_</span></code> sugar<a class="headerlink" href="#the-sugar" title="Link to this heading">¶</a></h2>
-<p>Writing motives as <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">…</span></code> gets old fast, so <code class="docutils literal notranslate"><span class="pre">_</span></code> is sugar for that
-lambda: the motive <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">_</span></code> means <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">Nat)</span> <span class="pre">st</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">x</span></code>. The <code class="docutils literal notranslate"><span class="pre">_</span></code> is the
-slot the equation’s sides plug into.</p>
-<p>Let’s prove <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code>. We have <code class="docutils literal notranslate"><span class="pre">add_zero_left(n)</span> <span class="pre">:</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>, and we want
-to turn the <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> on the right into <code class="docutils literal notranslate"><span class="pre">n</span></code> — replacing <code class="docutils literal notranslate"><span class="pre">a</span></code> (<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code>) with
-<code class="docutils literal notranslate"><span class="pre">b</span></code> (<code class="docutils literal notranslate"><span class="pre">n</span></code>), which is <strong>``forward``</strong>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">forward</span><span class="p">);</span>
+<section id="equational-reasoning-on-the-stack">
+<h2>Equational reasoning on the stack<a class="headerlink" href="#equational-reasoning-on-the-stack" title="Link to this heading">¶</a></h2>
+<p>Here’s the smallest real rewrite. Push <code class="docutils literal notranslate"><span class="pre">b</span></code> then <code class="docutils literal notranslate"><span class="pre">a</span></code> onto the empty stack, pop
+once, and the top is <code class="docutils literal notranslate"><span class="pre">b</span></code>. We know <code class="docutils literal notranslate"><span class="pre">pop(push(a,</span> <span class="pre">…))</span> <span class="pre">=</span> <span class="pre">…</span></code> from <code class="docutils literal notranslate"><span class="pre">pop_push</span></code>, so we
+rewrite that <code class="docutils literal notranslate"><span class="pre">pop(push(a,</span> <span class="pre">…))</span></code> <strong>forward</strong> into the stack underneath, then read
+off the top:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">forward</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
 
-<span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">sort</span> <span class="n">Stack</span> <span class="p">:</span> <span class="kt">Sort</span> <span class="o">→</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">empty</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+<span class="k">op</span> <span class="n">push</span>  <span class="p">:</span> <span class="n">A</span> <span class="o">*</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+<span class="k">op</span> <span class="n">pop</span>   <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+<span class="k">op</span> <span class="n">top</span>   <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">A</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">top_push</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>  <span class="o">⊢</span> <span class="n">top</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">pop_push</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>  <span class="o">⊢</span> <span class="n">pop</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="o">=</span> <span class="n">s</span><span class="p">;</span>
+
+<span class="k">lemma</span> <span class="n">one_pop</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">A</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">top</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">empty</span><span class="p">))))</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">forward</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">n</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">forward</span><span class="p">(</span><span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">pop</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">empty</span><span class="p">))),</span> <span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">empty</span><span class="p">),</span>
+             <span class="n">pop_push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">empty</span><span class="p">)),</span> <span class="n">top</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">b</span><span class="p">)</span>
+  <span class="n">then</span> <span class="o">⊢</span> <span class="n">top</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">empty</span><span class="p">))</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">top_push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">empty</span><span class="p">);</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Read the call as: with the equation <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code> (so <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> and
-<code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">n</span></code>) and the motive <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">_</span></code>, rewrite <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> to <code class="docutils literal notranslate"><span class="pre">n</span></code>. Plug each side
-into the hole to see what it does:</p>
+<p>Read the placeholder <code class="docutils literal notranslate"><span class="pre">top(_)</span> <span class="pre">=</span> <span class="pre">b</span></code> by plugging each side of the equation
+<code class="docutils literal notranslate"><span class="pre">pop(push(a,</span> <span class="pre">…))</span> <span class="pre">=</span> <span class="pre">push(b,</span> <span class="pre">empty)</span></code> into the <code class="docutils literal notranslate"><span class="pre">_</span></code>:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code> in the hole → <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> — our current goal.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">b</span></code> in the hole → <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code> — the new goal after the rewrite.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code> side in the hole → <code class="docutils literal notranslate"><span class="pre">top(pop(push(a,</span> <span class="pre">…)))</span> <span class="pre">=</span> <span class="pre">b</span></code> — our current goal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">b</span></code> side in the hole → <code class="docutils literal notranslate"><span class="pre">top(push(b,</span> <span class="pre">empty))</span> <span class="pre">=</span> <span class="pre">b</span></code> — the goal after the
+rewrite, which <code class="docutils literal notranslate"><span class="pre">top_push</span></code> closes.</p></li>
 </ul>
-<p>So the step turns <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> into <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>, which <code class="docutils literal notranslate"><span class="pre">refl</span></code> closes. The motive
-is how you <em>point</em> at the <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> on the right rather than the <code class="docutils literal notranslate"><span class="pre">n</span></code> on the
-left.</p>
-<p><code class="docutils literal notranslate"><span class="pre">_</span></code> is only shorthand — the motive is a plain lambda, and spelling it out
-long-hand checks identically. These two lines are the same step:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">forward</span><span class="p">);</span>
+<p>Deeper stacks work the same way — just more rewrites. Three pushes and two pops:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">forward</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">eq</span> <span class="o">:=</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+  <span class="p">────────────────────────</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="k">end</span><span class="p">;</span>
 
-<span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
+<span class="k">sort</span> <span class="n">Stack</span> <span class="p">:</span> <span class="kt">Sort</span> <span class="o">→</span> <span class="kt">Sort</span><span class="p">;</span>
+<span class="k">op</span> <span class="n">empty</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+<span class="k">op</span> <span class="n">push</span>  <span class="p">:</span> <span class="n">A</span> <span class="o">*</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+<span class="k">op</span> <span class="n">pop</span>   <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+<span class="k">op</span> <span class="n">top</span>   <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">→</span> <span class="n">A</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">top_push</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>  <span class="o">⊢</span> <span class="n">top</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">axiom</span> <span class="n">pop_push</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">s</span> <span class="p">:</span> <span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>  <span class="o">⊢</span> <span class="n">pop</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="o">=</span> <span class="n">s</span><span class="p">;</span>
+
+<span class="k">lemma</span> <span class="n">three_deep</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">a</span> <span class="n">b</span> <span class="n">c</span> <span class="p">:</span> <span class="n">A</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">top</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">))))))</span> <span class="o">=</span> <span class="n">c</span><span class="p">;</span>
 <span class="k">proof</span>
-  <span class="k">by</span> <span class="n">forward</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="o">λ</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">forward</span><span class="p">(</span><span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">pop</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">)))),</span> <span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">)),</span>
+             <span class="n">pop_push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">))),</span> <span class="n">top</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">_</span><span class="p">))</span> <span class="o">=</span> <span class="n">c</span><span class="p">)</span>
+  <span class="n">then</span> <span class="o">⊢</span> <span class="n">top</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">))))</span> <span class="o">=</span> <span class="n">c</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">forward</span><span class="p">(</span><span class="n">Stack</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">pop</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">))),</span> <span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">),</span>
+             <span class="n">pop_push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">)),</span> <span class="n">top</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">c</span><span class="p">)</span>
+  <span class="n">then</span> <span class="o">⊢</span> <span class="n">top</span><span class="p">(</span><span class="n">push</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">))</span> <span class="o">=</span> <span class="n">c</span><span class="p">;</span>
+  <span class="k">by</span> <span class="n">top_push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">empty</span><span class="p">);</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>Reach for <code class="docutils literal notranslate"><span class="pre">_</span></code> when the motive is obvious, and write the lambda when you want to
-be explicit about the bound variable.</p>
+<div class="warning admonition">
+<p class="admonition-title">This only reaches <em>fixed</em> depths</p>
+<p>Notice what we can and can’t do. We can prove the pop-through-<code class="docutils literal notranslate"><span class="pre">n</span></code>-pushes fact
+for <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">3</span></code> — but each is a <em>separate</em> proof, spelled
+out one rewrite per push. There is no way, with rewriting alone, to prove the
+statement for a stack of <strong>arbitrary</strong> length in one go — you’d need to write
+infinitely many rewrites. Reasoning about arbitrarily large values is exactly
+what <strong>induction</strong> is for, and it’s the subject of the next chapter.</p>
+</div>
 </section>
-<section id="when-the-motive-misses">
-<h2>When the motive misses<a class="headerlink" href="#when-the-motive-misses" title="Link to this heading">¶</a></h2>
-<p>The motive has to reproduce the goal when the equation’s <code class="docutils literal notranslate"><span class="pre">a</span></code> side fills the
-hole. Aim it at the wrong subterm and you get a very common error. Suppose we
-write <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">=</span> <span class="pre">n</span></code> by mistake:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">forward</span><span class="p">);</span>
-
-<span class="k">lemma</span> <span class="n">zero_left_flip</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
-<span class="k">proof</span>
-  <span class="k">by</span> <span class="n">forward</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="m">0</span> <span class="o">+</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">add_zero_left</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">_</span> <span class="o">=</span> <span class="n">n</span><span class="p">)</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
-  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
-<span class="k">qed</span><span class="p">;</span>
-</pre></div>
-</div>
+<section id="when-the-placeholder-misses">
+<h2>When the placeholder misses<a class="headerlink" href="#when-the-placeholder-misses" title="Link to this heading">¶</a></h2>
+<p>The placeholder has to reproduce the goal when the equation’s <code class="docutils literal notranslate"><span class="pre">a</span></code> side fills the
+hole. Aim it at the wrong subterm and you get a very common error. In <code class="docutils literal notranslate"><span class="pre">one_pop</span></code>,
+suppose we wrote <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">=</span> <span class="pre">b</span></code> — a hole over the <em>whole</em> left side — instead of
+<code class="docutils literal notranslate"><span class="pre">top(_)</span> <span class="pre">=</span> <span class="pre">b</span></code>:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>error: tactic `forward`: rule conclusion does not match the current goal
-  the rule concludes:  (λ (x : Nat) st x = n)(0 + n)
-  but the goal is:     n = 0 + n
+  the rule concludes:  (λ (x : Stack(A)) st x = b)(pop(push(a, push(b, empty))))
+  but the goal is:     top(pop(push(a, push(b, empty)))) = b
 </pre></div>
 </div>
-<p>Here <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">=</span> <span class="pre">n</span></code> is <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">Nat)</span> <span class="pre">st</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">n</span></code>. With <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code> in the hole it
-produces <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code> — <em>not</em> the goal <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span></code>. When you hit “rule
-conclusion does not match the current goal” on a rewrite, the motive is almost
-always the culprit: move the <code class="docutils literal notranslate"><span class="pre">_</span></code> to the subterm you actually mean to touch.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">=</span> <span class="pre">b</span></code> the hole swallows the <code class="docutils literal notranslate"><span class="pre">top(…)</span></code> as well, so filling it produces
+<code class="docutils literal notranslate"><span class="pre">pop(push(a,</span> <span class="pre">…))</span> <span class="pre">=</span> <span class="pre">b</span></code> — <em>not</em> the goal. When you hit “rule conclusion does not
+match the current goal” on a rewrite, the placeholder is almost always the culprit:
+move the <code class="docutils literal notranslate"><span class="pre">_</span></code> to the subterm you actually mean to touch.</p>
 </section>
 <section id="the-other-direction-backward">
 <h2>The other direction: <code class="docutils literal notranslate"><span class="pre">backward</span></code><a class="headerlink" href="#the-other-direction-backward" title="Link to this heading">¶</a></h2>
-<p>Use <code class="docutils literal notranslate"><span class="pre">backward</span></code> when you need to go the other way — expand a term to match an
-equation’s <em>right</em>-hand side. This is the everyday move in an induction step.
-Here we’re given the induction hypothesis <code class="docutils literal notranslate"><span class="pre">ih</span> <span class="pre">:</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">k</span></code> and must prove
-<code class="docutils literal notranslate"><span class="pre">s(k)</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">s(k)</span></code>; we rewrite the <code class="docutils literal notranslate"><span class="pre">k</span></code> inside <code class="docutils literal notranslate"><span class="pre">s(_)</span></code> <em>backward</em> into
-<code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span></code> (replacing <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">k</span></code> with <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span></code>) so that <code class="docutils literal notranslate"><span class="pre">add_succ_left</span></code> can
-finish it:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">nat</span><span class="p">;</span>
-<span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">backward</span><span class="p">);</span>
-
-<span class="k">lemma</span> <span class="n">succ_step</span><span class="p">(</span><span class="n">k</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">,</span> <span class="n">ih</span> <span class="o">:=</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">k</span><span class="p">)</span>
-  <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">);</span>
-<span class="k">proof</span>
-  <span class="k">by</span> <span class="n">backward</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">ih</span><span class="p">,</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">_</span><span class="p">))</span>
-  <span class="n">then</span> <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">);</span>
-  <span class="k">by</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>
-<span class="k">qed</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>Notice the equation here is <code class="docutils literal notranslate"><span class="pre">ih</span></code> — a <em>hypothesis</em>, not an axiom. Any proof of an
-equality will do as the <code class="docutils literal notranslate"><span class="pre">eq</span></code> argument, which is what makes rewriting with your
-induction hypothesis possible. You’ll see this exact step inside a real induction
-in <a class="reference internal" href="induction.html"><span class="doc">Induction and friends</span></a>.</p>
-<div class="note admonition">
-<p class="admonition-title">forward or backward?</p>
-<p>Pick by what you’re doing to the goal, reading the equation as <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">b</span></code>:
-to turn an <code class="docutils literal notranslate"><span class="pre">a</span></code> you can see into <code class="docutils literal notranslate"><span class="pre">b</span></code>, use <code class="docutils literal notranslate"><span class="pre">forward</span></code>; to turn a <code class="docutils literal notranslate"><span class="pre">b</span></code> into
-an <code class="docutils literal notranslate"><span class="pre">a</span></code> (usually to set up another rule), use <code class="docutils literal notranslate"><span class="pre">backward</span></code>. If a rewrite is
-rejected with “rule conclusion does not match,” you’ve either aimed the motive
-wrong or picked the wrong direction — try its mirror.</p>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">forward</span></code> follows an equation left to right; <code class="docutils literal notranslate"><span class="pre">backward</span></code> runs it the other way,
+replacing <code class="docutils literal notranslate"><span class="pre">b</span></code> with <code class="docutils literal notranslate"><span class="pre">a</span></code> — usually to <em>expand</em> a term so another rule can fire.
+That move is the everyday shape of an induction step, so we’ll meet <code class="docutils literal notranslate"><span class="pre">backward</span></code>
+doing real work in the very next chapter, <a class="reference internal" href="induction.html"><span class="doc">Induction and friends</span></a>.</p>
 </section>
 </section>
 
@@ -428,12 +446,12 @@ wrong or picked the wrong direction — try its mirror.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="worlds.html">
+          <a class="next-page" href="proof-techniques.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Two worlds and a vocabulary</div>
+                <div class="title">Proof techniques crash course</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -444,7 +462,7 @@ wrong or picked the wrong direction — try its mirror.</p>
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Sorts, operations, and equations</div>
+                <div class="title">Algebraic specification</div>
                 
               </div>
             </a>
@@ -480,9 +498,10 @@ wrong or picked the wrong direction — try its mirror.</p>
             <ul>
 <li><a class="reference internal" href="#">Reflexivity and rewriting</a><ul>
 <li><a class="reference internal" href="#reflexivity">Reflexivity</a></li>
-<li><a class="reference internal" href="#rewriting-with-a-motive">Rewriting with a motive</a></li>
-<li><a class="reference internal" href="#the-sugar">The <code class="docutils literal notranslate"><span class="pre">_</span></code> sugar</a></li>
-<li><a class="reference internal" href="#when-the-motive-misses">When the motive misses</a></li>
+<li><a class="reference internal" href="#what-the-same-term-means">What “the same term” means</a></li>
+<li><a class="reference internal" href="#the-rewrite-rules-and-the-placeholder">The rewrite rules and the placeholder</a></li>
+<li><a class="reference internal" href="#equational-reasoning-on-the-stack">Equational reasoning on the stack</a></li>
+<li><a class="reference internal" href="#when-the-placeholder-misses">When the placeholder misses</a></li>
 <li><a class="reference internal" href="#the-other-direction-backward">The other direction: <code class="docutils literal notranslate"><span class="pre">backward</span></code></a></li>
 </ul>
 </li>

@@ -3,5 +3,5 @@ import core(implication_intro, and_left);
 lemma proj(A B : Prop)
   ⊢ (A ∧ B) ⇒ A;
 proof
-  by wip;
+  by wip(?goal);
 wip;
