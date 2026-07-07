@@ -76,28 +76,35 @@ async function upgradePlayground(mountAlgaeEditor) {
   const host = document.getElementById("algae-playground");
   if (!host) return;
 
-  // A `?src=<url>` query parameter overrides the page's default seed, so a proof
-  // file (e.g. a game room) can be opened straight in the playground. `?module=`
-  // optionally names the checker unit; otherwise it's derived from the filename.
+  // A `?q=<url>` query parameter overrides the page's default seed, so any proof
+  // file — a relative path (a game room) or an absolute URL (e.g. a
+  // raw.githubusercontent.com link) — can be opened straight in the playground.
+  // This makes proofs shareable: whatever is in the box goes into `?q=`, and a
+  // `?q=` on load is fetched automatically. `?module=` optionally names the
+  // checker unit; otherwise it's derived from the file name.
   const params = new URLSearchParams(window.location.search);
-  const srcParam = params.get("src");
-  const seedUrl = srcParam || host.getAttribute("data-seed-url");
+  const qParam = params.get("q");
+  const seedUrl = qParam || host.getAttribute("data-seed-url");
   let moduleName = params.get("module") || host.getAttribute("data-module") || "playground";
-  if (srcParam && !params.get("module")) {
-    const stem = srcParam.split(/[\/\\]/).pop().replace(/\.alg$/, "");
+  if (qParam && !params.get("module")) {
+    const stem = qParam.split(/[?#]/)[0].split(/[\/\\]/).pop().replace(/\.alg$/, "");
     if (stem) moduleName = stem;
   }
 
   let doc = host.getAttribute("data-seed") || "";
   if (seedUrl) {
     try {
+      // An absolute URL ignores the base; a relative one resolves against the
+      // page. Cross-origin fetches (e.g. raw.githubusercontent.com, which sends
+      // `Access-Control-Allow-Origin: *`) work; a host without CORS headers will
+      // be blocked and surfaced below.
       const resp = await fetch(new URL(seedUrl, document.baseURI));
       if (resp.ok) doc = await resp.text();
-      else if (srcParam) doc = "# Could not load " + seedUrl + " — HTTP " + resp.status + "\n";
+      else if (qParam) doc = "# Could not load " + seedUrl + " — HTTP " + resp.status + "\n";
     } catch (_e) {
-      // A `?src` fetch that fails (bad path, or a cross-origin URL blocked by
-      // CORS) should be visible, not silently ignored.
-      if (srcParam) doc = "# Could not load " + seedUrl + " (network error or blocked by CORS)\n";
+      // A `?q` fetch that fails (bad URL, or a cross-origin host without CORS)
+      // should be visible, not silently ignored.
+      if (qParam) doc = "# Could not load " + seedUrl + " (network error or blocked by CORS)\n";
     }
   }
 
@@ -106,14 +113,15 @@ async function upgradePlayground(mountAlgaeEditor) {
   mountAlgaeEditor(host, { doc, wasm: wasm || undefined, moduleName });
   shieldGlobalKeys(host);
 
-  // Wire the optional "Load from URL" control (see playground.md): typing a URL
-  // and pressing Load / Enter reloads the page with `?src=<url>`.
+  // Wire the "Load from URL" control (see playground.md): typing a URL and
+  // pressing Load / Enter reloads the page with `?q=<url>`, so the resulting
+  // address is itself a shareable link to that proof.
   const urlInput = document.getElementById("algae-load-url");
   if (urlInput) {
-    if (srcParam) urlInput.value = srcParam;
+    if (qParam) urlInput.value = qParam;
     const go = () => {
       const v = urlInput.value.trim();
-      if (v) window.location.search = "?src=" + encodeURIComponent(v);
+      if (v) window.location.search = "?q=" + encodeURIComponent(v);
     };
     const loadBtn = document.getElementById("algae-load-btn");
     if (loadBtn) loadBtn.addEventListener("click", go);

@@ -275,17 +275,20 @@ are available via <code class="docutils literal notranslate"><span class="pre">i
 </style>
 <div class="algae-load-bar">
   <input id="algae-load-url" type="text"
-         placeholder="Load a .alg from a URL — e.g. game/challenge/060-room.alg" />
+         placeholder="Load a .alg from a URL — a game room, or a raw.githubusercontent.com link" />
   <button id="algae-load-btn" type="button">Load</button>
 </div>
 <div id="algae-playground"
      data-seed-url="_static/examples/nat.alg"
      data-module="nat"></div><div class="note admonition">
-<p class="admonition-title">Load any proof by URL</p>
-<p>Paste a path or URL into the box above and press <strong>Load</strong> to open that <code class="docutils literal notranslate"><span class="pre">.alg</span></code>
-file in the editor — handy for trying a <a class="reference internal" href="game.html"><span class="std std-doc">game</span></a> room, e.g.
-<code class="docutils literal notranslate"><span class="pre">game/challenge/060-room.alg</span></code>. You can also link straight to it:
-<code class="docutils literal notranslate"><span class="pre">playground.html?src=game/challenge/060-room.alg</span></code>.</p>
+<p class="admonition-title">Load and share proofs by URL</p>
+<p>Paste any URL into the box above and press <strong>Load</strong> to open that <code class="docutils literal notranslate"><span class="pre">.alg</span></code> file in
+the editor — a <a class="reference internal" href="game.html"><span class="std std-doc">game</span></a> room like <code class="docutils literal notranslate"><span class="pre">game/challenge/060-room.alg</span></code>, or an
+absolute link such as a raw GitHub file
+(<code class="docutils literal notranslate"><span class="pre">https://raw.githubusercontent.com/dhilst/algae/refs/heads/main/algae/v1/challenge/002-room.alg</span></code>).</p>
+<p>The address updates to <code class="docutils literal notranslate"><span class="pre">playground.html?q=&lt;url&gt;</span></code>, so <strong>that link is itself
+shareable</strong> — send it to anyone and the playground loads the proof automatically.
+(Cross-origin hosts must allow it via CORS; raw GitHub does.)</p>
 </div>
 <div class="tip admonition">
 <p class="admonition-title">If a proof is incomplete</p>
@@ -358,6 +361,6 @@ guides you to its arguments.</p>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
-    <script type="module" src="_static/algae-init.js?v=f450dc36"></script>
+    <script type="module" src="_static/algae-init.js?v=f4e4bcee"></script>
     </body>
 </html>
