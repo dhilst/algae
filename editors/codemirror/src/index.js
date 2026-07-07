@@ -257,11 +257,14 @@ export function mountAlgaeEditor(parent, opts = {}) {
     }
     container.appendChild(toolbar);
     container.appendChild(pane);
-    // Run an initial check so the pane reflects the seed proof.
-    requestAnimationFrame(check);
   }
 
   parent.appendChild(container);
+  // Check on load whenever a kernel is present, so inline diagnostics and fix
+  // suggestions are ready immediately — even without a toolbar (the game mounts
+  // with showToolbar:false and casts via its own button, but should still be
+  // checked at load so Ctrl-Space works without a manual check first).
+  if (wasm) requestAnimationFrame(check);
   return { view, container, check };
 }
 
