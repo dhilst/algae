@@ -6,5 +6,5 @@
   "module": "room023",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
-  "help": "Existential proof. exists_intro(T, P, a) then ⊢ P(a); the leftover goal is P at a — by pa."
+  "help": "exists_intro(T, P, a) then ⊢ P(a); by pa;."
 }

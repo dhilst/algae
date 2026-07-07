@@ -1,4 +1,8 @@
-import core(or_intro_right);
+rule or_intro_right(P Q : Prop)
+  ⊢ Q
+  ────────────────────────
+  ⊢ P ∨ Q
+end;
 
 lemma inject_right(A B : Prop, y := B)
   ⊢ A ∨ B;

@@ -1,11 +1,11 @@
 {
   "id": "083",
   "tier": "veryhard",
-  "title": "Under The Universal",
+  "title": "From All, One",
   "monster": "dragon",
   "module": "room083",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": true,
   "lore": "'Turn back,' something pleads from the dark, in a tone almost tender, almost familiar.",
-  "help": "Existential elim. In the witness branch, instantiate use at x with forall_elim to get P(x) ⇒ R, then implication_elim against witness."
+  "help": "This room holds 3 lemmas — finish them all (turn every wip into qed). (1) Helper. forall_elim(T, P, a) then ⊢ ∀y. P(y); by all;. (2) Uses inst. exists_intro(T, P, a) then ⊢ P(a); by inst(P, all, a);. (3) Uses inst and all_to_ex. and_intro cases; by inst(P, all, a); and by all_to_ex(P, all, a);."
 }

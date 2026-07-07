@@ -6,5 +6,5 @@
   "module": "room022",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
-  "help": "Universal proof. forall_intro(T, _ = _) then x : T ⊢ x = x; close by refl(T, x)."
+  "help": "forall_intro(T, _ = _) then x : T ⊢ x = x; by refl(T, x);."
 }

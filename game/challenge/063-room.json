@@ -7,5 +7,5 @@
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": false,
   "lore": "Grooves worn into the stone, as if others came this way before you — each of them, it seems, alone.",
-  "help": "Proof by contradiction. negation_intro(¬A) then P := ¬A ⊢ False; now P : ¬A and x : A — negation_elim(A) gives False."
+  "help": "This room holds 3 lemmas — finish them all (turn every wip into qed). (1) Helper. negation_intro(¬A) then P := ¬A ⊢ False; by negation_elim(A) from x and P. (2) Uses dni. implication_intro then P := A ⊢ ¬(¬A); by dni(A, P);. (3) Uses dni and dni_imp. and_intro cases; by dni(A, x); and by dni_imp(A);."
 }

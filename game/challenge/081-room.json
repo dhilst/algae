@@ -1,11 +1,11 @@
 {
   "id": "081",
   "tier": "veryhard",
-  "title": "The Contradiction's Gift",
+  "title": "Carry It Across",
   "monster": "dragon",
   "module": "room081",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": false,
   "lore": "The deeper you go, the fainter her voice becomes, and the louder the doubt.",
-  "help": "Explosion. false_elim(C) then ⊢ False; produce False from x and nx with negation_elim(A) (two cases)."
+  "help": "This room holds 3 lemmas — finish them all (turn every wip into qed). (1) Helper (modus ponens). implication_elim(A, B) cases; by f; and by x;. (2) Helper. forall_elim(T, λx. P(x) ⇒ Q(x), a) then ⊢ ∀y. P(y) ⇒ Q(y); by f;. (3) Uses both. exists_elim; in the witness branch by exists_intro(T, Q, x) then ⊢ Q(x); by mp(P(x), Q(x), at_imp(P, Q, f, x), witness);."
 }

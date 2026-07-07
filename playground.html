@@ -266,9 +266,28 @@ compiled to WebAssembly. Your code never leaves the page. The other standard
 library modules (<code class="docutils literal notranslate"><span class="pre">core</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">option</span></code>, <code class="docutils literal notranslate"><span class="pre">result</span></code>, <code class="docutils literal notranslate"><span class="pre">group</span></code>, <code class="docutils literal notranslate"><span class="pre">monad</span></code>, <code class="docutils literal notranslate"><span class="pre">adt</span></code>)
 are available via <code class="docutils literal notranslate"><span class="pre">import</span></code>.</p>
 </div>
+<style>
+.algae-load-bar { display: flex; gap: .5rem; margin: 1rem 0 .3rem; }
+.algae-load-bar input { flex: 1; font: inherit; font-size: 13px; padding: .3rem .5rem;
+  border: 1px solid rgba(128,128,128,0.4); border-radius: 5px; }
+.algae-load-bar button { font: inherit; font-size: 13px; cursor: pointer; padding: .3rem .8rem;
+  border-radius: 5px; border: 1px solid rgba(128,128,128,0.4); background: #4078f2; color: #fff; }
+</style>
+<div class="algae-load-bar">
+  <input id="algae-load-url" type="text"
+         placeholder="Load a .alg from a URL — e.g. game/challenge/060-room.alg" />
+  <button id="algae-load-btn" type="button">Load</button>
+</div>
 <div id="algae-playground"
      data-seed-url="_static/examples/nat.alg"
-     data-module="nat"></div><div class="tip admonition">
+     data-module="nat"></div><div class="note admonition">
+<p class="admonition-title">Load any proof by URL</p>
+<p>Paste a path or URL into the box above and press <strong>Load</strong> to open that <code class="docutils literal notranslate"><span class="pre">.alg</span></code>
+file in the editor — handy for trying a <a class="reference internal" href="game.html"><span class="std std-doc">game</span></a> room, e.g.
+<code class="docutils literal notranslate"><span class="pre">game/challenge/060-room.alg</span></code>. You can also link straight to it:
+<code class="docutils literal notranslate"><span class="pre">playground.html?src=game/challenge/060-room.alg</span></code>.</p>
+</div>
+<div class="tip admonition">
 <p class="admonition-title">If a proof is incomplete</p>
 <p>A proof that ends in <code class="docutils literal notranslate"><span class="pre">wip</span></code>, or that leaves a hole <code class="docutils literal notranslate"><span class="pre">_</span></code> where a real step is
 required, checks as <em>in progress</em> rather than done — the results pane tells you
@@ -339,6 +358,6 @@ guides you to its arguments.</p>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
-    <script type="module" src="_static/algae-init.js?v=d1eac676"></script>
+    <script type="module" src="_static/algae-init.js?v=f450dc36"></script>
     </body>
 </html>

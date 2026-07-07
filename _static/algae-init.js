@@ -76,15 +76,28 @@ async function upgradePlayground(mountAlgaeEditor) {
   const host = document.getElementById("algae-playground");
   if (!host) return;
 
-  const seedUrl = host.getAttribute("data-seed-url");
-  const moduleName = host.getAttribute("data-module") || "playground";
+  // A `?src=<url>` query parameter overrides the page's default seed, so a proof
+  // file (e.g. a game room) can be opened straight in the playground. `?module=`
+  // optionally names the checker unit; otherwise it's derived from the filename.
+  const params = new URLSearchParams(window.location.search);
+  const srcParam = params.get("src");
+  const seedUrl = srcParam || host.getAttribute("data-seed-url");
+  let moduleName = params.get("module") || host.getAttribute("data-module") || "playground";
+  if (srcParam && !params.get("module")) {
+    const stem = srcParam.split(/[\/\\]/).pop().replace(/\.alg$/, "");
+    if (stem) moduleName = stem;
+  }
+
   let doc = host.getAttribute("data-seed") || "";
   if (seedUrl) {
     try {
       const resp = await fetch(new URL(seedUrl, document.baseURI));
       if (resp.ok) doc = await resp.text();
+      else if (srcParam) doc = "# Could not load " + seedUrl + " — HTTP " + resp.status + "\n";
     } catch (_e) {
-      /* fall back to inline/empty seed */
+      // A `?src` fetch that fails (bad path, or a cross-origin URL blocked by
+      // CORS) should be visible, not silently ignored.
+      if (srcParam) doc = "# Could not load " + seedUrl + " (network error or blocked by CORS)\n";
     }
   }
 
@@ -92,6 +105,25 @@ async function upgradePlayground(mountAlgaeEditor) {
   host.textContent = "";
   mountAlgaeEditor(host, { doc, wasm: wasm || undefined, moduleName });
   shieldGlobalKeys(host);
+
+  // Wire the optional "Load from URL" control (see playground.md): typing a URL
+  // and pressing Load / Enter reloads the page with `?src=<url>`.
+  const urlInput = document.getElementById("algae-load-url");
+  if (urlInput) {
+    if (srcParam) urlInput.value = srcParam;
+    const go = () => {
+      const v = urlInput.value.trim();
+      if (v) window.location.search = "?src=" + encodeURIComponent(v);
+    };
+    const loadBtn = document.getElementById("algae-load-btn");
+    if (loadBtn) loadBtn.addEventListener("click", go);
+    urlInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        go();
+      }
+    });
+  }
 }
 
 async function main() {

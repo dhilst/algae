@@ -7,5 +7,5 @@
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
   "lore": "The sphinx recites every promise you have ever broken, small as dust, and asks if she knows.",
-  "help": "Proof by cases. or_elim(A, A, A) cases — feed d, and each branch hands you an assumption of A."
+  "help": "This room holds 2 lemmas — finish them all (turn every wip into qed). (1) or_elim(A, A, A) cases; each branch hands you an A. (2) contrapositive(B, A) then ⊢ ¬A ⇒ ¬B; by nn;."
 }
