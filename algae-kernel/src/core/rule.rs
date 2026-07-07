@@ -42,7 +42,7 @@ pub struct InlinedRule {
     /// True for the built-in `forall_intro` rule, which carries a
     /// side-condition (spec §4.15).
     pub is_forall_intro: bool,
-    /// True for the congruence rewrite rules (`rewrite_r`/`rewrite_l`). Their
+    /// True for the congruence rewrite rules (`backward`/`forward`). Their
     /// single premise establishes a congruence under a verified equation, so
     /// the goal may match either the conclusion (standard) or the premise (the
     /// reverse rewrite); both are sound because `=` is symmetric.

@@ -1,10 +1,10 @@
 {
   "id": "020",
   "tier": "easy",
-  "title": "Both Halves Spoken",
+  "title": "A Granted Assumption",
   "monster": "sphinx",
   "module": "room020",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
-  "help": "To prove `A /\\ B`, prove both halves. `and_intro(A, B)` opens two cases — close them with the assumptions you were handed, `by x;` and `by y;`."
+  "help": "Conditional proof. implication_intro(A, B) then P := A ⊢ B; you already hold q : B, so by q."
 }

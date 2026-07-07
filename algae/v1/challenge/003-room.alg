@@ -1,11 +1,7 @@
-# It offers you a pair and asks only for its right hand.
-import core(and_right);
+import core(and_left);
 
-lemma banish(A B : Prop, both := A /\ B)
-  |- B;
+lemma take_left(A B : Prop, h := A ∧ B)
+  ⊢ A;
 proof
-  by and_right(A, B)
-  then
-    |- A /\ B;
-    by wip;
+  by wip;
 wip;

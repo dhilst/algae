@@ -61,7 +61,7 @@ function titleScreen() {
   const note = el("p", "title-note");
   note.appendChild(document.createTextNode("This is a game about Algae, an algebraic specification language. If you don't know what Algae is, "));
   const tut = el("a", "title-note-link", "check out the tutorial first");
-  tut.href = "https://dhilst.github.io/algae/";
+  tut.href = "../tutorial/index.html";
   tut.target = "_blank";
   tut.rel = "noopener noreferrer";
   note.appendChild(tut);

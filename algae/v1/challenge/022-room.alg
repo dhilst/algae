@@ -1,12 +1,9 @@
-# Grant the hypothesis; the conclusion stands on its own.
-import core(implication_intro);
+import core(forall_intro, refl);
 
-lemma banish(A : Prop)
-  |- A => A;
+sort T : Sort;
+
+lemma refl_all
+  ⊢ ∀ (x : T) st x = x;
 proof
-  by implication_intro(A, A)
-  then
-    P := A;
-    |- A;
-    by wip;
+  by wip;
 wip;

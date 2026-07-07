@@ -35,7 +35,7 @@ Here's the whole thing, error-aware, still verifying:
 
 .. code-block:: alg
 
-   import core(rewrite_r);
+   import core(forward);
 
    sort Stack : Sort → Sort;
    sort Error : Sort;
@@ -66,7 +66,7 @@ Here's the whole thing, error-aware, still verifying:
    # push one, pop it, then peek: the error surfaces through the composition.
    lemma push_pop_peek(A : Sort, a : A)  ⊢ top(pop(push(a, empty))) = err;
    proof
-     by rewrite_r(Stack(A), pop(push(a, empty)), empty,
+     by forward(Stack(A), pop(push(a, empty)), empty,
                   pop_push(A, a, empty), top(_) = err)
      then ⊢ top(empty) = err;
      by top_empty(A);

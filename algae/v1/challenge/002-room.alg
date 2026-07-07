@@ -1,11 +1,7 @@
-# One truth is enough to tip the balance.
-import core(or_intro_left);
+import core(or_intro_right);
 
-lemma banish(A B : Prop, x := A)
-  |- A \/ B;
+lemma inject_right(A B : Prop, y := B)
+  ⊢ A ∨ B;
 proof
-  by or_intro_left(A, B)
-  then
-    |- A;
-    by wip;
+  by wip;
 wip;

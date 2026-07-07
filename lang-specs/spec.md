@@ -1009,7 +1009,7 @@ A rule has premises and a conclusion.
 
 Applying a rule to prove its conclusion generates proof obligations for its premises.
 
-The conclusion is matched against the current goal up to **α/β-equivalence only**. Operators are inert constants: the checker never evaluates them, and equational axioms are **not** applied automatically. An equation is used only where a proof invokes it explicitly — for example, through the congruence rules `rewrite_r` / `rewrite_l`.
+The conclusion is matched against the current goal up to **α/β-equivalence only**. Operators are inert constants: the checker never evaluates them, and equational axioms are **not** applied automatically. An equation is used only where a proof invokes it explicitly — for example, through the congruence rules `backward` / `forward`.
 
 If a rule has zero premises, it closes the current goal.
 
@@ -1156,7 +1156,7 @@ axiom refl(
 )
   |- x = x;
 
-rule rewrite_r(
+rule backward(
   T : Sort,
   a b : T,
   eq := a = b,
@@ -1167,7 +1167,7 @@ rule rewrite_r(
   |- P(b)
 end;
 
-rule rewrite_l(
+rule forward(
   T : Sort,
   a b : T,
   eq := a = b,
@@ -1362,8 +1362,8 @@ end;
 ```alg
 import core(
   refl,
-  rewrite_r,
-  rewrite_l,
+  backward,
+  forward,
   transitivity,
   and_intro,
   and_left,
@@ -1483,8 +1483,8 @@ Note: built-in type syntax `A * B` and `A | B` exists independently from the nam
 ```alg
 import core(
   refl,
-  rewrite_r,
-  rewrite_l,
+  backward,
+  forward,
   transitivity
 );
 
@@ -1599,7 +1599,7 @@ end;
 ```alg
 import core(
   refl,
-  rewrite_r,
+  backward,
   transitivity
 );
 
@@ -1659,7 +1659,7 @@ model OptionMonad satisfies Monad(
 ) iff laws
   law left_identity;
   proof
-    by rewrite_r(
+    by backward(
       Option(A),
       return(x),
       some(x),
@@ -1687,7 +1687,7 @@ model OptionMonad satisfies Monad(
         A : Sort;
         x : A;
         |- bind(some(x), return) = some(x);
-        by rewrite_r(
+        by backward(
           Option(A),
           bind(some(x), return),
           return(x),
@@ -1723,7 +1723,7 @@ model OptionMonad satisfies Monad(
              none,
              lambda (x : A) st bind(f(x), g)
            );
-        by rewrite_r(
+        by backward(
           Option(B),
           bind(none, f),
           none,
@@ -1737,7 +1737,7 @@ model OptionMonad satisfies Monad(
             )
         )
         then |- bind(none, g) = bind(none, lambda (x : A) st bind(f(x), g));
-        by rewrite_r(
+        by backward(
           Option(C),
           bind(none, lambda (x : A) st bind(f(x), g)),
           none,
@@ -1759,7 +1759,7 @@ model OptionMonad satisfies Monad(
              some(x),
              lambda (y : A) st bind(f(y), g)
            );
-        by rewrite_r(
+        by backward(
           Option(B),
           bind(some(x), f),
           f(x),
@@ -1773,7 +1773,7 @@ model OptionMonad satisfies Monad(
             )
         )
         then |- bind(f(x), g) = bind(some(x), lambda (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           Option(C),
           bind(some(x), lambda (y : A) st bind(f(y), g)),
           bind(f(x), g),
@@ -1797,7 +1797,7 @@ qed;
 ```alg
 import core(
   refl,
-  rewrite_r
+  backward
 );
 
 import monad(
@@ -1855,7 +1855,7 @@ model ResultMonad satisfies Monad(
 ) iff laws
   law left_identity;
   proof
-    by rewrite_r(
+    by backward(
       Result(A, E),
       return(x),
       ok(x),
@@ -1878,7 +1878,7 @@ model ResultMonad satisfies Monad(
         A E : Sort;
         x : A;
         |- bind(ok(x), return) = ok(x);
-        by rewrite_r(
+        by backward(
           Result(A, E),
           bind(ok(x), return),
           return(x),
@@ -1923,7 +1923,7 @@ model ResultMonad satisfies Monad(
              ok(x),
              lambda (y : A) st bind(f(y), g)
            );
-        by rewrite_r(
+        by backward(
           Result(B, E),
           bind(ok(x), f),
           f(x),
@@ -1937,7 +1937,7 @@ model ResultMonad satisfies Monad(
             )
         )
         then |- bind(f(x), g) = bind(ok(x), lambda (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           Result(C, E),
           bind(ok(x), lambda (y : A) st bind(f(y), g)),
           bind(f(x), g),
@@ -1961,7 +1961,7 @@ model ResultMonad satisfies Monad(
              err(e),
              lambda (x : A) st bind(f(x), g)
            );
-        by rewrite_r(
+        by backward(
           Result(B, E),
           bind(err(e), f),
           err(e),
@@ -1975,7 +1975,7 @@ model ResultMonad satisfies Monad(
             )
         )
         then |- bind(err(e), g) = bind(err(e), lambda (x : A) st bind(f(x), g));
-        by rewrite_r(
+        by backward(
           Result(C, E),
           bind(err(e), lambda (x : A) st bind(f(x), g)),
           err(e),
@@ -1997,7 +1997,7 @@ qed;
 ```alg
 import core(
   refl,
-  rewrite_r,
+  backward,
   transitivity
 );
 
@@ -2105,7 +2105,7 @@ model ListMonad satisfies Monad(
 ) iff laws
   law left_identity;
   proof
-    by rewrite_r(
+    by backward(
       List(A),
       return(x),
       singleton(x),
@@ -2135,7 +2135,7 @@ model ListMonad satisfies Monad(
         rest : List(A);
         ih := bind(rest, return) = rest;
         |- bind(cons(x, rest), return) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           bind(cons(x, rest), return),
           append(return(x), bind(rest, return)),
@@ -2143,7 +2143,7 @@ model ListMonad satisfies Monad(
           lambda (ys : List(A)) st ys = cons(x, rest)
         )
         then |- append(return(x), bind(rest, return)) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           return(x),
           singleton(x),
@@ -2151,7 +2151,7 @@ model ListMonad satisfies Monad(
           lambda (ys : List(A)) st append(ys, bind(rest, return)) = cons(x, rest)
         )
         then |- append(singleton(x), bind(rest, return)) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           bind(rest, return),
           rest,
@@ -2159,7 +2159,7 @@ model ListMonad satisfies Monad(
           lambda (ys : List(A)) st append(singleton(x), ys) = cons(x, rest)
         )
         then |- append(singleton(x), rest) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           singleton(x),
           cons(x, nil),
@@ -2167,7 +2167,7 @@ model ListMonad satisfies Monad(
           lambda (ys : List(A)) st append(ys, rest) = cons(x, rest)
         )
         then |- append(cons(x, nil), rest) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           append(cons(x, nil), rest),
           cons(x, append(nil, rest)),
@@ -2175,7 +2175,7 @@ model ListMonad satisfies Monad(
           lambda (ys : List(A)) st ys = cons(x, rest)
         )
         then |- cons(x, append(nil, rest)) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           append(nil, rest),
           rest,
@@ -2211,7 +2211,7 @@ model ListMonad satisfies Monad(
              nil,
              lambda (x : A) st bind(f(x), g)
            );
-        by rewrite_r(
+        by backward(
           List(B),
           bind(nil, f),
           nil,
@@ -2225,7 +2225,7 @@ model ListMonad satisfies Monad(
             )
         )
         then |- bind(nil, g) = bind(nil, lambda (x : A) st bind(f(x), g));
-        by rewrite_r(
+        by backward(
           List(C),
           bind(nil, lambda (x : A) st bind(f(x), g)),
           nil,
@@ -2249,7 +2249,7 @@ model ListMonad satisfies Monad(
              cons(x, rest),
              lambda (y : A) st bind(f(y), g)
            );
-        by rewrite_r(
+        by backward(
           List(B),
           bind(cons(x, rest), f),
           append(f(x), bind(rest, f)),
@@ -2264,7 +2264,7 @@ model ListMonad satisfies Monad(
         )
         then |- bind(append(f(x), bind(rest, f)), g)
               = bind(cons(x, rest), lambda (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           List(C),
           bind(append(f(x), bind(rest, f)), g),
           append(bind(f(x), g), bind(bind(rest, f), g)),
@@ -2279,7 +2279,7 @@ model ListMonad satisfies Monad(
         )
         then |- append(bind(f(x), g), bind(bind(rest, f), g))
               = bind(cons(x, rest), lambda (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           List(C),
           bind(bind(rest, f), g),
           bind(rest, lambda (x : A) st bind(f(x), g)),
@@ -2294,7 +2294,7 @@ model ListMonad satisfies Monad(
         )
         then |- append(bind(f(x), g), bind(rest, lambda (x : A) st bind(f(x), g)))
               = bind(cons(x, rest), lambda (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           List(C),
           bind(cons(x, rest), lambda (y : A) st bind(f(y), g)),
           append(bind(f(x), g), bind(rest, lambda (y : A) st bind(f(y), g))),
@@ -2321,7 +2321,7 @@ qed;
 ```alg
 import core(
   refl,
-  rewrite_r,
+  backward,
   transitivity
 );
 
@@ -2381,7 +2381,7 @@ proof
       k : Nat;                    # the context
       ih := k + 0 = k;            # induction hypothesis
       |- s(k) + 0 = s(k);          # the current goal
-      by rewrite_r(               # rewrite at right
+      by backward(               # backward: replace `k + 0` with `k`
         Nat,                      # the type of each side
         k + 0, k,                 # replace `k + 0` → `k`
         ih,                       # by the induction hypothesis (k + 0 = k)
@@ -2401,7 +2401,7 @@ qed;
 ```alg
 import core(
   refl,
-  rewrite_r,
+  backward,
   transitivity,
   symmetry
 );

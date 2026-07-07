@@ -1,10 +1,10 @@
 {
   "id": "062",
   "tier": "hard",
-  "title": "Rewrite The World",
+  "title": "Name It, Then Forget",
   "monster": "dragon",
   "module": "room062",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": true,
-  "help": "Good luck!"
+  "help": "Existential elim. exists_elim(T, P, ∃ (x : T) st P(x)) cases: feed ex, then in the witness branch rebuild with exists_intro(T, P, x) then ⊢ P(x); by witness."
 }

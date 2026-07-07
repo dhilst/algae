@@ -1,15 +1,9 @@
-# No scaffold this time. Build the whole chain a = b = c yourself.
-import core(transitivity);
+import core(exists_intro, exists_elim, symmetry);
 
 sort T : Sort;
-op a : -> T;
-op b : -> T;
-op c : -> T;
-axiom ab |- a = b;
-axiom bc |- b = c;
 
-lemma banish
-  |- a = c;
+lemma exists_flip(a : T, ex := ∃ (x : T) st x = a)
+  ⊢ ∃ (y : T) st a = y;
 proof
   by wip;
 wip;

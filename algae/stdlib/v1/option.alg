@@ -1,6 +1,6 @@
 import core(
   refl,
-  rewrite_r,
+  backward,
   transitivity
 );
 
@@ -60,7 +60,7 @@ model OptionMonad satisfies Monad(
 ) iff laws
   law left_identity;
   proof
-    by rewrite_r(
+    by backward(
       Option(A),
       return(x),
       some(x),
@@ -88,7 +88,7 @@ model OptionMonad satisfies Monad(
         A : Sort;
         x : A;
         ⊢ bind(some(x), return) = some(x);
-        by rewrite_r(
+        by backward(
           Option(A),
           bind(some(x), return),
           return(x),
@@ -124,7 +124,7 @@ model OptionMonad satisfies Monad(
              none,
              λ (x : A) st bind(f(x), g)
            );
-        by rewrite_r(
+        by backward(
           Option(B),
           bind(none, f),
           none,
@@ -138,7 +138,7 @@ model OptionMonad satisfies Monad(
             )
         )
         then ⊢ bind(none, g) = bind(none, λ (x : A) st bind(f(x), g));
-        by rewrite_r(
+        by backward(
           Option(C),
           bind(none, λ (x : A) st bind(f(x), g)),
           none,
@@ -160,7 +160,7 @@ model OptionMonad satisfies Monad(
              some(x),
              λ (y : A) st bind(f(y), g)
            );
-        by rewrite_r(
+        by backward(
           Option(B),
           bind(some(x), f),
           f(x),
@@ -174,7 +174,7 @@ model OptionMonad satisfies Monad(
             )
         )
         then ⊢ bind(f(x), g) = bind(some(x), λ (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           Option(C),
           bind(some(x), λ (y : A) st bind(f(y), g)),
           bind(f(x), g),

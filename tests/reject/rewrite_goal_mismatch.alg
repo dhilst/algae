@@ -1,4 +1,4 @@
-# rewrite_r is sound only because the motive applied to the rewrite target must
+# backward is sound only because the motive applied to the rewrite target must
 # equal the goal: P(b) (and, for the reverse direction, P(a)) is checked against
 # the current goal. Here the motive is `_ = z`, so P(b) = (b = z) and
 # P(a) = (a = z), but the goal is `s(a) = s(a)`. Even though `e` validly proves
@@ -6,7 +6,7 @@
 #
 # (No equational axioms are declared, so definitional equality is plain
 # beta/structural and cannot paper over the mismatch.)
-import core(rewrite_r, refl);
+import core(backward, refl);
 
 sort Nat : Sort;
 
@@ -19,7 +19,7 @@ lemma bad(
 )
   |- s(a) = s(a);
 proof
-  by rewrite_r(Nat, a, b, e, _ = z)
+  by backward(Nat, a, b, e, _ = z)
   then
     |- b = z;
     by refl(Nat, b);

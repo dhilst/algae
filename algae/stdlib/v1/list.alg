@@ -1,6 +1,6 @@
 import core(
   refl,
-  rewrite_r,
+  backward,
   transitivity
 );
 
@@ -108,7 +108,7 @@ model ListMonad satisfies Monad(
 ) iff laws
   law left_identity;
   proof
-    by rewrite_r(
+    by backward(
       List(A),
       return(x),
       singleton(x),
@@ -138,7 +138,7 @@ model ListMonad satisfies Monad(
         rest : List(A);
         ih := bind(rest, return) = rest;
         ⊢ bind(cons(x, rest), return) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           bind(cons(x, rest), return),
           append(return(x), bind(rest, return)),
@@ -146,7 +146,7 @@ model ListMonad satisfies Monad(
           λ (ys : List(A)) st ys = cons(x, rest)
         )
         then ⊢ append(return(x), bind(rest, return)) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           return(x),
           singleton(x),
@@ -154,7 +154,7 @@ model ListMonad satisfies Monad(
           λ (ys : List(A)) st append(ys, bind(rest, return)) = cons(x, rest)
         )
         then ⊢ append(singleton(x), bind(rest, return)) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           bind(rest, return),
           rest,
@@ -162,7 +162,7 @@ model ListMonad satisfies Monad(
           λ (ys : List(A)) st append(singleton(x), ys) = cons(x, rest)
         )
         then ⊢ append(singleton(x), rest) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           singleton(x),
           cons(x, nil),
@@ -170,7 +170,7 @@ model ListMonad satisfies Monad(
           λ (ys : List(A)) st append(ys, rest) = cons(x, rest)
         )
         then ⊢ append(cons(x, nil), rest) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           append(cons(x, nil), rest),
           cons(x, append(nil, rest)),
@@ -178,7 +178,7 @@ model ListMonad satisfies Monad(
           λ (ys : List(A)) st ys = cons(x, rest)
         )
         then ⊢ cons(x, append(nil, rest)) = cons(x, rest);
-        by rewrite_r(
+        by backward(
           List(A),
           append(nil, rest),
           rest,
@@ -214,7 +214,7 @@ model ListMonad satisfies Monad(
              nil,
              λ (x : A) st bind(f(x), g)
            );
-        by rewrite_r(
+        by backward(
           List(B),
           bind(nil, f),
           nil,
@@ -228,7 +228,7 @@ model ListMonad satisfies Monad(
             )
         )
         then ⊢ bind(nil, g) = bind(nil, λ (x : A) st bind(f(x), g));
-        by rewrite_r(
+        by backward(
           List(C),
           bind(nil, λ (x : A) st bind(f(x), g)),
           nil,
@@ -252,7 +252,7 @@ model ListMonad satisfies Monad(
              cons(x, rest),
              λ (y : A) st bind(f(y), g)
            );
-        by rewrite_r(
+        by backward(
           List(B),
           bind(cons(x, rest), f),
           append(f(x), bind(rest, f)),
@@ -267,7 +267,7 @@ model ListMonad satisfies Monad(
         )
         then ⊢ bind(append(f(x), bind(rest, f)), g)
               = bind(cons(x, rest), λ (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           List(C),
           bind(append(f(x), bind(rest, f)), g),
           append(bind(f(x), g), bind(bind(rest, f), g)),
@@ -282,7 +282,7 @@ model ListMonad satisfies Monad(
         )
         then ⊢ append(bind(f(x), g), bind(bind(rest, f), g))
               = bind(cons(x, rest), λ (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           List(C),
           bind(bind(rest, f), g),
           bind(rest, λ (x : A) st bind(f(x), g)),
@@ -297,7 +297,7 @@ model ListMonad satisfies Monad(
         )
         then ⊢ append(bind(f(x), g), bind(rest, λ (x : A) st bind(f(x), g)))
               = bind(cons(x, rest), λ (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           List(C),
           bind(cons(x, rest), λ (y : A) st bind(f(y), g)),
           append(bind(f(x), g), bind(rest, λ (y : A) st bind(f(y), g))),

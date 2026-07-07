@@ -1,6 +1,6 @@
 import core(
   refl,
-  rewrite_r
+  backward
 );
 
 import monad(
@@ -58,7 +58,7 @@ model ResultMonad satisfies Monad(
 ) iff laws
   law left_identity;
   proof
-    by rewrite_r(
+    by backward(
       Result(A, E),
       return(x),
       ok(x),
@@ -81,7 +81,7 @@ model ResultMonad satisfies Monad(
         A E : Sort;
         x : A;
         ⊢ bind(ok(x), return) = ok(x);
-        by rewrite_r(
+        by backward(
           Result(A, E),
           bind(ok(x), return),
           return(x),
@@ -126,7 +126,7 @@ model ResultMonad satisfies Monad(
              ok(x),
              λ (y : A) st bind(f(y), g)
            );
-        by rewrite_r(
+        by backward(
           Result(B, E),
           bind(ok(x), f),
           f(x),
@@ -140,7 +140,7 @@ model ResultMonad satisfies Monad(
             )
         )
         then ⊢ bind(f(x), g) = bind(ok(x), λ (y : A) st bind(f(y), g));
-        by rewrite_r(
+        by backward(
           Result(C, E),
           bind(ok(x), λ (y : A) st bind(f(y), g)),
           bind(f(x), g),
@@ -164,7 +164,7 @@ model ResultMonad satisfies Monad(
              err(e),
              λ (x : A) st bind(f(x), g)
            );
-        by rewrite_r(
+        by backward(
           Result(B, E),
           bind(err(e), f),
           err(e),
@@ -178,7 +178,7 @@ model ResultMonad satisfies Monad(
             )
         )
         then ⊢ bind(err(e), g) = bind(err(e), λ (x : A) st bind(f(x), g));
-        by rewrite_r(
+        by backward(
           Result(C, E),
           bind(err(e), λ (x : A) st bind(f(x), g)),
           err(e),

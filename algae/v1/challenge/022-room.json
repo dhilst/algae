@@ -1,10 +1,10 @@
 {
   "id": "022",
   "tier": "easy",
-  "title": "A Granted Assumption",
+  "title": "What Holds For All",
   "monster": "sphinx",
   "module": "room022",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
-  "help": "To prove `A => A`, assume `A` and prove `A`. `implication_intro(A, A)` introduces the antecedent as a hypothesis named `P` — the goal then *is* that hypothesis, closed `by P;`."
+  "help": "Universal proof. forall_intro(T, _ = _) then x : T ⊢ x = x; close by refl(T, x)."
 }

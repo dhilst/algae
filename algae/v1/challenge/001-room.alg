@@ -1,16 +1,7 @@
-# "You know a = b," it hisses. "Then speak the mirror."
-import core(symmetry);
+import core(or_intro_left);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-axiom ab |- a = b;
-
-lemma banish
-  |- b = a;
+lemma inject_left(A B : Prop, x := A)
+  ⊢ A ∨ B;
 proof
-  by symmetry(T, a, b)
-  then
-    |- a = b;
-    by wip;
+  by wip;
 wip;

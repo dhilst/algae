@@ -1,11 +1,8 @@
-# The right side will do.
-import core(or_intro_right);
+import nat;
+import core(symmetry);
 
-lemma banish(A B : Prop, y := B)
-  |- A \/ B;
+lemma flip_eq(a b : Nat, h := a = b)
+  ⊢ b = a;
 proof
-  by or_intro_right(A, B)
-  then
-    |- B;
-    by wip;
+  by wip;
 wip;

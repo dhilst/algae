@@ -7,5 +7,5 @@
   "prompt": "The final demon holds the ring. Complete the proof to end the descent.",
   "food": false,
   "lore": "The demon shudders, and for an instant its shape flickers into something you almost know — then the fire takes it.",
-  "help": "Good luck!"
+  "help": "Mathematical induction. by induction(_ + 0 = _) cases. Base: 0 + 0 = 0 by add_zero_left(0). Step: rewrite k into k + 0 with backward(Nat, k + 0, k, ih, s(k) + 0 = s(_)) then add_succ_left(k, 0)."
 }

@@ -1,10 +1,9 @@
-# Something exists. Unpack it, and pack it up again.
-import core(exists_intro, exists_elim);
+import core(forall_intro, forall_elim, and_intro);
 
 sort T : Sort;
 
-lemma banish(P : T -> Prop, ex := exists (x : T) st P(x))
-  |- exists (x : T) st P(x);
+lemma forall_and(P Q : T → Prop, hp := ∀ (x : T) st P(x), hq := ∀ (x : T) st Q(x))
+  ⊢ ∀ (x : T) st P(x) ∧ Q(x);
 proof
   by wip;
 wip;

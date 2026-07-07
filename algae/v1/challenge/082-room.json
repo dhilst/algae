@@ -1,10 +1,10 @@
 {
   "id": "082",
   "tier": "veryhard",
-  "title": "No Scaffold",
+  "title": "Flip The Witness",
   "monster": "dragon",
   "module": "room082",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": false,
-  "help": "Good luck!"
+  "help": "Existential elim. Open ex with exists_elim; in the witness branch (witness := x = a), re-witness with x and flip via symmetry."
 }

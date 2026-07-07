@@ -1,11 +1,11 @@
 {
   "id": "001",
   "tier": "trivial",
-  "title": "The Mirrored Word",
+  "title": "The Left Path",
   "monster": "sphinx",
   "module": "room001",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
   "lore": "'You are not ready for her,' it whispers as it dissolves. 'You never were.'",
-  "help": "You are given `a = b` (the axiom `ab`) and must show `b = a`. Apply `symmetry`, which flips a proof of `x = y` into `y = x`; then discharge its premise `a = b` with `by ab;`."
+  "help": "Direct proof. or_intro_left(A, B) proves A ∨ B from ⊢ A (one premise → then), closed by your assumption x."
 }

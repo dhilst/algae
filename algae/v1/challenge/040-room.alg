@@ -1,10 +1,7 @@
-# Name no witness; prove it for an arbitrary one.
-import core(refl, forall_intro);
+import core(implication_intro, and_left);
 
-sort T : Sort;
-
-lemma banish
-  |- forall (x : T) st x = x;
+lemma proj(A B : Prop)
+  ⊢ (A ∧ B) ⇒ A;
 proof
   by wip;
 wip;

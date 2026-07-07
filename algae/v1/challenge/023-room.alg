@@ -1,13 +1,9 @@
-# What holds for all holds at any point.
-import core(forall_elim);
+import core(exists_intro);
 
 sort T : Sort;
 
-lemma banish(P : T -> Prop, a : T, all := forall (y : T) st P(y))
-  |- P(a);
+lemma witnessed(P : T → Prop, a : T, pa := P(a))
+  ⊢ ∃ (x : T) st P(x);
 proof
-  by forall_elim(T, P, a)
-  then
-    |- forall (y : T) st P(y);
-    by wip;
+  by wip;
 wip;

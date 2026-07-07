@@ -568,7 +568,7 @@ pub fn build_rule(elab: &mut Elab, r: &ast::RuleDecl) -> Result<InlinedRule, ()>
     // generalized variable is an eigenvariable in the premise context, so the
     // §4.15 side condition is enforced by eigenvariable freshness.
     let is_gen = false;
-    let bidirectional = r.name.text == "rewrite_r" || r.name.text == "rewrite_l";
+    let bidirectional = r.name.text == "backward" || r.name.text == "forward";
     // Premises: each premise's context entries are eigenvariables/hypotheses,
     // lowered as additional free variables in a cloned scope.
     let mut premises = Vec::new();

@@ -87,7 +87,7 @@ pub fn elaborate_unit(
 /// Definitional equality in the checker is **beta reduction only**: operators
 /// are inert constants and equational axioms are *not* silently applied as
 /// rewrite rules. An equation is used only where the proof explicitly invokes
-/// it via the congruence rules `rewrite_r`/`rewrite_l`. Hence the checker runs
+/// it via the congruence rules `backward`/`forward`. Hence the checker runs
 /// against an empty rewrite system (`nf` = beta normal form).
 fn build_rewrite_system(_elab: &Elab) -> RewriteSystem {
     RewriteSystem::new()

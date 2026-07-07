@@ -1,10 +1,10 @@
 {
   "id": "023",
   "tier": "easy",
-  "title": "What Holds For All",
+  "title": "A Single Witness",
   "monster": "sphinx",
   "module": "room023",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
-  "help": "A universal `forall y. P(y)` can be instantiated at any point. `forall_elim(T, P, a)` turns it into `P(a)`; supply the universal you were handed with `by all;`."
+  "help": "Existential proof. exists_intro(T, P, a) then ⊢ P(a); the leftover goal is P at a — by pa."
 }

@@ -7,5 +7,5 @@
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
   "lore": "The sphinx studies you a long moment, as if it has met you somewhere before, then fades.",
-  "help": "The goal `a = a` holds by reflexivity. Replace `by wip;` with `by refl(T, a);`, then change the closing `wip;` to `qed;`. `refl(T, x)` proves `x = x` for any sort T and term x."
+  "help": "Direct proof. 0 + 0 = 0 is the axiom add_zero_left at 0 — a premise-free step: by add_zero_left(0);."
 }

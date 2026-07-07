@@ -1,13 +1,7 @@
-# The equation cuts the other way here.
-import core(refl, rewrite_l);
+import core(negation_intro, negation_elim);
 
-sort T : Sort;
-op a : -> T;
-op b : -> T;
-axiom ab |- a = b;
-
-lemma banish
-  |- a = a;
+lemma dni(A : Prop, x := A)
+  ⊢ ¬(¬A);
 proof
   by wip;
 wip;

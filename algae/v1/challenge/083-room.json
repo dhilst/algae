@@ -1,11 +1,11 @@
 {
   "id": "083",
   "tier": "veryhard",
-  "title": "The Bare Induction",
+  "title": "Under The Universal",
   "monster": "dragon",
   "module": "room083",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": true,
   "lore": "'Turn back,' something pleads from the dark, in a tone almost tender, almost familiar.",
-  "help": "Good luck!"
+  "help": "Existential elim. In the witness branch, instantiate use at x with forall_elim to get P(x) ⇒ R, then implication_elim against witness."
 }

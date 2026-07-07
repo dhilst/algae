@@ -1,11 +1,11 @@
 {
   "id": "081",
   "tier": "veryhard",
-  "title": "Zero On The Right",
+  "title": "The Contradiction's Gift",
   "monster": "dragon",
   "module": "room081",
   "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
   "food": false,
   "lore": "The deeper you go, the fainter her voice becomes, and the louder the doubt.",
-  "help": "Good luck!"
+  "help": "Explosion. false_elim(C) then ⊢ False; produce False from x and nx with negation_elim(A) (two cases)."
 }

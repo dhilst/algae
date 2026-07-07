@@ -1,7 +1,7 @@
 # Hole `_` sugar: an expression with `_` becomes a unary lambda whose binder
 # type is inferred from the tactic parameter's function domain. All `_` in one
 # expression share the single fresh binder.
-import core(refl, rewrite_r);
+import core(refl, backward);
 
 sort Nat : Sort;
 
@@ -43,7 +43,7 @@ qed;
 lemma collapse
   |- s(s(z)) = s(z);
 proof
-  by rewrite_r(Nat, s(z), z, s_collapses, s(_) = s(z))
+  by backward(Nat, s(z), z, s_collapses, s(_) = s(z))
   then
     |- s(z) = s(z);
     by refl(Nat, s(z));

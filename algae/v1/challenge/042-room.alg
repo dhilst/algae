@@ -1,8 +1,8 @@
-# The implication is given; feed it what it hungers for.
-import core(implication_elim);
+import nat;
+import core(refl, forward);
 
-lemma banish(A B : Prop, f := A => B, x := A)
-  |- B;
+lemma zero_left_flip(n : Nat)
+  ⊢ n = 0 + n;
 proof
   by wip;
 wip;

@@ -1,17 +1,9 @@
-# Both directions, and the gate swings free.
-import core(biconditional_intro);
+import core(forall_elim);
 
-lemma banish(A B : Prop, fwd := A => B, bwd := B => A)
-  |- A <=> B;
+sort T : Sort;
+
+lemma at_point(P : T → Prop, a : T, all := ∀ (y : T) st P(y))
+  ⊢ P(a);
 proof
-  by biconditional_intro(A, B) cases
-    case
-      |- A => B;
-      by wip;
-    wip;
-    case
-      |- B => A;
-      by wip;
-    wip;
-  wip;
+  by wip;
 wip;
