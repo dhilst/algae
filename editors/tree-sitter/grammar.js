@@ -25,7 +25,8 @@ const PREC = {
   sum: 1,      // | (sum type)
   product: 2,  // * (product type / kind)
   arrow: 1,    // -> (function type, right associative)
-  infix: 3,    // term infix operators (+ - * / == < > <= >=)
+  cmp: 3,      // term comparison operators (== < > <= >=), looser than arithmetic
+  infix: 4,    // term arithmetic infix operators (+ - * /)
   app: 10,     // application
 };
 
@@ -558,7 +559,7 @@ module.exports = grammar({
 
     _lambda_term: $ => choice(
       $.lambda_term,
-      $._infix_term,
+      $._comparison_term,
     ),
 
     // lambda_term = ("lambda" | "λ") binder "st" term
@@ -574,6 +575,18 @@ module.exports = grammar({
       'st',
       field('body', choice($.prop, $.term)),
     )),
+
+    // comparison_term = infix_term [ comparison_op infix_term ]
+    //
+    // Comparisons bind looser than arithmetic and are non-chaining, so at most
+    // one comparison operator appears per term (`a + b < c` is `(a + b) < c`).
+    _comparison_term: $ => prec.left(PREC.cmp, seq(
+      $._infix_term,
+      optional(seq($.comparison_op, $._infix_term)),
+    )),
+
+    // comparison_op = == | < | > | <= | >=
+    comparison_op: _ => choice('==', '<=', '>=', '<', '>'),
 
     // infix_term = application_term { infix_op application_term }
     _infix_term: $ => prec.left(PREC.infix, seq(

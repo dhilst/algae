@@ -148,6 +148,7 @@
 ; Term / type operators
 ; ---------------------------------------------------------------------------
 (infix_op) @operator
+(comparison_op) @operator
 (symbolic_operator) @operator
 (sum_op) @operator           ; |  (sum type)
 

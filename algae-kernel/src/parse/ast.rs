@@ -362,4 +362,9 @@ pub enum InfixOp {
     Minus,
     Star,
     Slash,
+    EqEq,
+    Lt,
+    Gt,
+    Le,
+    Ge,
 }

@@ -241,22 +241,27 @@
   {
     "type": "case_block",
     "named": true,
-    "fields": {
-      "proof": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "proof_block",
-            "named": true
-          }
-        ]
-      }
-    },
+    "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "by_stmt_many",
+          "named": true
+        },
+        {
+          "type": "by_stmt_then",
+          "named": true
+        },
+        {
+          "type": "by_stmt_wip",
+          "named": true
+        },
+        {
+          "type": "by_stmt_zero",
+          "named": true
+        },
         {
           "type": "case_body",
           "named": true
@@ -282,6 +287,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "comparison_op",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "conjunction_op",
@@ -1340,6 +1350,10 @@
       "types": [
         {
           "type": "application",
+          "named": true
+        },
+        {
+          "type": "comparison_op",
           "named": true
         },
         {

@@ -1212,12 +1212,25 @@
           "name": "case_body"
         },
         {
-          "type": "FIELD",
-          "name": "proof",
-          "content": {
-            "type": "SYMBOL",
-            "name": "proof_block"
-          }
+          "type": "SYMBOL",
+          "name": "_proof_body"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "qed"
+            },
+            {
+              "type": "STRING",
+              "value": "wip"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ";"
         }
       ]
     },
@@ -2174,7 +2187,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "_infix_term"
+          "name": "_comparison_term"
         }
       ]
     },
@@ -2233,9 +2246,68 @@
         ]
       }
     },
-    "_infix_term": {
+    "_comparison_term": {
       "type": "PREC_LEFT",
       "value": 3,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "_infix_term"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "comparison_op"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "_infix_term"
+                  }
+                ]
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "comparison_op": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "=="
+        },
+        {
+          "type": "STRING",
+          "value": "<="
+        },
+        {
+          "type": "STRING",
+          "value": ">="
+        },
+        {
+          "type": "STRING",
+          "value": "<"
+        },
+        {
+          "type": "STRING",
+          "value": ">"
+        }
+      ]
+    },
+    "_infix_term": {
+      "type": "PREC_LEFT",
+      "value": 4,
       "content": {
         "type": "SEQ",
         "members": [

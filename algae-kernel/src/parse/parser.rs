@@ -375,13 +375,41 @@ fn e_and(input: &mut In) -> ModalResult<Expr> {
 }
 
 fn e_eq(input: &mut In) -> ModalResult<Expr> {
-    let left = e_prefix(input)?;
+    let left = e_cmp(input)?;
     if at(*input, &T::Eq) {
         expect(input, T::Eq)?;
-        let right = e_prefix(input)?;
+        let right = e_cmp(input)?;
         let span = left.span.merge(right.span);
         Ok(Expr {
             node: ExprNode::Eq(Box::new(left), Box::new(right)),
+            span,
+        })
+    } else {
+        Ok(left)
+    }
+}
+
+fn cmp_op(k: &T) -> Option<InfixOp> {
+    Some(match k {
+        T::EqEq => InfixOp::EqEq,
+        T::Lt => InfixOp::Lt,
+        T::Gt => InfixOp::Gt,
+        T::Le => InfixOp::Le,
+        T::Ge => InfixOp::Ge,
+        _ => return None,
+    })
+}
+
+// Comparison operators bind looser than arithmetic but tighter than `=` and the
+// logical connectives. Non-chaining, like `=`: `a < b < c` is a parse error.
+fn e_cmp(input: &mut In) -> ModalResult<Expr> {
+    let left = e_prefix(input)?;
+    if let Some(op) = peek_kind(*input).and_then(cmp_op) {
+        *input = &input[1..];
+        let right = e_prefix(input)?;
+        let span = left.span.merge(right.span);
+        Ok(Expr {
+            node: ExprNode::Infix(Box::new(left), op, Box::new(right)),
             span,
         })
     } else {

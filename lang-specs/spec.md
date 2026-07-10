@@ -805,7 +805,12 @@ term =
 
 lambda_term =
     ("lambda" | "λ") binder "st" term
-  | infix_term ;
+  | comparison_term ;
+
+(* Comparisons bind looser than arithmetic infix and are non-chaining:
+   `a + b < c` parses as `(a + b) < c`, while `a < b < c` is a syntax error. *)
+comparison_term =
+  infix_term [ comparison_op infix_term ] ;
 
 infix_term =
   application_term { infix_op application_term } ;
@@ -829,6 +834,13 @@ infix_op =
   | "*"
   | "/"
   | qualified_or_unqualified_ident ;
+
+comparison_op =
+    "=="
+  | "<"
+  | ">"
+  | "<="
+  | ">=" ;
 
 symbol =
     qualified_or_unqualified_ident

@@ -527,6 +527,11 @@ fn infix_text(op: ast::InfixOp) -> &'static str {
         ast::InfixOp::Minus => "-",
         ast::InfixOp::Star => "*",
         ast::InfixOp::Slash => "/",
+        ast::InfixOp::EqEq => "==",
+        ast::InfixOp::Lt => "<",
+        ast::InfixOp::Gt => ">",
+        ast::InfixOp::Le => "<=",
+        ast::InfixOp::Ge => ">=",
     }
 }
 
