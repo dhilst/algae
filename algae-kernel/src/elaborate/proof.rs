@@ -26,6 +26,9 @@ pub struct CompiledUnit {
     pub obligations: Vec<Obligation>,
     /// The equational rewrite system used for definitional equality.
     pub rewrite: RewriteSystem,
+    /// Non-fatal warnings gathered during elaboration (e.g. a hypothesis named
+    /// after a rule parameter). These do not fail verification.
+    pub warnings: Vec<Diagnostic>,
 }
 
 pub struct Obligation {
@@ -49,7 +52,7 @@ pub fn elaborate_unit(
     let mut loaded = HashSet::new();
     // Pass 1: build the full signature (local declarations + imports).
     process_decls(&mut elab, &module.decls, module_name, resolver, true, &mut loaded);
-    if !elab.diags.is_empty() {
+    if elab.diags.iter().any(|d| d.severity == crate::diagnostics::Severity::Error) {
         return Err(elab.diags);
     }
 
@@ -72,15 +75,19 @@ pub fn elaborate_unit(
             }
         }
     }
-    if !elab.diags.is_empty() {
+    if elab.diags.iter().any(|d| d.severity == crate::diagnostics::Severity::Error) {
         return Err(elab.diags);
     }
     let exports = elab.sig.exported.clone();
+    // Any remaining diagnostics are warnings; they travel with the unit and do
+    // not fail verification.
+    let warnings = elab.diags;
     Ok(CompiledUnit {
         interner: elab.interner,
         exports,
         obligations,
         rewrite,
+        warnings,
     })
 }
 
@@ -751,12 +758,35 @@ fn elaborate_step(
             .filter_map(|fp| user_entry(elab, fp))
             .filter(|(s, _)| !parent_names.contains(s))
             .collect();
-        if user_new.len() != prem.ctx.len() {
+        // Rule 1: a premise hypothesis whose instantiated proposition is already
+        // assumed in the parent context is dischargeable — it need not be
+        // reintroduced (the existing assumption satisfies it).
+        let dischargeable: Vec<bool> = prem
+            .ctx
+            .iter()
+            .map(|e| match e {
+                CtxEntry::Proof { prop, .. } => {
+                    let p = crate::core::tactic::subst_all(prop, &term_subst);
+                    ctx.iter().any(|pe| {
+                        matches!(pe, CtxEntry::Proof { prop: pp, .. } if rs.defeq(pp, &p))
+                    })
+                }
+                CtxEntry::Term { .. } => false,
+            })
+            .collect();
+        let required: Vec<&CtxEntry> = prem
+            .ctx
+            .iter()
+            .zip(&dischargeable)
+            .filter(|(_, d)| !**d)
+            .map(|(e, _)| e)
+            .collect();
+        if user_new.len() != required.len() {
             elab.err(
                 format!(
                     "case introduces {} variable(s) but the rule premise introduces {}",
                     user_new.len(),
-                    prem.ctx.len()
+                    required.len()
                 ),
                 case.span,
             );
@@ -797,9 +827,18 @@ fn elaborate_step(
                 }
             }
         }
-        // Build the renaming and apply it to the premise.
+        // Build the premise: drop the dischargeable hypotheses (they are not
+        // added to the subgoal), then rename the required ones to the user's
+        // chosen names.
         let mut renamed = prem.clone();
-        for (eig, (user, _is_proof)) in prem.ctx.iter().zip(&user_new) {
+        renamed.ctx = prem
+            .ctx
+            .iter()
+            .zip(&dischargeable)
+            .filter(|(_, d)| !**d)
+            .map(|(e, _)| e.clone())
+            .collect();
+        for (eig, (user, _is_proof)) in required.iter().zip(&user_new) {
             let from = eig.name();
             renamed = rename_sequent(&renamed, from, *user);
         }
@@ -899,13 +938,64 @@ fn show_ctx_ext(entries: &[CtxEntry], names: &crate::core::name::Interner) -> St
 /// The entries a `then`/case continuation must restate to reach `sq` from a
 /// parent context of length `parent_len`: every carried proof assumption plus
 /// every entry the tactic introduced. (Parent term variables stay implicit.)
-fn restated_entries(parent: &[CtxEntry], sq_ctx: &[CtxEntry]) -> Vec<CtxEntry> {
-    let mut out: Vec<CtxEntry> = parent
+fn continuation_entries(
+    parent: &[CtxEntry],
+    sq_ctx: &[CtxEntry],
+    rs: &RewriteSystem,
+    names: &Interner,
+) -> Vec<String> {
+    use crate::core::display::show;
+    // Names currently in scope (for the rule-2 name-collision check) and the
+    // propositions currently assumed (for the rule-1 "already present" check).
+    let mut used: HashSet<String> = parent
+        .iter()
+        .map(|e| names.resolve(e.name()).to_string())
+        .collect();
+    let mut props: Vec<Expr> = parent
+        .iter()
+        .filter_map(|e| match e {
+            CtxEntry::Proof { prop, .. } => Some(prop.clone()),
+            CtxEntry::Term { .. } => None,
+        })
+        .collect();
+    // Carried proof assumptions are always restated (no implicit weakening).
+    let mut out: Vec<String> = parent
         .iter()
         .filter(|e| matches!(e, CtxEntry::Proof { .. }))
-        .cloned()
+        .map(|e| render_entry(e, names))
         .collect();
-    out.extend(sq_ctx[parent.len().min(sq_ctx.len())..].iter().cloned());
+    // Newly-introduced entries, subject to the freshness rules.
+    for e in &sq_ctx[parent.len().min(sq_ctx.len())..] {
+        match e {
+            CtxEntry::Proof { name, prop } => {
+                // Rule 1: the proposition is already assumed → not reintroduced.
+                if props.iter().any(|p| rs.defeq(p, prop)) {
+                    continue;
+                }
+                // Rule 2: the name is taken by a different proposition → freshen
+                // it to `<base>0`, `<base>1`, … until unused.
+                let base = names.resolve(*name).to_string();
+                let mut nm = base.clone();
+                if used.contains(&nm) {
+                    let mut n = 0u32;
+                    loop {
+                        nm = format!("{base}{n}");
+                        if !used.contains(&nm) {
+                            break;
+                        }
+                        n += 1;
+                    }
+                }
+                out.push(format!("{nm} := {}", show(prop, names)));
+                used.insert(nm);
+                props.push(prop.clone());
+            }
+            CtxEntry::Term { name, ty } => {
+                out.push(format!("{} : {}", names.resolve(*name), show(ty, names)));
+                used.insert(names.resolve(*name).to_string());
+            }
+        }
+    }
     out
 }
 
@@ -917,34 +1007,47 @@ fn restated_entries(parent: &[CtxEntry], sq_ctx: &[CtxEntry]) -> Vec<CtxEntry> {
 ///     x : T
 ///     ⊢ <goal>;
 /// ```
-fn render_then(restate: &[CtxEntry], goal: &str, names: &crate::core::name::Interner) -> String {
-    if restate.is_empty() {
+fn render_then(entries: &[String], goal: &str, body_indent: &str) -> String {
+    if entries.is_empty() {
         return format!("then ⊢ {goal};");
     }
     let mut b = String::from("then\n");
-    let n = restate.len();
-    for (i, e) in restate.iter().enumerate() {
+    let n = entries.len();
+    for (i, e) in entries.iter().enumerate() {
         let sep = if i + 1 < n { ";" } else { "" };
-        b.push_str(&format!("    {}{sep}\n", render_entry(e, names)));
+        b.push_str(&format!("{body_indent}{e}{sep}\n"));
     }
-    b.push_str(&format!("    ⊢ {goal};"));
+    b.push_str(&format!("{body_indent}⊢ {goal};"));
     b
 }
 
 /// Like [`render_then`] but for one branch of a `cases` skeleton, laid out one
 /// context entry per line under a `case` header.
-fn render_case(restate: &[CtxEntry], goal: &str, names: &crate::core::name::Interner) -> String {
-    if restate.is_empty() {
+fn render_case(entries: &[String], goal: &str, body_indent: &str) -> String {
+    if entries.is_empty() {
         return format!("case ⊢ {goal};");
     }
     let mut b = String::from("case\n");
-    let n = restate.len();
-    for (i, e) in restate.iter().enumerate() {
+    let n = entries.len();
+    for (i, e) in entries.iter().enumerate() {
         let sep = if i + 1 < n { ";" } else { "" };
-        b.push_str(&format!("      {}{sep}\n", render_entry(e, names)));
+        b.push_str(&format!("{body_indent}{e}{sep}\n"));
     }
-    b.push_str(&format!("      ⊢ {goal};"));
+    b.push_str(&format!("{body_indent}⊢ {goal};"));
     b
+}
+
+/// The leading whitespace of the source line containing `span.start` — used to
+/// indent multi-line continuation fixes so they align with the `by` they follow.
+fn line_indent(source: &str, start: usize) -> String {
+    let ls = source[..start.min(source.len())]
+        .rfind('\n')
+        .map(|i| i + 1)
+        .unwrap_or(0);
+    source[ls..start.min(source.len())]
+        .chars()
+        .take_while(|c| *c == ' ' || *c == '\t')
+        .collect()
 }
 
 /// Report a **tactic-inspect** step (`by ref(…)?`, `?name` arguments, or a
@@ -1039,6 +1142,9 @@ fn report_tactic_hole(
             let t = t.strip_suffix('?').unwrap_or(t).trim_end();
             t.to_string()
         });
+        // Continuation fixes are multi-line; indent their extra lines to match
+        // the `by` they follow so the pasted `then`/`cases` lines up.
+        let indent = line_indent(&elab.source, stmt.span.start);
         let mut fixes: Vec<Fix> = Vec::new();
 
         // Fully concrete: apply for real and suggest the next step.
@@ -1071,35 +1177,40 @@ fn report_tactic_hole(
                     // and any eigenvariables/hypotheses the tactic introduced — so
                     // the suggested `then …` is a valid, non-weakening continuation.
                     let sq = &next[0];
-                    let restate = restated_entries(ctx, &sq.ctx);
+                    let entries = continuation_entries(ctx, &sq.ctx, rs, &elab.interner);
                     let g = show(&sq.goal, &elab.interner);
-                    let then_block = render_then(&restate, &g, &elab.interner);
+                    let body_indent = format!("{indent}  ");
+                    let then_block = render_then(&entries, &g, &body_indent);
                     msg.push_str(&format!(
-                        "\nContinue with:\n  {then_block}\n  by wip(?{name});\n"
+                        "\nContinue with:\n{indent}{then_block}\n{indent}by wip(?{name});\n"
                     ));
                     if let Some(by) = &concrete_by {
                         fixes.push(Fix {
                             title: "Continue with `then`".to_string(),
-                            replacement: format!("{by}\n  {then_block}\n  by wip(?{name});"),
+                            replacement: format!("{by}\n{indent}{then_block}\n{indent}by wip(?{name});"),
                             span: stmt.span,
                         });
                     }
                 } else {
                     // Paste-able `cases` skeleton, one `case` per subgoal, each
                     // branch left as a named hole to fill in.
+                    let case_body_indent = format!("{indent}    ");
                     let mut skel = String::from("cases\n");
                     for (k, sq) in next.iter().enumerate() {
-                        let restate = restated_entries(ctx, &sq.ctx);
+                        let entries = continuation_entries(ctx, &sq.ctx, rs, &elab.interner);
                         let g = show(&sq.goal, &elab.interner);
-                        let case_hdr = render_case(&restate, &g, &elab.interner);
-                        skel.push_str(&format!("    {case_hdr}\n      by wip(?g{});\n    wip;\n", k + 1));
+                        let case_hdr = render_case(&entries, &g, &case_body_indent);
+                        skel.push_str(&format!(
+                            "{indent}  {case_hdr}\n{indent}    by wip(?g{});\n{indent}  wip;\n",
+                            k + 1
+                        ));
                     }
-                    skel.push_str("  wip;");
-                    msg.push_str(&format!("\nContinue with:\n  {skel}\n"));
+                    skel.push_str(&format!("{indent}wip;"));
+                    msg.push_str(&format!("\nContinue with:\n{indent}{skel}\n"));
                     if let Some(by) = &concrete_by {
                         fixes.push(Fix {
                             title: "Continue with `cases`".to_string(),
-                            replacement: format!("{by}\n  {skel}"),
+                            replacement: format!("{by}\n{indent}{skel}"),
                             span: stmt.span,
                         });
                     }
@@ -1671,9 +1782,26 @@ mod fix_tests {
 
     fn diags(src: &str) -> Vec<Diagnostic> {
         match elaborate_unit(src, "t", &StdlibResolver, true) {
-            Ok(_) => Vec::new(),
+            Ok(u) => u.warnings,
             Err(d) => d,
         }
+    }
+
+    #[test]
+    fn hypothesis_named_after_param_warns() {
+        // `P := P` names the hypothesis after the `P : Prop` parameter. It must
+        // still verify (freshened internally), but emit a non-fatal warning.
+        let src = "rule r(P : Prop)\n  P := P ⊢ False\n  ────────────────────────\n  ⊢ ¬P\nend;\n";
+        let ds = diags(src);
+        assert!(
+            ds.iter().any(|d| d.severity == crate::diagnostics::Severity::Warning
+                && d.message.contains("clashes with a name the rule already introduces")),
+            "expected a name-clash warning: {ds:?}"
+        );
+        assert!(
+            ds.iter().all(|d| d.severity != crate::diagnostics::Severity::Error),
+            "must not be an error: {ds:?}"
+        );
     }
 
     /// Every fix's span must slice back to valid source (so an editor can apply

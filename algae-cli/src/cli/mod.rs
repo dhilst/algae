@@ -247,6 +247,10 @@ fn cmd_verify(opts: &GlobalOpts, targets: &[PathBuf]) -> Result<(), ()> {
                 continue;
             }
         };
+        // Warnings are non-fatal: report them, but don't fail the run.
+        for d in &unit.warnings {
+            eprintln!("{}", d.clone().with_file(f.clone()).render(Some(&src)));
+        }
         let mut file_ok = true;
         let mut wip_count = 0usize;
         for ob in &unit.obligations {

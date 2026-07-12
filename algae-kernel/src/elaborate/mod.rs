@@ -122,6 +122,10 @@ impl Elab {
         self.diags.push(Diagnostic::error(msg).with_span(span));
     }
 
+    pub fn warn(&mut self, msg: impl Into<String>, span: Span) {
+        self.diags.push(Diagnostic::warning(msg).with_span(span));
+    }
+
     /// Like [`err`](Self::err), but attaches machine-applicable fix suggestions
     /// (surfaced as autocomplete completions by the web editor).
     pub fn err_with_fixes(&mut self, msg: impl Into<String>, span: Span, fixes: Vec<Fix>) {
@@ -753,13 +757,37 @@ pub fn build_rule(elab: &mut Elab, r: &ast::RuleDecl) -> Result<InlinedRule, ()>
     // §4.15 side condition is enforced by eigenvariable freshness.
     let is_gen = false;
     let bidirectional = r.name.text == "backward" || r.name.text == "forward";
+    let param_names: std::collections::HashSet<Sym> =
+        param_entries.iter().map(|e| e.name()).collect();
     // Premises: each premise's context entries are eigenvariables/hypotheses,
     // lowered as additional free variables in a cloned scope.
     let mut premises = Vec::new();
     for prem in &r.premises {
         let mut pscope = scope.clone();
-        let ext = elab.lower_telescope(&mut pscope, &prem.context)?;
+        let mut ext = elab.lower_telescope(&mut pscope, &prem.context)?;
         let goal = elab.lower_expr(&mut pscope, &prem.prop)?;
+        // A hypothesis named after a name the rule already introduced (a
+        // parameter — the classic `P := P`) shares that name's symbol, so a later
+        // case-rename (`P` → the user's name) would rewrite the *proposition* too,
+        // corrupting it into a self-reference (`Pa := Pa`). Warn, and give the
+        // hypothesis a fresh internal name (the user renames it in the case
+        // anyway). By convention hypotheses are lower-case, which avoids this.
+        for e in &mut ext {
+            if let CtxEntry::Proof { name, .. } = e {
+                let nm = *name;
+                if param_names.contains(&nm) {
+                    let orig = elab.interner.resolve(nm).to_string();
+                    elab.warn(
+                        format!(
+                            "hypothesis `{orig}` clashes with a name the rule already \
+                             introduces; name hypotheses in lower case (e.g. `hp := {orig}`)"
+                        ),
+                        prem.prop.span,
+                    );
+                    *name = elab.interner.fresh("hyp");
+                }
+            }
+        }
         let mut pctx = param_entries.clone();
         pctx.extend(ext.clone());
         elab.check_goal_welltyped(&pctx, &goal, prem.prop.span);

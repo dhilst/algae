@@ -72,6 +72,16 @@ impl Diagnostic {
         }
     }
 
+    pub fn warning(message: impl Into<String>) -> Diagnostic {
+        Diagnostic {
+            severity: Severity::Warning,
+            message: message.into(),
+            file: None,
+            span: None,
+            fixes: Vec::new(),
+        }
+    }
+
     pub fn with_file(mut self, file: impl Into<PathBuf>) -> Diagnostic {
         self.file = Some(file.into());
         self

@@ -192,8 +192,14 @@ fn run_check(source: &str, module_name: &str, extra: Vec<(String, String)>) -> C
         ));
     }
     let wip = unit.obligations.iter().filter(|o| o.wip).count();
+    // Warnings are reported but do not affect `ok`.
     let ok = errors.is_empty();
-    let diagnostics: Vec<JsDiag> = errors.iter().map(|d| JsDiag::from(source, d)).collect();
+    let diagnostics: Vec<JsDiag> = unit
+        .warnings
+        .iter()
+        .chain(errors.iter())
+        .map(|d| JsDiag::from(source, d))
+        .collect();
     CheckResult {
         ok,
         diagnostics,

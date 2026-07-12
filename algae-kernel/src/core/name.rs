@@ -47,7 +47,9 @@ impl Interner {
     pub fn fresh(&mut self, base: &str) -> Sym {
         let mut n = 0u32;
         loop {
-            let candidate = format!("{base}#{n}");
+            // No `#` separator: `#` starts a comment, so a fresh name must be a
+            // valid identifier (e.g. `hyp0`) to survive being pasted into source.
+            let candidate = format!("{base}{n}");
             if !self.map.contains_key(&candidate) {
                 return self.intern(&candidate);
             }
