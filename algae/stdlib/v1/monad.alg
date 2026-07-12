@@ -79,31 +79,33 @@ theory Applicative(
 end;
 
 theory Monad(
-  A B C : Sort,
   M : Sort → Sort,
-  return : A → M(A),
-  bind : M(A) * (A → M(B)) → M(B)
+  return : forall (X : Sort) st X → M(X),
+  bind : forall (X Y : Sort) st M(X) * (X → M(Y)) → M(Y)
 ) laws
   law left_identity(
+    A B : Sort,
     x : A,
     f : A → M(B)
   )
-    ⊢ bind(return(x), f) = f(x);
+    ⊢ bind(A, B, return(A, x), f) = f(x);
 
   law right_identity(
+    A : Sort,
     m : M(A)
   )
-    ⊢ bind(m, return) = m;
+    ⊢ bind(A, A, m, λ (x : A) st return(A, x)) = m;
 
   law associativity(
+    A B C : Sort,
     m : M(A),
     f : A → M(B),
     g : B → M(C)
   )
-    ⊢ bind(bind(m, f), g)
+    ⊢ bind(B, C, bind(A, B, m, f), g)
        =
        bind(
-         m,
-         λ (x : A) st bind(f(x), g)
+         A, C, m,
+         λ (x : A) st bind(B, C, f(x), g)
        );
 end;

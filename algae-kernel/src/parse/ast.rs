@@ -104,6 +104,9 @@ pub struct SortBinding {
 #[derive(Clone, Debug)]
 pub struct OpDecl {
     pub symbol: Symbol,
+    /// Explicit type parameters bound by a leading `forall (… : Sort) st` prefix
+    /// on the signature (empty for monomorphic operators).
+    pub type_params: Vec<Binder>,
     pub sig: FunctionSig,
     pub span: Span,
 }
@@ -312,6 +315,9 @@ pub enum TypeNode {
     Product(Vec<Type>),
     Sum(Vec<Type>),
     Arrow(Box<Type>, Box<Type>),
+    /// A dependent function type `forall (… : Sort) st <type>`: a polymorphic
+    /// operation type (used for operator signatures and theory operations).
+    Forall(Box<Binder>, Box<Type>),
 }
 
 // ---- Binders --------------------------------------------------------------

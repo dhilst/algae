@@ -244,6 +244,18 @@ fn type_sum(input: &mut In) -> ModalResult<Type> {
 }
 
 fn type_expr(input: &mut In) -> ModalResult<Type> {
+    // Dependent function type: `forall (… : Sort) st <type>`.
+    if at(*input, &T::KwForall) {
+        let kw = expect(input, T::KwForall)?;
+        let b = binder(input)?;
+        expect(input, T::KwSt)?;
+        let body = type_expr(input)?;
+        let span = kw.merge(body.span);
+        return Ok(Type {
+            node: TypeNode::Forall(Box::new(b), Box::new(body)),
+            span,
+        });
+    }
     let left = type_sum(input)?;
     if at(*input, &T::Arrow) {
         expect(input, T::Arrow)?;
@@ -1033,6 +1045,14 @@ fn op_decl(input: &mut In) -> ModalResult<OpDecl> {
     let start = expect(input, T::KwOp)?;
     let symbol = op_symbol(input)?;
     expect(input, T::Colon)?;
+    // Optional explicit type parameters: one or more `forall (… : Sort) st`
+    // prefixes bind the sort variables the signature ranges over.
+    let mut type_params = Vec::new();
+    while at(*input, &T::KwForall) {
+        expect(input, T::KwForall)?;
+        type_params.push(binder(input)?);
+        expect(input, T::KwSt)?;
+    }
     // function_sig = [type_expr] "->" type_expr.
     // The domain is parsed without a top-level arrow so the right-associative
     // function arrow does not swallow the domain→codomain `->`.
@@ -1046,6 +1066,7 @@ fn op_decl(input: &mut In) -> ModalResult<OpDecl> {
     let end = semi(input)?;
     Ok(OpDecl {
         symbol,
+        type_params,
         sig: FunctionSig { domain, codomain },
         span: start.merge(end),
     })

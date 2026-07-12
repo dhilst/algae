@@ -21,6 +21,10 @@ pub enum Expr {
     Lam(Box<Expr>, Box<Expr>),
     /// Non-dependent function type `dom -> cod`.
     Arrow(Box<Expr>, Box<Expr>),
+    /// Dependent function type `Pi (_ : dom) . cod` — the type of a polymorphic
+    /// operator or a type-abstracting lambda. Distinct from the logical `Forall`
+    /// (which is Prop-valued); `Pi` is a function type and may be applied.
+    Pi(Box<Expr>, Box<Expr>),
     /// Product type `a * b * ...`.
     Product(Vec<Expr>),
     /// Sum type `a | b | ...`.
@@ -79,6 +83,10 @@ impl Expr {
                 Box::new(ty.shift(d, cutoff)),
                 Box::new(b.shift(d, cutoff + 1)),
             ),
+            Expr::Pi(ty, b) => Expr::Pi(
+                Box::new(ty.shift(d, cutoff)),
+                Box::new(b.shift(d, cutoff + 1)),
+            ),
             Expr::Arrow(a, b) => {
                 Expr::Arrow(Box::new(a.shift(d, cutoff)), Box::new(b.shift(d, cutoff)))
             }
@@ -101,7 +109,7 @@ impl Expr {
             Expr::Bound(i) => *i == idx,
             Expr::Free(_) | Expr::Const(_) | Expr::Sort | Expr::Prop | Expr::False => false,
             Expr::App(f, args) => f.has_bound(idx) || args.iter().any(|a| a.has_bound(idx)),
-            Expr::Lam(ty, b) | Expr::Forall(ty, b) | Expr::Exists(ty, b) => {
+            Expr::Lam(ty, b) | Expr::Forall(ty, b) | Expr::Exists(ty, b) | Expr::Pi(ty, b) => {
                 ty.has_bound(idx) || b.has_bound(idx + 1)
             }
             Expr::Arrow(a, b)
@@ -121,7 +129,7 @@ impl Expr {
             Expr::Free(x) => *x == s,
             Expr::Bound(_) | Expr::Const(_) | Expr::Sort | Expr::Prop | Expr::False => false,
             Expr::App(f, args) => f.has_free(s) || args.iter().any(|a| a.has_free(s)),
-            Expr::Lam(ty, b) | Expr::Forall(ty, b) | Expr::Exists(ty, b) => {
+            Expr::Lam(ty, b) | Expr::Forall(ty, b) | Expr::Exists(ty, b) | Expr::Pi(ty, b) => {
                 ty.has_free(s) || b.has_free(s)
             }
             Expr::Arrow(a, b)
@@ -154,6 +162,9 @@ impl Expr {
             }
             Expr::Exists(ty, b) => {
                 Expr::Exists(Box::new(ty.subst_free(s, v)), Box::new(b.subst_free(s, v)))
+            }
+            Expr::Pi(ty, b) => {
+                Expr::Pi(Box::new(ty.subst_free(s, v)), Box::new(b.subst_free(s, v)))
             }
             Expr::Arrow(a, b) => {
                 Expr::Arrow(Box::new(a.subst_free(s, v)), Box::new(b.subst_free(s, v)))
@@ -192,6 +203,7 @@ impl Expr {
                 args.iter().map(|a| a.subst_many(map)).collect(),
             ),
             Expr::Lam(ty, b) => Expr::Lam(Box::new(ty.subst_many(map)), Box::new(b.subst_many(map))),
+            Expr::Pi(ty, b) => Expr::Pi(Box::new(ty.subst_many(map)), Box::new(b.subst_many(map))),
             Expr::Forall(ty, b) => {
                 Expr::Forall(Box::new(ty.subst_many(map)), Box::new(b.subst_many(map)))
             }
@@ -250,6 +262,10 @@ fn subst_bound(e: &Expr, k: u32, v: &Expr) -> Expr {
             Box::new(subst_bound(ty, k, v)),
             Box::new(subst_bound(b, k + 1, v)),
         ),
+        Expr::Pi(ty, b) => Expr::Pi(
+            Box::new(subst_bound(ty, k, v)),
+            Box::new(subst_bound(b, k + 1, v)),
+        ),
         Expr::Arrow(a, b) => Expr::Arrow(Box::new(subst_bound(a, k, v)), Box::new(subst_bound(b, k, v))),
         Expr::Product(xs) => Expr::Product(xs.iter().map(|x| subst_bound(x, k, v)).collect()),
         Expr::Sum(xs) => Expr::Sum(xs.iter().map(|x| subst_bound(x, k, v)).collect()),
@@ -286,6 +302,9 @@ fn close_at(e: &Expr, s: Sym, k: u32) -> Expr {
         }
         Expr::Exists(ty, b) => {
             Expr::Exists(Box::new(close_at(ty, s, k)), Box::new(close_at(b, s, k + 1)))
+        }
+        Expr::Pi(ty, b) => {
+            Expr::Pi(Box::new(close_at(ty, s, k)), Box::new(close_at(b, s, k + 1)))
         }
         Expr::Arrow(a, b) => Expr::Arrow(Box::new(close_at(a, s, k)), Box::new(close_at(b, s, k))),
         Expr::Product(xs) => Expr::Product(xs.iter().map(|x| close_at(x, s, k)).collect()),

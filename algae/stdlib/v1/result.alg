@@ -9,94 +9,92 @@ import monad(
 
 sort Result : Sort * Sort → Sort;
 
-op ok : A → Result(A, E);
+op ok : forall (A E : Sort) st A → Result(A, E);
 
-op err : E → Result(A, E);
+op err : forall (A E : Sort) st E → Result(A, E);
 
-op return : A → Result(A, E);
+op return : forall (A E : Sort) st A → Result(A, E);
 
-op bind : Result(A, E) * (A → Result(B, E)) → Result(B, E);
+op bind : forall (A B E : Sort) st Result(A, E) * (A → Result(B, E)) → Result(B, E);
 
 axiom return_def(
   A E : Sort,
   x : A
 )
-  ⊢ return(x) = ok(x);
+  ⊢ return(A, E, x) = ok(A, E, x);
 
 axiom bind_ok(
   A B E : Sort,
   x : A,
   f : A → Result(B, E)
 )
-  ⊢ bind(ok(x), f) = f(x);
+  ⊢ bind(A, B, E, ok(A, E, x), f) = f(x);
 
 axiom bind_err(
   A B E : Sort,
   e : E,
   f : A → Result(B, E)
 )
-  ⊢ bind(err(e), f) = err(e);
+  ⊢ bind(A, B, E, err(A, E, e), f) = err(B, E, e);
 
 rule result_cases(
   A E : Sort,
   r : Result(A, E),
   P : Result(A, E) → Prop
 )
-  x : A ⊢ P(ok(x));
-  e : E ⊢ P(err(e))
+  x : A ⊢ P(ok(A, E, x));
+  e : E ⊢ P(err(A, E, e))
   ────────────────────────
   ⊢ P(r)
 end;
 
+# `Result(-, E)` is a monad for each fixed error type `E`. Because `Result` is
+# binary while `Monad` expects a unary type constructor, the model supplies a
+# type-abstracting `M = λ X. Result(X, E)` and error-fixed `return`/`bind` as
+# dependent lambdas.
 model ResultMonad satisfies Monad(
-  A,
-  B,
-  C,
   λ (X : Sort) st Result(X, E),
-  return,
-  bind
+  λ (X : Sort) st λ (v : X) st return(X, E, v),
+  λ (X : Sort) st λ (Y : Sort) st
+    λ (p : Result(X, E) * (X → Result(Y, E))) st bind(X, Y, E, p)
 ) iff laws
   law left_identity;
   proof
     by backward(
       Result(A, E),
-      return(x),
-      ok(x),
+      return(A, E, x),
+      ok(A, E, x),
       return_def(A, E, x),
-      λ (r : Result(A, E)) st bind(r, f) = f(x)
+      λ (r : Result(A, E)) st bind(A, B, E, r, f) = f(x)
     )
-    then ⊢ bind(ok(x), f) = f(x);
+    then ⊢ bind(A, B, E, ok(A, E, x), f) = f(x);
     by bind_ok(A, B, E, x, f);
   qed;
 
   law right_identity;
   proof
     by result_cases(
-      A,
-      E,
-      m,
-      λ (r : Result(A, E)) st bind(r, return) = r
+      A, E, m,
+      λ (r : Result(A, E)) st bind(A, A, E, r, λ (w : A) st return(A, E, w)) = r
     ) cases
       case
-        A E : Sort;
         x : A;
-        ⊢ bind(ok(x), return) = ok(x);
+        ⊢ bind(A, A, E, ok(A, E, x), λ (w : A) st return(A, E, w)) = ok(A, E, x);
         by backward(
           Result(A, E),
-          bind(ok(x), return),
-          return(x),
-          bind_ok(A, A, E, x, return),
-          λ (r : Result(A, E)) st r = ok(x)
+          bind(A, A, E, ok(A, E, x), λ (w : A) st return(A, E, w)),
+          return(A, E, x),
+          bind_ok(A, A, E, x, λ (w : A) st return(A, E, w)),
+          λ (r : Result(A, E)) st r = ok(A, E, x)
         )
-        then ⊢ return(x) = ok(x);
+        then ⊢ return(A, E, x) = ok(A, E, x);
         by return_def(A, E, x);
       qed;
 
       case
-        A E : Sort;
         e : E;
-        ⊢ bind(err(e), return) = err(e);
-        by bind_err(A, A, E, e, return);
+        ⊢ bind(A, A, E, err(A, E, e), λ (w : A) st return(A, E, w)) = err(A, E, e);
+        by bind_err(A, A, E, e, λ (w : A) st return(A, E, w));
       qed;
     qed;
   qed;
@@ -104,88 +102,80 @@ model ResultMonad satisfies Monad(
   law associativity;
   proof
     by result_cases(
-      A,
-      E,
-      m,
+      A, E, m,
       λ (r : Result(A, E)) st
-        bind(bind(r, f), g)
+        bind(B, C, E, bind(A, B, E, r, f), g)
         =
         bind(
-          r,
-          λ (x : A) st bind(f(x), g)
+          A, C, E, r,
+          λ (x : A) st bind(B, C, E, f(x), g)
         )
     ) cases
       case
-        A B C E : Sort;
         x : A;
-        f : A → Result(B, E);
-        g : B → Result(C, E);
-        ⊢ bind(bind(ok(x), f), g)
+        ⊢ bind(B, C, E, bind(A, B, E, ok(A, E, x), f), g)
            =
            bind(
-             ok(x),
-             λ (y : A) st bind(f(y), g)
+             A, C, E, ok(A, E, x),
+             λ (y : A) st bind(B, C, E, f(y), g)
            );
         by backward(
           Result(B, E),
-          bind(ok(x), f),
+          bind(A, B, E, ok(A, E, x), f),
           f(x),
           bind_ok(A, B, E, x, f),
           λ (r : Result(B, E)) st
-            bind(r, g)
+            bind(B, C, E, r, g)
             =
             bind(
-              ok(x),
-              λ (y : A) st bind(f(y), g)
+              A, C, E, ok(A, E, x),
+              λ (y : A) st bind(B, C, E, f(y), g)
             )
         )
-        then ⊢ bind(f(x), g) = bind(ok(x), λ (y : A) st bind(f(y), g));
+        then ⊢ bind(B, C, E, f(x), g) = bind(A, C, E, ok(A, E, x), λ (y : A) st bind(B, C, E, f(y), g));
         by backward(
           Result(C, E),
-          bind(ok(x), λ (y : A) st bind(f(y), g)),
-          bind(f(x), g),
-          bind_ok(A, C, E, x, λ (y : A) st bind(f(y), g)),
+          bind(A, C, E, ok(A, E, x), λ (y : A) st bind(B, C, E, f(y), g)),
+          bind(B, C, E, f(x), g),
+          bind_ok(A, C, E, x, λ (y : A) st bind(B, C, E, f(y), g)),
           λ (r : Result(C, E)) st
-            r = bind(ok(x), λ (y : A) st bind(f(y), g))
+            r = bind(A, C, E, ok(A, E, x), λ (y : A) st bind(B, C, E, f(y), g))
         )
-        then ⊢ bind(ok(x), λ (y : A) st bind(f(y), g))
-              = bind(ok(x), λ (y : A) st bind(f(y), g));
-        by refl(Result(C, E), bind(ok(x), λ (y : A) st bind(f(y), g)));
+        then ⊢ bind(A, C, E, ok(A, E, x), λ (y : A) st bind(B, C, E, f(y), g))
+              = bind(A, C, E, ok(A, E, x), λ (y : A) st bind(B, C, E, f(y), g));
+        by refl(Result(C, E), bind(A, C, E, ok(A, E, x), λ (y : A) st bind(B, C, E, f(y), g)));
       qed;
 
       case
-        A B C E : Sort;
         e : E;
-        f : A → Result(B, E);
-        g : B → Result(C, E);
-        ⊢ bind(bind(err(e), f), g)
+        ⊢ bind(B, C, E, bind(A, B, E, err(A, E, e), f), g)
            =
            bind(
-             err(e),
-             λ (x : A) st bind(f(x), g)
+             A, C, E, err(A, E, e),
+             λ (x : A) st bind(B, C, E, f(x), g)
            );
         by backward(
           Result(B, E),
-          bind(err(e), f),
-          err(e),
+          bind(A, B, E, err(A, E, e), f),
+          err(B, E, e),
           bind_err(A, B, E, e, f),
           λ (r : Result(B, E)) st
-            bind(r, g)
+            bind(B, C, E, r, g)
             =
             bind(
-              err(e),
-              λ (x : A) st bind(f(x), g)
+              A, C, E, err(A, E, e),
+              λ (x : A) st bind(B, C, E, f(x), g)
             )
         )
-        then ⊢ bind(err(e), g) = bind(err(e), λ (x : A) st bind(f(x), g));
+        then ⊢ bind(B, C, E, err(B, E, e), g) = bind(A, C, E, err(A, E, e), λ (x : A) st bind(B, C, E, f(x), g));
         by backward(
           Result(C, E),
-          bind(err(e), λ (x : A) st bind(f(x), g)),
-          err(e),
-          bind_err(A, C, E, e, λ (x : A) st bind(f(x), g)),
-          λ (r : Result(C, E)) st bind(err(e), g) = r
+          bind(A, C, E, err(A, E, e), λ (x : A) st bind(B, C, E, f(x), g)),
+          err(C, E, e),
+          bind_err(A, C, E, e, λ (x : A) st bind(B, C, E, f(x), g)),
+          λ (r : Result(C, E)) st bind(B, C, E, err(B, E, e), g) = r
         )
-        then ⊢ bind(err(e), g) = err(e);
+        then ⊢ bind(B, C, E, err(B, E, e), g) = err(C, E, e);
         by bind_err(B, C, E, e, g);
       qed;
     qed;

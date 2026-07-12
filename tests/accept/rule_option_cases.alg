@@ -6,13 +6,13 @@ lemma e(A : Sort, m : Option(A))
 proof
   by option_cases(A, m, _ = _) cases
     case
-      |- none = none;
-      by refl(None, none);
+      |- none(A) = none(A);
+      by refl(Option(A), none(A));
     qed;
     case
       x : A;
-      |- some(x) = some(x);
-      by refl(Option(A), some(x));
+      |- some(A, x) = some(A, x);
+      by refl(Option(A), some(A, x));
     qed;
   qed;
 qed;

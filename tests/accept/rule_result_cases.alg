@@ -7,13 +7,13 @@ proof
   by result_cases(A, E, r, _ = _) cases
     case
       x : A;
-      |- ok(x) = ok(x);
-      by refl(Result(A, E), ok(x));
+      |- ok(A, E, x) = ok(A, E, x);
+      by refl(Result(A, E), ok(A, E, x));
     qed;
     case
       e : E;
-      |- err(e) = err(e);
-      by refl(Result(A, E), err(e));
+      |- err(A, E, e) = err(A, E, e);
+      by refl(Result(A, E), err(A, E, e));
     qed;
   qed;
 qed;

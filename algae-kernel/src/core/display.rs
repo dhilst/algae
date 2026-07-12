@@ -124,6 +124,7 @@ fn go(e: &Expr, names: &Interner, binders: &mut Vec<String>, out: &mut String) {
         Expr::Lam(ty, b) => quantifier("λ", ty, b, names, binders, out),
         Expr::Forall(ty, b) => quantifier("∀", ty, b, names, binders, out),
         Expr::Exists(ty, b) => quantifier("∃", ty, b, names, binders, out),
+        Expr::Pi(ty, b) => quantifier("Π", ty, b, names, binders, out),
         Expr::Arrow(a, b) => binary(a, " → ", b, names, binders, out),
         Expr::Product(xs) => join(xs, " * ", names, binders, out),
         Expr::Sum(xs) => join(xs, " | ", names, binders, out),

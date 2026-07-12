@@ -19,12 +19,12 @@ closes a goal outright. We'll write it out in the buffer rather than importing i
      ⊢ x = x;
 
    sort Stack : Sort → Sort;
-   op push : A * Stack(A) → Stack(A);
+   op push : forall (A : Sort) st A * Stack(A) → Stack(A);
 
    lemma same(A : Sort, x : A, s : Stack(A))
-     ⊢ push(x, s) = push(x, s);
+     ⊢ push(A, x, s) = push(A, x, s);
    proof
-     by refl(Stack(A), push(x, s));
+     by refl(Stack(A), push(A, x, s));
    qed;
 
 That looks trivial, and it is — but note *when* it works, because that's the one
@@ -46,13 +46,13 @@ equal only when they become *literally identical* after two harmless clean-ups:
 
 And **that's all** — "α/β equivalence only." Crucially, the *operators* you
 declared (``push``, ``pop``, ``top``, ``+`` …) are **inert**: the kernel never
-runs them and never applies your axioms on its own. So ``pop(push(x, s))`` is
+runs them and never applies your axioms on its own. So ``pop(A, push(A, x, s))`` is
 **not** automatically ``s`` — even though your axiom says they're equal — and
-``top(push(x, s))`` is not automatically ``x``. To the kernel those are just
+``top(A, push(A, x, s))`` is not automatically ``x``. To the kernel those are just
 different symbol trees until *you* apply the equation that relates them.
 
-That's why ``refl`` closes ``push(x, s) = push(x, s)`` (identical trees) but would
-**not** close ``top(push(x, s)) = x`` (two different trees, equal only *by an
+That's why ``refl`` closes ``push(A, x, s) = push(A, x, s)`` (identical trees) but would
+**not** close ``top(A, push(A, x, s)) = x`` (two different trees, equal only *by an
 axiom*). Bridging that gap is exactly what rewriting is for.
 
 The rewrite rules and the placeholder
@@ -102,8 +102,8 @@ Equational reasoning on the stack
 =================================
 
 Here's the smallest real rewrite. Push ``b`` then ``a`` onto the empty stack, pop
-once, and the top is ``b``. We know ``pop(push(a, …)) = …`` from ``pop_push``, so we
-rewrite that ``pop(push(a, …))`` **forward** into the stack underneath, then read
+once, and the top is ``b``. We know ``pop(A, push(A, a, …)) = …`` from ``pop_push``, so we
+rewrite that ``pop(A, push(A, a, …))`` **forward** into the stack underneath, then read
 off the top:
 
 .. code-block:: alg
@@ -115,32 +115,32 @@ off the top:
    end;
 
    sort Stack : Sort → Sort;
-   op empty : → Stack(A);
-   op push  : A * Stack(A) → Stack(A);
-   op pop   : Stack(A) → Stack(A);
-   op top   : Stack(A) → A;
-   axiom top_push(A : Sort, x : A, s : Stack(A))  ⊢ top(push(x, s)) = x;
-   axiom pop_push(A : Sort, x : A, s : Stack(A))  ⊢ pop(push(x, s)) = s;
+   op empty : forall (A : Sort) st → Stack(A);
+   op push  : forall (A : Sort) st A * Stack(A) → Stack(A);
+   op pop   : forall (A : Sort) st Stack(A) → Stack(A);
+   op top   : forall (A : Sort) st Stack(A) → A;
+   axiom top_push(A : Sort, x : A, s : Stack(A))  ⊢ top(A, push(A, x, s)) = x;
+   axiom pop_push(A : Sort, x : A, s : Stack(A))  ⊢ pop(A, push(A, x, s)) = s;
 
    lemma one_pop(A : Sort, a b : A)
-     ⊢ top(
-         pop(push(a, push(b, empty)))    # this is going to be replaced
+     ⊢ top(A,
+         pop(A, push(A, a, push(A, b, empty(A))))    # this is going to be replaced
        ) = b;
    proof
      by forward(Stack(A),
-         pop(push(a, push(b, empty))),   # replace this
-         push(b, empty),                 # with this
-         pop_push(A, a, push(b, empty)), # using this equation
-         top(_) = b)                     # at this position
-     then ⊢ top(push(b, empty)) = b;     # yielding this
-     by top_push(A, b, empty);
+         pop(A, push(A, a, push(A, b, empty(A)))),   # replace this
+         push(A, b, empty(A)),                 # with this
+         pop_push(A, a, push(A, b, empty(A))), # using this equation
+         top(A, _) = b)                     # at this position
+     then ⊢ top(A, push(A, b, empty(A))) = b;     # yielding this
+     by top_push(A, b, empty(A));
    qed;
 
-Read the placeholder ``top(_) = b`` by plugging each side of the equation
-``pop(push(a, …)) = push(b, empty)`` into the ``_``:
+Read the placeholder ``top(A, _) = b`` by plugging each side of the equation
+``pop(A, push(A, a, …)) = push(A, b, empty(A))`` into the ``_``:
 
-- ``a`` side in the hole → ``top(pop(push(a, …))) = b`` — our current goal.
-- ``b`` side in the hole → ``top(push(b, empty)) = b`` — the goal after the
+- ``a`` side in the hole → ``top(A, pop(A, push(A, a, …))) = b`` — our current goal.
+- ``b`` side in the hole → ``top(A, push(A, b, empty(A))) = b`` — the goal after the
   rewrite, which ``top_push`` closes.
 
 Deeper stacks work the same way — just more rewrites. Three pushes and two pops:
@@ -157,26 +157,26 @@ we'll cover later.*
    end;
 
    sort Stack : Sort → Sort;
-   op empty : → Stack(A);
-   op push  : A * Stack(A) → Stack(A);
-   op pop   : Stack(A) → Stack(A);
-   op top   : Stack(A) → A;
-   axiom top_push(A : Sort, x : A, s : Stack(A))  ⊢ top(push(x, s)) = x;
-   axiom pop_push(A : Sort, x : A, s : Stack(A))  ⊢ pop(push(x, s)) = s;
+   op empty : forall (A : Sort) st → Stack(A);
+   op push  : forall (A : Sort) st A * Stack(A) → Stack(A);
+   op pop   : forall (A : Sort) st Stack(A) → Stack(A);
+   op top   : forall (A : Sort) st Stack(A) → A;
+   axiom top_push(A : Sort, x : A, s : Stack(A))  ⊢ top(A, push(A, x, s)) = x;
+   axiom pop_push(A : Sort, x : A, s : Stack(A))  ⊢ pop(A, push(A, x, s)) = s;
 
    lemma three_deep(A : Sort, a b c : A)
-     ⊢ top(pop(pop(push(a, push(b, push(c, empty)))))) = c;
+     ⊢ top(A, pop(A, pop(A, push(A, a, push(A, b, push(A, c, empty(A))))))) = c;
    proof
      by forward(Stack(A),
-         pop(push(a, push(b, push(c, empty)))),
-         push(b, push(c, empty)),
-         pop_push(A, a, push(b, push(c, empty))),
-         top(pop(_)) = c)
-     then ⊢ top(pop(push(b, push(c, empty)))) = c;
-     by forward(Stack(A), pop(push(b, push(c, empty))), push(c, empty),
-                pop_push(A, b, push(c, empty)), top(_) = c)
-     then ⊢ top(push(c, empty)) = c;
-     by top_push(A, c, empty);
+         pop(A, push(A, a, push(A, b, push(A, c, empty(A))))),
+         push(A, b, push(A, c, empty(A))),
+         pop_push(A, a, push(A, b, push(A, c, empty(A)))),
+         top(A, pop(A, _)) = c)
+     then ⊢ top(A, pop(A, push(A, b, push(A, c, empty(A))))) = c;
+     by forward(Stack(A), pop(A, push(A, b, push(A, c, empty(A)))), push(A, c, empty(A)),
+                pop_push(A, b, push(A, c, empty(A))), top(A, _) = c)
+     then ⊢ top(A, push(A, c, empty(A))) = c;
+     by top_push(A, c, empty(A));
    qed;
 
 .. admonition:: This only reaches *fixed* depths
@@ -195,16 +195,16 @@ When the placeholder misses
 The placeholder has to reproduce the goal when the equation's ``a`` side fills the
 hole. Aim it at the wrong subterm and you get a very common error. In ``one_pop``,
 suppose we wrote ``_ = b`` — a hole over the *whole* left side — instead of
-``top(_) = b``:
+``top(A, _) = b``:
 
 .. code-block:: text
 
    error: tactic `forward`: rule conclusion does not match the current goal
-     the rule concludes:  (λ (x : Stack(A)) st x = b)(pop(push(a, push(b, empty))))
-     but the goal is:     top(pop(push(a, push(b, empty)))) = b
+     the rule concludes:  (λ (x : Stack(A)) st x = b)(pop(A, push(A, a, push(A, b, empty(A)))))
+     but the goal is:     top(A, pop(A, push(A, a, push(A, b, empty(A))))) = b
 
 With ``_ = b`` the hole swallows the ``top(…)`` as well, so filling it produces
-``pop(push(a, …)) = b`` — *not* the goal. When you hit "rule conclusion does not
+``pop(A, push(A, a, …)) = b`` — *not* the goal. When you hit "rule conclusion does not
 match the current goal" on a rewrite, the placeholder is almost always the culprit:
 move the ``_`` to the subterm you actually mean to touch.
 

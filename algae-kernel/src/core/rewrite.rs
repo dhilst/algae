@@ -75,7 +75,8 @@ pub fn match_pattern(pat: &Expr, term: &Expr, metas: &[Sym], subst: &mut Vec<(Sy
         }
         (Expr::Lam(t1, b1), Expr::Lam(t2, b2))
         | (Expr::Forall(t1, b1), Expr::Forall(t2, b2))
-        | (Expr::Exists(t1, b1), Expr::Exists(t2, b2)) => {
+        | (Expr::Exists(t1, b1), Expr::Exists(t2, b2))
+        | (Expr::Pi(t1, b1), Expr::Pi(t2, b2)) => {
             match_pattern(t1, t2, metas, subst) && match_pattern(b1, b2, metas, subst)
         }
         (Expr::Arrow(a1, b1), Expr::Arrow(a2, b2))
@@ -122,6 +123,7 @@ fn rewrite_children(l: &Expr, r: &Expr, metas: &[Sym], e: &Expr) -> (Expr, bool)
         Expr::App(f, args) => Expr::App(Box::new(rw(f)), args.iter().map(&mut rw).collect()),
         Expr::Lam(t, b) => Expr::Lam(Box::new(rw(t)), Box::new(rw(b))),
         Expr::Forall(t, b) => Expr::Forall(Box::new(rw(t)), Box::new(rw(b))),
+        Expr::Pi(t, b) => Expr::Pi(Box::new(rw(t)), Box::new(rw(b))),
         Expr::Exists(t, b) => Expr::Exists(Box::new(rw(t)), Box::new(rw(b))),
         Expr::Arrow(a, b) => Expr::Arrow(Box::new(rw(a)), Box::new(rw(b))),
         Expr::Eq(a, b) => Expr::Eq(Box::new(rw(a)), Box::new(rw(b))),

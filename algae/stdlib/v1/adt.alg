@@ -13,32 +13,32 @@ import core(
 
 sort Pair : Sort * Sort → Sort;
 
-op pair : A * B → Pair(A, B);
+op pair : forall (A B : Sort) st A * B → Pair(A, B);
 
-op fst : Pair(A, B) → A;
+op fst : forall (A B : Sort) st Pair(A, B) → A;
 
-op snd : Pair(A, B) → B;
+op snd : forall (A B : Sort) st Pair(A, B) → B;
 
 axiom fst_pair(
   A B : Sort,
   x : A,
   y : B
 )
-  ⊢ fst(pair(x, y)) = x;
+  ⊢ fst(A, B, pair(A, B, x, y)) = x;
 
 axiom snd_pair(
   A B : Sort,
   x : A,
   y : B
 )
-  ⊢ snd(pair(x, y)) = y;
+  ⊢ snd(A, B, pair(A, B, x, y)) = y;
 
 rule pair_cases(
   A B : Sort,
   p : Pair(A, B),
   P : Pair(A, B) → Prop
 )
-  x : A, y : B ⊢ P(pair(x, y))
+  x : A, y : B ⊢ P(pair(A, B, x, y))
   ────────────────────────
   ⊢ P(p)
 end;
@@ -70,17 +70,17 @@ end;
 
 sort Sum : Sort * Sort → Sort;
 
-op inl : A → Sum(A, B);
+op inl : forall (A B : Sort) st A → Sum(A, B);
 
-op inr : B → Sum(A, B);
+op inr : forall (A B : Sort) st B → Sum(A, B);
 
 rule sum_cases(
   A B : Sort,
   s : Sum(A, B),
   P : Sum(A, B) → Prop
 )
-  x : A ⊢ P(inl(x));
-  y : B ⊢ P(inr(y))
+  x : A ⊢ P(inl(A, B, x));
+  y : B ⊢ P(inr(A, B, y))
   ────────────────────────
   ⊢ P(s)
 end;

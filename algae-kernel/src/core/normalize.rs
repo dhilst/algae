@@ -18,6 +18,7 @@ pub fn nf(e: &Expr) -> Expr {
         }
         Expr::Lam(ty, b) => Expr::Lam(Box::new(nf(ty)), Box::new(nf(b))),
         Expr::Forall(ty, b) => Expr::Forall(Box::new(nf(ty)), Box::new(nf(b))),
+        Expr::Pi(ty, b) => Expr::Pi(Box::new(nf(ty)), Box::new(nf(b))),
         Expr::Exists(ty, b) => Expr::Exists(Box::new(nf(ty)), Box::new(nf(b))),
         Expr::Arrow(a, b) => Expr::Arrow(Box::new(nf(a)), Box::new(nf(b))),
         Expr::Product(xs) => Expr::Product(xs.iter().map(nf).collect()),

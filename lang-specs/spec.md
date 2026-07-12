@@ -227,11 +227,19 @@ sort Result : Sort * Sort -> Sort;
 
 ```ebnf
 op_decl =
-  "op" symbol ":" function_sig ";" ;
+  "op" symbol ":" { "forall" binder "st" } function_sig ";" ;
 
 function_sig =
   [ type_expr ] "->" type_expr ;
 ```
+
+An operator may be **polymorphic**: a leading `forall (… : Sort) st` prefix binds
+the sort variables that its signature ranges over. Such an operator is a
+*dependent function* over its type parameters — the type arguments must be
+supplied **explicitly and positionally** at each use site (see §3.23), and every
+occurrence is therefore monomorphic and fully type-checked. There is no implicit
+generalization: an unqualified name in a signature that is neither a declared
+constant nor a bound type parameter is an error.
 
 Examples:
 
@@ -242,8 +250,25 @@ op s : Nat -> Nat;
 
 op + : Nat * Nat -> Nat;
 
-op may_fail : A -> B | Err;
+op none : forall (A : Sort) st -> Option(A);
+
+op some : forall (A : Sort) st A -> Option(A);
+
+op bind : forall (A B : Sort) st Option(A) * (A -> Option(B)) -> Option(B);
+
+op may_fail : forall (A B Err : Sort) st A -> B | Err;
 ```
+
+At a use site the type arguments come first, before the value arguments:
+
+```alg
+none(A)                 # : Option(A)
+some(A, x)              # : Option(A),  for x : A
+bind(A, B, m, f)        # : Option(B),  for m : Option(A), f : A -> Option(B)
+```
+
+A bare polymorphic operator (with no type arguments) is ill-typed; supplying a
+wrong-typed value argument, or too few type arguments, is a static error.
 
 ---
 
@@ -353,6 +378,32 @@ theory Semigroup(
     |- *( *(x, y), z ) = *( x, *(y, z) );
 end;
 ```
+
+A theory's operation parameters may themselves be **polymorphic**, carrying a
+`forall (… : Sort) st` prefix (§3.5). This lets a single operation be used at
+several type instantiations across the laws — e.g. a monad's `bind` applied at
+`(A, B)` and again at `(B, C)` within the associativity law:
+
+```alg
+theory Monad(
+  M : Sort -> Sort,
+  return : forall (X : Sort) st X -> M(X),
+  bind : forall (X Y : Sort) st M(X) * (X -> M(Y)) -> M(Y)
+) laws
+  law associativity(
+    A B C : Sort,
+    m : M(A),
+    f : A -> M(B),
+    g : B -> M(C)
+  )
+    |- bind(B, C, bind(A, B, m, f), g)
+       = bind(A, C, m, λ (x : A) st bind(B, C, f(x), g));
+end;
+```
+
+A model then supplies the concrete polymorphic operators directly (e.g.
+`Monad(Option, return, bind)`), and the instantiated law bodies are fully
+type-checked.
 
 A theory declares laws as requirements, not proofs — nothing is proved inside it,
 so `end` is a plain terminator (the laws become proof obligations only when a
@@ -723,6 +774,17 @@ This parses as:
 A -> (B | Err)
 ```
 
+A `function_type` may also be quantified: `forall (X : Sort) st <type>` is the
+dependent function type of a polymorphic operator or a type-abstracting lambda
+(§3.5).
+
+`a | b` is **shorthand for the binary `adt` sum** `Sum(a, b)` (right-nested for
+more summands: `a | b | c` = `Sum(a, Sum(b, c))`). It is therefore a genuine,
+inhabited type — build its values with `adt`'s `inl` / `inr` and eliminate them
+with `sum_cases`. Using `|` requires `Sum` (i.e. `adt`) to be in scope. The `|`
+shorthand is only recognized in type positions; in a term/proof-argument position
+write `Sum(a, b)` explicitly.
+
 ---
 
 ## 3.21 Propositions
@@ -817,6 +879,10 @@ infix_term =
 
 application_term =
   term_atom [ "(" [ term_list ] ")" ] ;
+
+(* Application is uniform: a polymorphic operator's type arguments (§3.5) are
+   ordinary leading positional arguments, e.g. `some(A, x)` or
+   `bind(A, B, m, f)`. There is no separate bracket syntax for type arguments. *)
 
 term_atom =
     qualified_or_unqualified_ident

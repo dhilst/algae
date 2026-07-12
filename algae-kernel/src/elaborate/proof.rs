@@ -212,32 +212,33 @@ fn symbol_text(s: &ast::Symbol) -> String {
 /// implicit (universally quantified) sort variables.
 fn lower_op_sig(elab: &mut Elab, od: &ast::OpDecl) -> Option<Expr> {
     let mut scope = Scope::new();
-    // Collect implicit sort variables from the signature.
-    let mut implicit = Vec::new();
-    if let Some(dom) = &od.sig.domain {
-        collect_type_frees(elab, dom, &mut implicit);
-    }
-    collect_type_frees(elab, &od.sig.codomain, &mut implicit);
-    for name in &implicit {
-        let s = elab.interner.intern(name);
-        scope_add_free(&mut scope, s, Expr::Sort);
+    // Bind the explicit type parameters (each `forall (… : kind) st` prefix) as
+    // free variables so the signature can refer to them. Any unqualified name in
+    // the signature that is neither a declared constant nor a bound type
+    // parameter is now an "unbound" error (no implicit generalization).
+    let mut params: Vec<(Sym, Expr)> = Vec::new();
+    for b in &od.type_params {
+        let kind = elab.lower_type(&scope, &b.ty).ok()?;
+        for name in &b.names {
+            let s = elab.interner.intern(&name.text);
+            scope.add_free_pub(s, kind.clone());
+            params.push((s, kind.clone()));
+        }
     }
     let cod = elab.lower_type(&scope, &od.sig.codomain).ok()?;
-    let ty = match &od.sig.domain {
+    let mut ty = match &od.sig.domain {
         Some(dom) => {
             let d = elab.lower_type(&scope, dom).ok()?;
             Expr::Arrow(Box::new(d), Box::new(cod))
         }
         None => cod,
     };
+    // Close over the type parameters in reverse to form nested `Forall(kind, …)`,
+    // making the operator's type a dependent function over its sort arguments.
+    for (s, kind) in params.iter().rev() {
+        ty = Expr::Pi(Box::new(kind.clone()), Box::new(crate::core::term::close(&ty, *s)));
+    }
     Some(ty)
-}
-
-fn scope_add_free(scope: &mut Scope, s: Sym, ty: Expr) {
-    // Scope's fields are private; reuse the public telescope path via a tiny
-    // shim: we encode the free var by lowering a dummy. Instead, expose through
-    // add_free helper.
-    scope.add_free_pub(s, ty);
 }
 
 /// Collect unqualified names in a surface type that are not declared constants
@@ -265,6 +266,19 @@ fn collect_type_frees(elab: &Elab, t: &ast::Type, out: &mut Vec<String>) {
         ast::TypeNode::Arrow(a, b) => {
             collect_type_frees(elab, a, out);
             collect_type_frees(elab, b, out);
+        }
+        ast::TypeNode::Forall(b, body) => {
+            // The binder's own parameters are bound, not implicit; collect frees
+            // from the body but drop any that the binder introduces.
+            collect_type_frees(elab, &b.ty, out);
+            let mut inner = Vec::new();
+            collect_type_frees(elab, body, &mut inner);
+            let bound: Vec<&str> = b.names.iter().map(|n| n.text.as_str()).collect();
+            for name in inner {
+                if !bound.contains(&name.as_str()) && !out.contains(&name) {
+                    out.push(name);
+                }
+            }
         }
         ast::TypeNode::Sort | ast::TypeNode::Prop => {}
     }
@@ -361,6 +375,7 @@ fn elaborate_lemma_proof(
     };
     let mut ctx = params;
     ctx.extend(ctx_entries);
+    elab.check_goal_welltyped(&ctx, &goal, ld.sequent.prop.span);
     elab.current_proof = Some(ld.name.text.clone());
     let elaborated = elaborate_proof(elab, &ctx, &goal, &ld.proof, ld.span, rs);
     elab.current_proof = None;
@@ -613,6 +628,14 @@ fn elaborate_step(
         return None;
     }
     let mut scope = scope_from_ctx(ctx);
+    // Types of the context's term variables, for inferring argument types.
+    let frees: std::collections::HashMap<Sym, Expr> = ctx
+        .iter()
+        .filter_map(|e| match e {
+            CtxEntry::Term { name, ty } => Some((*name, ty.clone())),
+            CtxEntry::Proof { .. } => None,
+        })
+        .collect();
     let mut args = Vec::new();
     let mut term_subst: Vec<(Sym, Expr)> = Vec::new();
     for (p, sa) in base_rule.params.iter().zip(&surface_args) {
@@ -623,6 +646,33 @@ fn elaborate_step(
                 } else {
                     elab.lower_expr(&mut scope, sa).ok()?
                 };
+                // Check the argument against the parameter's (instantiated) type.
+                // `ty` refers to earlier params via free variables, which
+                // `term_subst` already binds. With explicit type arguments every
+                // term is monomorphic, so both a type mismatch and an outright
+                // ill-typed argument are hard errors.
+                let expected =
+                    crate::core::normalize::nf(&crate::core::tactic::subst_all(ty, &term_subst));
+                match elab.infer(&frees, &[], &e) {
+                    Ok(got) => {
+                        if !crate::core::normalize::defeq(&got, &expected) {
+                            elab.err(
+                                format!(
+                                    "argument has type `{}` but parameter `{}` expects `{}`",
+                                    crate::core::display::show(&got, &elab.interner),
+                                    elab.interner.resolve(*name),
+                                    crate::core::display::show(&expected, &elab.interner),
+                                ),
+                                sa.span,
+                            );
+                            return None;
+                        }
+                    }
+                    Err(msg) => {
+                        elab.err(format!("ill-typed argument: {msg}"), sa.span);
+                        return None;
+                    }
+                }
                 term_subst.push((*name, e.clone()));
                 args.push(Arg::Term(e));
             }

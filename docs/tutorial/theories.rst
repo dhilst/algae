@@ -27,15 +27,14 @@ as an obligation. Here's the ``Monad`` interface from ``monad.alg``:
 .. code-block:: alg
 
    theory Monad(
-     A B C : Sort,
      M : Sort → Sort,
-     return : A → M(A),
-     bind : M(A) * (A → M(B)) → M(B)
+     return : forall (X : Sort) st X → M(X),
+     bind : forall (X Y : Sort) st M(X) * (X → M(Y)) → M(Y)
    ) laws
-     law left_identity(x : A, f : A → M(B))  ⊢ bind(return(x), f) = f(x);
-     law right_identity(m : M(A))            ⊢ bind(m, return) = m;
-     law associativity(m : M(A), f : A → M(B), g : B → M(C))
-       ⊢ bind(bind(m, f), g) = bind(m, λ (x : A) st bind(f(x), g));
+     law left_identity(A B : Sort, x : A, f : A → M(B))  ⊢ bind(A, B, return(A, x), f) = f(x);
+     law right_identity(A : Sort, m : M(A))              ⊢ bind(A, A, m, λ (x : A) st return(A, x)) = m;
+     law associativity(A B C : Sort, m : M(A), f : A → M(B), g : B → M(C))
+       ⊢ bind(B, C, bind(A, B, m, f), g) = bind(A, C, m, λ (x : A) st bind(B, C, f(x), g));
    end;
 
 ``option.alg``, ``list.alg``, and ``result.alg`` each ship a verified ``model``
@@ -51,29 +50,28 @@ theory, then prove our concrete stack is a **model** of it:
    import core;
 
    sort Stack : Sort → Sort;
-   op empty : → Stack(A);
-   op push  : A * Stack(A) → Stack(A);
-   op pop   : Stack(A) → Stack(A);
-   op top   : Stack(A) → A;
+   op empty : forall (A : Sort) st → Stack(A);
+   op push  : forall (A : Sort) st A * Stack(A) → Stack(A);
+   op pop   : forall (A : Sort) st Stack(A) → Stack(A);
+   op top   : forall (A : Sort) st Stack(A) → A;
 
-   axiom top_ax(A : Sort, x : A, s : Stack(A))  ⊢ top(push(x, s)) = x;
-   axiom pop_ax(A : Sort, x : A, s : Stack(A))  ⊢ pop(push(x, s)) = s;
+   axiom top_ax(A : Sort, x : A, s : Stack(A))  ⊢ top(A, push(A, x, s)) = x;
+   axiom pop_ax(A : Sort, x : A, s : Stack(A))  ⊢ pop(A, push(A, x, s)) = s;
 
    # the interface: any S with these operations obeying these laws is a stack
    theory StackSpec(
-     A : Sort,
      S : Sort → Sort,
-     e : S(A),
-     psh : A * S(A) → S(A),
-     pp : S(A) → S(A),
-     tp : S(A) → A
+     e : forall (X : Sort) st S(X),
+     psh : forall (X : Sort) st X * S(X) → S(X),
+     pp : forall (X : Sort) st S(X) → S(X),
+     tp : forall (X : Sort) st S(X) → X
    ) laws
-     law top_law(x : A, s : S(A))  ⊢ tp(psh(x, s)) = x;
-     law pop_law(x : A, s : S(A))  ⊢ pp(psh(x, s)) = s;
+     law top_law(A : Sort, x : A, s : S(A))  ⊢ tp(A, psh(A, x, s)) = x;
+     law pop_law(A : Sort, x : A, s : S(A))  ⊢ pp(A, psh(A, x, s)) = s;
    end;
 
    # the claim: our concrete operations are a stack
-   model ConcreteStack satisfies StackSpec(A, Stack, empty, push, pop, top) iff laws
+   model ConcreteStack satisfies StackSpec(Stack, empty, push, pop, top) iff laws
      law top_law;
      proof
        by top_ax(A, x, s);

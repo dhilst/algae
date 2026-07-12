@@ -180,13 +180,52 @@ impl Elab {
                 Ok(Expr::Product(xs?))
             }
             ast::TypeNode::Sum(ts) => {
-                let xs: Result<Vec<_>, _> = ts.iter().map(|x| self.lower_type(scope, x)).collect();
-                Ok(Expr::Sum(xs?))
+                // `a | b | …` desugars to the binary `Sum` sort (right-nested), so
+                // it is a genuine, inhabited type: the `adt` constructors `inl` /
+                // `inr` build its values and `sum_cases` eliminates them.
+                let sum = self.interner.intern("Sum");
+                if !self.sig.consts.contains_key(&sum) {
+                    self.err(
+                        "`|` sum types require importing `adt` (which declares `Sum`, `inl`, `inr`)",
+                        t.span,
+                    );
+                    return Err(());
+                }
+                let xs: Vec<Expr> = ts
+                    .iter()
+                    .map(|x| self.lower_type(scope, x))
+                    .collect::<Result<_, _>>()?;
+                let mut it = xs.into_iter().rev();
+                let mut acc = it.next().expect("sum has at least two summands");
+                for x in it {
+                    acc = Expr::app(Expr::Const(sum), vec![x, acc]);
+                }
+                Ok(acc)
             }
             ast::TypeNode::Arrow(a, b) => Ok(Expr::Arrow(
                 Box::new(self.lower_type(scope, a)?),
                 Box::new(self.lower_type(scope, b)?),
             )),
+            ast::TypeNode::Forall(b, body) => {
+                // Dependent function type: bind the type parameters as free
+                // variables, lower the body, then close them into `Forall` layers.
+                let kind = self.lower_type(scope, &b.ty)?;
+                let mut inner = scope.clone();
+                let mut syms = Vec::new();
+                for name in &b.names {
+                    let s = self.interner.intern(&name.text);
+                    inner.add_free_pub(s, kind.clone());
+                    syms.push(s);
+                }
+                let mut ty = self.lower_type(&inner, body)?;
+                for s in syms.iter().rev() {
+                    ty = Expr::Pi(
+                        Box::new(kind.clone()),
+                        Box::new(crate::core::term::close(&ty, *s)),
+                    );
+                }
+                Ok(ty)
+            }
         }
     }
 
@@ -242,6 +281,15 @@ impl Elab {
                 self.resolve_name(scope, &q)
             }
             ast::ExprNode::App(head, args) => {
+                // `_` sugar: a single trailing hole eta-expands the application,
+                // `f(a.., _)` ==> `λ (v : dom) st f(a.., v)`.
+                if matches!(args.last().map(|a| &a.node), Some(ast::ExprNode::Hole))
+                    && args[..args.len() - 1]
+                        .iter()
+                        .all(|a| !matches!(a.node, ast::ExprNode::Hole))
+                {
+                    return self.lower_trailing_hole(scope, head, &args[..args.len() - 1], e.span);
+                }
                 let h = self.lower_expr(scope, head)?;
                 let a: Result<Vec<_>, _> = args.iter().map(|x| self.lower_expr(scope, x)).collect();
                 Ok(Expr::app(h, a?))
@@ -303,6 +351,77 @@ impl Elab {
                 Err(())
             }
         }
+    }
+
+    /// Desugar `f(prefix.., _)` into `λ (v : dom) st f(prefix.., v)`, where `dom`
+    /// is the argument type the head expects at the hole position. Determined by
+    /// peeling the head's (dependent) function type through the prefix arguments.
+    fn lower_trailing_hole(
+        &mut self,
+        scope: &mut Scope,
+        head: &ast::Expr,
+        prefix: &[ast::Expr],
+        span: crate::diagnostics::Span,
+    ) -> Result<Expr, ()> {
+        use crate::core::normalize::nf;
+        use crate::core::term::open;
+        let h = self.lower_expr(scope, head)?;
+        let pargs: Vec<Expr> = prefix
+            .iter()
+            .map(|x| self.lower_expr(scope, x))
+            .collect::<Result<_, _>>()?;
+        let head_ty = match &h {
+            Expr::Const(s) => self.sig.consts.get(s).cloned(),
+            Expr::Free(s) => scope.frees.get(s).cloned(),
+            _ => None,
+        };
+        let Some(head_ty) = head_ty else {
+            self.err("`_` requires a head operator/function with a known type", span);
+            return Err(());
+        };
+        // Consume the leading dependent (type) arguments, then land on the value
+        // arrow whose domain (possibly a product) hosts the hole.
+        let mut ty = nf(&head_ty);
+        let mut i = 0;
+        while i < pargs.len() {
+            match ty {
+                Expr::Pi(_, cod) => {
+                    ty = nf(&open(&cod, &pargs[i]));
+                    i += 1;
+                }
+                _ => break,
+            }
+        }
+        let dom = match ty {
+            Expr::Arrow(d, _) | Expr::Pi(d, _) => match nf(&d) {
+                Expr::Product(ds) => {
+                    let k = pargs.len() - i;
+                    if k < ds.len() {
+                        ds[k].clone()
+                    } else {
+                        self.err("`_`: head is already fully applied", span);
+                        return Err(());
+                    }
+                }
+                other => {
+                    if pargs.len() - i == 0 {
+                        other
+                    } else {
+                        self.err("`_`: head is already fully applied", span);
+                        return Err(());
+                    }
+                }
+            },
+            _ => {
+                self.err("`_` requires the head to expect a further argument", span);
+                return Err(());
+            }
+        };
+        let v = self.interner.fresh("x");
+        let mut body_args = pargs;
+        body_args.push(Expr::Free(v));
+        let body = Expr::app(h, body_args);
+        Ok(Expr::Lam(Box::new(dom), Box::new(crate::core::term::close(&body, v))))
     }
 
     fn lower_binder(
@@ -398,18 +517,42 @@ impl Elab {
             }
             Expr::App(f, args) => {
                 let ft = self.infer(frees, binders, f)?;
-                self.apply_type(frees, binders, ft, args)
+                let rt = self.apply_type(frees, binders, ft, args)?;
+                // No currying: an application must be fully saturated. A function
+                // value is written as a lambda (or `_` sugar), never as a partial
+                // operator application.
+                match crate::core::normalize::nf(&rt) {
+                    Expr::Pi(..) | Expr::Arrow(..) => Err(
+                        "operator is not fully applied (currying is unsupported; \
+                         use a lambda or `_`)"
+                            .to_string(),
+                    ),
+                    _ => Ok(rt),
+                }
             }
             Expr::Lam(ty, body) => {
                 let mut b2 = binders.to_vec();
                 b2.push((**ty).clone());
                 let bt = self.infer(frees, &b2, body)?;
-                Ok(Expr::Arrow(ty.clone(), Box::new(bt)))
+                // A lambda whose body type depends on its binder is a dependent
+                // function (`Pi`); otherwise it is an ordinary `Arrow`.
+                if bt.has_bound(0) {
+                    Ok(Expr::Pi(ty.clone(), Box::new(bt)))
+                } else {
+                    Ok(Expr::Arrow(ty.clone(), Box::new(bt)))
+                }
             }
-            Expr::Arrow(_, _) | Expr::Product(_) | Expr::Sum(_) => Ok(Expr::Sort),
+            Expr::Arrow(_, _) | Expr::Pi(_, _) | Expr::Product(_) | Expr::Sum(_) => Ok(Expr::Sort),
             Expr::Eq(a, b) => {
                 let ta = self.infer(frees, binders, a)?;
                 let tb = self.infer(frees, binders, b)?;
+                // An operand whose type is still a `Pi` is an operator missing its
+                // type argument(s) — reject rather than compare function schemes.
+                if matches!(crate::core::normalize::nf(&ta), Expr::Pi(..))
+                    || matches!(crate::core::normalize::nf(&tb), Expr::Pi(..))
+                {
+                    return Err("operator is missing type argument(s)".to_string());
+                }
                 if crate::core::normalize::defeq(&ta, &tb) {
                     Ok(Expr::Prop)
                 } else {
@@ -454,6 +597,13 @@ impl Elab {
             return Ok(ft);
         }
         match ft {
+            Expr::Pi(dom, cod) => {
+                // Dependent type argument: check it against the binder's kind,
+                // then substitute it into the codomain and continue.
+                self.check(frees, binders, &args[0], &dom)?;
+                let opened = crate::core::term::open(&cod, &args[0]);
+                self.apply_type(frees, binders, opened, &args[1..])
+            }
             Expr::Arrow(dom, cod) => {
                 let domc = crate::core::normalize::nf(&dom);
                 match domc {
@@ -491,6 +641,34 @@ impl Elab {
             Ok(())
         } else {
             Err("type mismatch".to_string())
+        }
+    }
+
+    /// Build a `frees` map (term variables → their types) from a context
+    /// telescope, for use with [`infer`](Self::infer)/[`check`](Self::check).
+    pub fn frees_of(entries: &[CtxEntry]) -> HashMap<Sym, Expr> {
+        entries
+            .iter()
+            .filter_map(|e| match e {
+                CtxEntry::Term { name, ty } => Some((*name, ty.clone())),
+                CtxEntry::Proof { .. } => None,
+            })
+            .collect()
+    }
+
+    /// Full well-typedness check for a goal/premise proposition: it must infer to
+    /// `Prop` under the given context. Reports a diagnostic on failure.
+    pub fn check_goal_welltyped(
+        &mut self,
+        entries: &[CtxEntry],
+        prop: &Expr,
+        span: crate::diagnostics::Span,
+    ) {
+        let frees = Self::frees_of(entries);
+        match self.infer(&frees, &[], prop) {
+            Ok(t) if crate::core::normalize::defeq(&t, &Expr::Prop) => {}
+            Ok(_) => self.err("goal is not a proposition", span),
+            Err(msg) => self.err(format!("ill-typed goal: {msg}"), span),
         }
     }
 }
@@ -549,6 +727,7 @@ pub fn build_fact_rule(
     let conclusion = elab.lower_expr(&mut scope, &sequent.prop)?;
     let mut all = param_entries;
     all.extend(ctx_entries);
+    elab.check_goal_welltyped(&all, &conclusion, sequent.prop.span);
     Ok(InlinedRule {
         params: all.into_iter().map(ctx_to_param).collect(),
         premises: Vec::new(),
@@ -581,6 +760,9 @@ pub fn build_rule(elab: &mut Elab, r: &ast::RuleDecl) -> Result<InlinedRule, ()>
         let mut pscope = scope.clone();
         let ext = elab.lower_telescope(&mut pscope, &prem.context)?;
         let goal = elab.lower_expr(&mut pscope, &prem.prop)?;
+        let mut pctx = param_entries.clone();
+        pctx.extend(ext.clone());
+        elab.check_goal_welltyped(&pctx, &goal, prem.prop.span);
         premises.push(Sequent { ctx: ext, goal });
     }
     // Conclusion (its own context, if any, also becomes params — but stdlib
@@ -588,6 +770,9 @@ pub fn build_rule(elab: &mut Elab, r: &ast::RuleDecl) -> Result<InlinedRule, ()>
     let mut cscope = scope.clone();
     let cctx = elab.lower_telescope(&mut cscope, &r.conclusion.context)?;
     let conclusion = elab.lower_expr(&mut cscope, &r.conclusion.prop)?;
+    let mut concl_ctx = param_entries.clone();
+    concl_ctx.extend(cctx.clone());
+    elab.check_goal_welltyped(&concl_ctx, &conclusion, r.conclusion.prop.span);
     let mut params: Vec<Param> = param_entries.into_iter().map(ctx_to_param).collect();
     params.extend(cctx.into_iter().map(ctx_to_param));
     Ok(InlinedRule {

@@ -8,52 +8,47 @@ import monad(
   Monad
 );
 
-sort None : Sort;
-
 sort Option : Sort → Sort;
 
-op none : → None;
+op none : forall (A : Sort) st → Option(A);
 
-op some : A → Option(A);
+op some : forall (A : Sort) st A → Option(A);
 
-op return : A → Option(A);
+op return : forall (A : Sort) st A → Option(A);
 
-op bind : Option(A) * (A → Option(B)) → Option(B);
+op bind : forall (A B : Sort) st Option(A) * (A → Option(B)) → Option(B);
 
 axiom return_def(
   A : Sort,
   x : A
 )
-  ⊢ return(x) = some(x);
+  ⊢ return(A, x) = some(A, x);
 
 axiom bind_none(
   A B : Sort,
   f : A → Option(B)
 )
-  ⊢ bind(none, f) = none;
+  ⊢ bind(A, B, none(A), f) = none(B);
 
 axiom bind_some(
   A B : Sort,
   x : A,
   f : A → Option(B)
 )
-  ⊢ bind(some(x), f) = f(x);
+  ⊢ bind(A, B, some(A, x), f) = f(x);
 
 rule option_cases(
   A : Sort,
   m : Option(A),
   P : Option(A) → Prop
 )
-  ⊢ P(none);
-  x : A ⊢ P(some(x))
+  ⊢ P(none(A));
+  x : A ⊢ P(some(A, x))
   ────────────────────────
   ⊢ P(m)
 end;
 
 model OptionMonad satisfies Monad(
-  A,
-  B,
-  C,
   Option,
   return,
   bind
@@ -62,12 +57,12 @@ model OptionMonad satisfies Monad(
   proof
     by backward(
       Option(A),
-      return(x),
-      some(x),
+      return(A, x),
+      some(A, x),
       return_def(A, x),
-      λ (o : Option(A)) st bind(o, f) = f(x)
+      λ (o : Option(A)) st bind(A, B, o, f) = f(x)
     )
-    then ⊢ bind(some(x), f) = f(x);
+    then ⊢ bind(A, B, some(A, x), f) = f(x);
     by bind_some(A, B, x, f);
   qed;
 
@@ -76,26 +71,24 @@ model OptionMonad satisfies Monad(
     by option_cases(
       A,
       m,
-      λ (o : Option(A)) st bind(o, return) = o
+      λ (o : Option(A)) st bind(A, A, o, λ (w : A) st return(A, w)) = o
     ) cases
       case
-        A : Sort;
-        ⊢ bind(none, return) = none;
-        by bind_none(A, A, return);
+        ⊢ bind(A, A, none(A), λ (w : A) st return(A, w)) = none(A);
+        by bind_none(A, A, λ (w : A) st return(A, w));
       qed;
 
       case
-        A : Sort;
         x : A;
-        ⊢ bind(some(x), return) = some(x);
+        ⊢ bind(A, A, some(A, x), λ (w : A) st return(A, w)) = some(A, x);
         by backward(
           Option(A),
-          bind(some(x), return),
-          return(x),
-          bind_some(A, A, x, return),
-          λ (o : Option(A)) st o = some(x)
+          bind(A, A, some(A, x), λ (w : A) st return(A, w)),
+          return(A, x),
+          bind_some(A, A, x, λ (w : A) st return(A, w)),
+          λ (o : Option(A)) st o = some(A, x)
         )
-        then ⊢ return(x) = some(x);
+        then ⊢ return(A, x) = some(A, x);
         by return_def(A, x);
       qed;
     qed;
@@ -107,84 +100,78 @@ model OptionMonad satisfies Monad(
       A,
       m,
       λ (o : Option(A)) st
-        bind(bind(o, f), g)
+        bind(B, C, bind(A, B, o, f), g)
         =
         bind(
-          o,
-          λ (x : A) st bind(f(x), g)
+          A, C, o,
+          λ (x : A) st bind(B, C, f(x), g)
         )
     ) cases
       case
-        A B C : Sort;
-        f : A → Option(B);
-        g : B → Option(C);
-        ⊢ bind(bind(none, f), g)
+        ⊢ bind(B, C, bind(A, B, none(A), f), g)
            =
            bind(
-             none,
-             λ (x : A) st bind(f(x), g)
+             A, C, none(A),
+             λ (x : A) st bind(B, C, f(x), g)
            );
         by backward(
           Option(B),
-          bind(none, f),
-          none,
+          bind(A, B, none(A), f),
+          none(B),
           bind_none(A, B, f),
           λ (r : Option(B)) st
-            bind(r, g)
+            bind(B, C, r, g)
             =
             bind(
-              none,
-              λ (x : A) st bind(f(x), g)
+              A, C, none(A),
+              λ (x : A) st bind(B, C, f(x), g)
             )
         )
-        then ⊢ bind(none, g) = bind(none, λ (x : A) st bind(f(x), g));
+        then ⊢ bind(B, C, none(B), g) = bind(A, C, none(A), λ (x : A) st bind(B, C, f(x), g));
         by backward(
           Option(C),
-          bind(none, λ (x : A) st bind(f(x), g)),
-          none,
-          bind_none(A, C, λ (x : A) st bind(f(x), g)),
-          λ (r : Option(C)) st bind(none, g) = r
+          bind(A, C, none(A), λ (x : A) st bind(B, C, f(x), g)),
+          none(C),
+          bind_none(A, C, λ (x : A) st bind(B, C, f(x), g)),
+          λ (r : Option(C)) st bind(B, C, none(B), g) = r
         )
-        then ⊢ bind(none, g) = none;
+        then ⊢ bind(B, C, none(B), g) = none(C);
         by bind_none(B, C, g);
       qed;
 
       case
-        A B C : Sort;
         x : A;
-        f : A → Option(B);
-        g : B → Option(C);
-        ⊢ bind(bind(some(x), f), g)
+        ⊢ bind(B, C, bind(A, B, some(A, x), f), g)
            =
            bind(
-             some(x),
-             λ (y : A) st bind(f(y), g)
+             A, C, some(A, x),
+             λ (y : A) st bind(B, C, f(y), g)
            );
         by backward(
           Option(B),
-          bind(some(x), f),
+          bind(A, B, some(A, x), f),
           f(x),
           bind_some(A, B, x, f),
           λ (r : Option(B)) st
-            bind(r, g)
+            bind(B, C, r, g)
             =
             bind(
-              some(x),
-              λ (y : A) st bind(f(y), g)
+              A, C, some(A, x),
+              λ (y : A) st bind(B, C, f(y), g)
             )
         )
-        then ⊢ bind(f(x), g) = bind(some(x), λ (y : A) st bind(f(y), g));
+        then ⊢ bind(B, C, f(x), g) = bind(A, C, some(A, x), λ (y : A) st bind(B, C, f(y), g));
         by backward(
           Option(C),
-          bind(some(x), λ (y : A) st bind(f(y), g)),
-          bind(f(x), g),
-          bind_some(A, C, x, λ (y : A) st bind(f(y), g)),
+          bind(A, C, some(A, x), λ (y : A) st bind(B, C, f(y), g)),
+          bind(B, C, f(x), g),
+          bind_some(A, C, x, λ (y : A) st bind(B, C, f(y), g)),
           λ (r : Option(C)) st
-            r = bind(some(x), λ (y : A) st bind(f(y), g))
+            r = bind(A, C, some(A, x), λ (y : A) st bind(B, C, f(y), g))
         )
-        then ⊢ bind(some(x), λ (y : A) st bind(f(y), g))
-              = bind(some(x), λ (y : A) st bind(f(y), g));
-        by refl(Option(C), bind(some(x), λ (y : A) st bind(f(y), g)));
+        then ⊢ bind(A, C, some(A, x), λ (y : A) st bind(B, C, f(y), g))
+              = bind(A, C, some(A, x), λ (y : A) st bind(B, C, f(y), g));
+        by refl(Option(C), bind(A, C, some(A, x), λ (y : A) st bind(B, C, f(y), g)));
       qed;
     qed;
   qed;
