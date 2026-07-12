@@ -61,7 +61,8 @@ Here's the whole thing, error-aware, still verifying:
 
 .. code-block:: alg
 
-   import result(ok, err, result_cases);
+   import result(ok, err, result_cases, ok_inj);
+   import core(forward, implication_intro);
 
    sort Stack : Sort → Sort;
    sort Error : Sort;
@@ -100,6 +101,28 @@ Here's the whole thing, error-aware, still verifying:
      ⊢ pop(A, push(A, a, s)) = ok(Stack(A), Error, s);
    proof
      by pop_push(A, a, s);
+   qed;
+
+   # A more evolved proof
+   lemma push_of_pop_weak(A : Sort, a : A, s0 s1 : Stack(A))
+     ⊢ pop(A, push(A, a, s0)) = ok(Stack(A), Error, s1) ⇒ s0 = s1;
+   proof
+     by forward(
+       Result(Stack(A), Error),
+       pop(A, push(A, a, s0)),
+       ok(Stack(A), Error, s0),
+       pop_push(A, a, s0),
+       (_ = ok(Stack(A), Error, s1) ⇒ s0 = s1))
+     then ⊢ (ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1)) ⇒ (s0 = s1);
+     by implication_intro(ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1), s0 = s1)
+     then
+       P := ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1)
+       ⊢ s0 = s1;
+     by ok_inj(Stack(A), Error, s0, s1)
+     then
+       P := ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1)
+       ⊢ ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1);
+     by P;
    qed;
 
 - **``peek_empty``** is the point of the whole exercise: ``top(A, empty(A))`` now has an

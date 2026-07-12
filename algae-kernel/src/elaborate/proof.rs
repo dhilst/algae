@@ -778,6 +778,25 @@ fn elaborate_step(
                 return None;
             }
         }
+        // No implicit weakening: every proof hypothesis carried from the parent
+        // context must be restated in this continuation's context. Silently
+        // dropping an assumption is not allowed (a dedicated rule for discarding
+        // assumptions may be added later).
+        let stated: HashSet<Sym> = case
+            .context
+            .iter()
+            .filter_map(|fp| user_entry(elab, fp))
+            .map(|(s, _)| s)
+            .collect();
+        for e in ctx {
+            if let CtxEntry::Proof { name, .. } = e {
+                if !stated.contains(name) {
+                    let nm = elab.interner.resolve(*name).to_string();
+                    elab.err(format!("assumption `{nm}` was discarded"), case.span);
+                    return None;
+                }
+            }
+        }
         // Build the renaming and apply it to the premise.
         let mut renamed = prem.clone();
         for (eig, (user, _is_proof)) in prem.ctx.iter().zip(&user_new) {
@@ -861,16 +880,71 @@ fn elaborate_step(
 
 /// An admitted (`by wip`) leaf step: the goal is assumed, not checked.
 /// Render a context (telescope) as `a : T, h := P`, for premise subgoals.
-fn show_ctx_ext(entries: &[CtxEntry], names: &crate::core::name::Interner) -> String {
+fn render_entry(e: &CtxEntry, names: &crate::core::name::Interner) -> String {
     use crate::core::display::show;
+    match e {
+        CtxEntry::Term { name, ty } => format!("{} : {}", names.resolve(*name), show(ty, names)),
+        CtxEntry::Proof { name, prop } => format!("{} := {}", names.resolve(*name), show(prop, names)),
+    }
+}
+
+fn show_ctx_ext(entries: &[CtxEntry], names: &crate::core::name::Interner) -> String {
     entries
         .iter()
-        .map(|e| match e {
-            CtxEntry::Term { name, ty } => format!("{} : {}", names.resolve(*name), show(ty, names)),
-            CtxEntry::Proof { name, prop } => format!("{} := {}", names.resolve(*name), show(prop, names)),
-        })
+        .map(|e| render_entry(e, names))
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+/// The entries a `then`/case continuation must restate to reach `sq` from a
+/// parent context of length `parent_len`: every carried proof assumption plus
+/// every entry the tactic introduced. (Parent term variables stay implicit.)
+fn restated_entries(parent: &[CtxEntry], sq_ctx: &[CtxEntry]) -> Vec<CtxEntry> {
+    let mut out: Vec<CtxEntry> = parent
+        .iter()
+        .filter(|e| matches!(e, CtxEntry::Proof { .. }))
+        .cloned()
+        .collect();
+    out.extend(sq_ctx[parent.len().min(sq_ctx.len())..].iter().cloned());
+    out
+}
+
+/// Render a `then` continuation, laid out one context entry per line:
+///
+/// ```text
+/// then
+///     h := P;
+///     x : T
+///     ⊢ <goal>;
+/// ```
+fn render_then(restate: &[CtxEntry], goal: &str, names: &crate::core::name::Interner) -> String {
+    if restate.is_empty() {
+        return format!("then ⊢ {goal};");
+    }
+    let mut b = String::from("then\n");
+    let n = restate.len();
+    for (i, e) in restate.iter().enumerate() {
+        let sep = if i + 1 < n { ";" } else { "" };
+        b.push_str(&format!("    {}{sep}\n", render_entry(e, names)));
+    }
+    b.push_str(&format!("    ⊢ {goal};"));
+    b
+}
+
+/// Like [`render_then`] but for one branch of a `cases` skeleton, laid out one
+/// context entry per line under a `case` header.
+fn render_case(restate: &[CtxEntry], goal: &str, names: &crate::core::name::Interner) -> String {
+    if restate.is_empty() {
+        return format!("case ⊢ {goal};");
+    }
+    let mut b = String::from("case\n");
+    let n = restate.len();
+    for (i, e) in restate.iter().enumerate() {
+        let sep = if i + 1 < n { ";" } else { "" };
+        b.push_str(&format!("      {}{sep}\n", render_entry(e, names)));
+    }
+    b.push_str(&format!("      ⊢ {goal};"));
+    b
 }
 
 /// Report a **tactic-inspect** step (`by ref(…)?`, `?name` arguments, or a
@@ -993,20 +1067,20 @@ fn report_tactic_hole(
                 }
                 if next.len() == 1 {
                     let name = stmt.subgoal_name.clone().unwrap_or_else(|| "goal".into());
-                    // Restate the remaining subgoal exactly — including any
-                    // eigenvariables/hypotheses the tactic introduced — so the
-                    // suggested `then …` is a valid continuation to paste.
+                    // Restate the remaining subgoal exactly — carried assumptions
+                    // and any eigenvariables/hypotheses the tactic introduced — so
+                    // the suggested `then …` is a valid, non-weakening continuation.
                     let sq = &next[0];
-                    let ext = show_ctx_ext(&sq.ctx[ctx.len().min(sq.ctx.len())..], &elab.interner);
+                    let restate = restated_entries(ctx, &sq.ctx);
                     let g = show(&sq.goal, &elab.interner);
-                    let sequent = if ext.is_empty() { format!("⊢ {g}") } else { format!("{ext} ⊢ {g}") };
+                    let then_block = render_then(&restate, &g, &elab.interner);
                     msg.push_str(&format!(
-                        "\nContinue with:\n  then {sequent};\n  by wip(?{name});\n"
+                        "\nContinue with:\n  {then_block}\n  by wip(?{name});\n"
                     ));
                     if let Some(by) = &concrete_by {
                         fixes.push(Fix {
                             title: "Continue with `then`".to_string(),
-                            replacement: format!("{by}\n  then {sequent};\n  by wip(?{name});"),
+                            replacement: format!("{by}\n  {then_block}\n  by wip(?{name});"),
                             span: stmt.span,
                         });
                     }
@@ -1015,10 +1089,10 @@ fn report_tactic_hole(
                     // branch left as a named hole to fill in.
                     let mut skel = String::from("cases\n");
                     for (k, sq) in next.iter().enumerate() {
-                        let ext = show_ctx_ext(&sq.ctx[ctx.len().min(sq.ctx.len())..], &elab.interner);
+                        let restate = restated_entries(ctx, &sq.ctx);
                         let g = show(&sq.goal, &elab.interner);
-                        let sequent = if ext.is_empty() { format!("⊢ {g}") } else { format!("{ext} ⊢ {g}") };
-                        skel.push_str(&format!("    case {sequent};\n      by wip(?g{});\n    wip;\n", k + 1));
+                        let case_hdr = render_case(&restate, &g, &elab.interner);
+                        skel.push_str(&format!("    {case_hdr}\n      by wip(?g{});\n    wip;\n", k + 1));
                     }
                     skel.push_str("  wip;");
                     msg.push_str(&format!("\nContinue with:\n  {skel}\n"));
@@ -1647,7 +1721,7 @@ mod fix_tests {
     fn wip_on_complete_cases_block_offers_qed_fix() {
         // A `cases` block whose branches all close (`qed`) but is itself
         // terminated with `wip` should offer to swap that `wip` for `qed`.
-        let src = "import core(and_intro);\nlemma both(A B : Prop, x := A, y := B)\n  |- A /\\ B;\nproof\n  by and_intro(A, B) cases\n    case |- A; by x; qed;\n    case |- B; by y; qed;\n  wip;\nqed;\n";
+        let src = "import core(and_intro);\nlemma both(A B : Prop, x := A, y := B)\n  |- A /\\ B;\nproof\n  by and_intro(A, B) cases\n    case x := A; y := B; |- A; by x; qed;\n    case x := A; y := B; |- B; by y; qed;\n  wip;\nqed;\n";
         let ds = diags(src);
         assert_spans_valid(src, &ds);
         let fix = ds

@@ -66,7 +66,9 @@ proof
         ih,                       # by the induction hypothesis (k + 0 = k)
         s(k) + 0 = s(_)           # at _, i.e. `s(k) + 0 = s(k)` → `s(k) + 0 = s(k + 0)`
       )
-      then ⊢ s(k) + 0 = s(k + 0);   # new goal after the rewrite
+      then
+        ih := k + 0 = k
+        ⊢ s(k) + 0 = s(k + 0);   # new goal after the rewrite
       by add_succ_left(k, 0);       # by def: add_succ_left(n, m) := s(n) + m = s(n + m);
     qed;
   qed;

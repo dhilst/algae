@@ -1,5 +1,6 @@
-# Regression: a hypothesis introduced by `implication_intro` must be usable as a
-# rewrite equation (its eigenvar must not collide with the `P : Prop` param).
+# No implicit weakening: a continuation that drops a carried assumption (here the
+# implication hypothesis `h`) must be rejected.
+#expect: assumption `h` was discarded
 import core(implication_intro, backward, refl);
 
 sort T : Sort;
@@ -12,8 +13,6 @@ proof
     h := x = y;
     |- y = x;
     by backward(T, x, y, h, λ (t : T) st y = t)
-    then
-      h := x = y
-      |- y = y;
+    then |- y = y;
     by refl(T, y);
   qed;

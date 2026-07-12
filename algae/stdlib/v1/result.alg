@@ -48,6 +48,16 @@ rule result_cases(
   ⊢ P(r)
 end;
 
+# `ok` is injective: since it is a constructor, equal `ok`s have equal payloads.
+rule ok_inj(
+  A E : Sort,
+  a b : A
+)
+  ⊢ ok(A, E, a) = ok(A, E, b)
+  ────────────────────────
+  ⊢ a = b
+end;
+
 # `Result(-, E)` is a monad for each fixed error type `E`. Because `Result` is
 # binary while `Monad` expects a unary type constructor, the model supplies a
 # type-abstracting `M = λ X. Result(X, E)` and error-fixed `return`/`bind` as

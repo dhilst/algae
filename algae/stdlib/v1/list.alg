@@ -140,7 +140,9 @@ model ListMonad satisfies Monad(
           bind_cons(A, A, x, rest, λ (w : A) st return(A, w)),
           λ (ys : List(A)) st ys = cons(A, x, rest)
         )
-        then ⊢ append(A, return(A, x), bind(A, A, rest, λ (w : A) st return(A, w))) = cons(A, x, rest);
+        then
+          ih := bind(A, A, rest, λ (w : A) st return(A, w)) = rest
+          ⊢ append(A, return(A, x), bind(A, A, rest, λ (w : A) st return(A, w))) = cons(A, x, rest);
         by backward(
           List(A),
           return(A, x),
@@ -148,7 +150,9 @@ model ListMonad satisfies Monad(
           return_def(A, x),
           λ (ys : List(A)) st append(A, ys, bind(A, A, rest, λ (w : A) st return(A, w))) = cons(A, x, rest)
         )
-        then ⊢ append(A, singleton(A, x), bind(A, A, rest, λ (w : A) st return(A, w))) = cons(A, x, rest);
+        then
+          ih := bind(A, A, rest, λ (w : A) st return(A, w)) = rest
+          ⊢ append(A, singleton(A, x), bind(A, A, rest, λ (w : A) st return(A, w))) = cons(A, x, rest);
         by backward(
           List(A),
           bind(A, A, rest, λ (w : A) st return(A, w)),
@@ -156,7 +160,9 @@ model ListMonad satisfies Monad(
           ih,
           λ (ys : List(A)) st append(A, singleton(A, x), ys) = cons(A, x, rest)
         )
-        then ⊢ append(A, singleton(A, x), rest) = cons(A, x, rest);
+        then
+          ih := bind(A, A, rest, λ (w : A) st return(A, w)) = rest
+          ⊢ append(A, singleton(A, x), rest) = cons(A, x, rest);
         by backward(
           List(A),
           singleton(A, x),
@@ -164,7 +170,9 @@ model ListMonad satisfies Monad(
           singleton_def(A, x),
           λ (ys : List(A)) st append(A, ys, rest) = cons(A, x, rest)
         )
-        then ⊢ append(A, cons(A, x, nil(A)), rest) = cons(A, x, rest);
+        then
+          ih := bind(A, A, rest, λ (w : A) st return(A, w)) = rest
+          ⊢ append(A, cons(A, x, nil(A)), rest) = cons(A, x, rest);
         by backward(
           List(A),
           append(A, cons(A, x, nil(A)), rest),
@@ -172,7 +180,9 @@ model ListMonad satisfies Monad(
           append_cons_left(A, x, nil(A), rest),
           λ (ys : List(A)) st ys = cons(A, x, rest)
         )
-        then ⊢ cons(A, x, append(A, nil(A), rest)) = cons(A, x, rest);
+        then
+          ih := bind(A, A, rest, λ (w : A) st return(A, w)) = rest
+          ⊢ cons(A, x, append(A, nil(A), rest)) = cons(A, x, rest);
         by backward(
           List(A),
           append(A, nil(A), rest),
@@ -180,7 +190,9 @@ model ListMonad satisfies Monad(
           append_nil_left(A, rest),
           λ (ys : List(A)) st cons(A, x, ys) = cons(A, x, rest)
         )
-        then ⊢ cons(A, x, rest) = cons(A, x, rest);
+        then
+          ih := bind(A, A, rest, λ (w : A) st return(A, w)) = rest
+          ⊢ cons(A, x, rest) = cons(A, x, rest);
         by refl(List(A), cons(A, x, rest));
       qed;
     qed;
@@ -254,7 +266,9 @@ model ListMonad satisfies Monad(
               λ (y : A) st bind(B, C, f(y), g)
             )
         )
-        then ⊢ bind(B, C, append(B, f(x), bind(A, B, rest, f)), g)
+        then
+          ih := bind(B, C, bind(A, B, rest, f), g) = bind(A, C, rest, λ (x : A) st bind(B, C, f(x), g))
+          ⊢ bind(B, C, append(B, f(x), bind(A, B, rest, f)), g)
               = bind(A, C, cons(A, x, rest), λ (y : A) st bind(B, C, f(y), g));
         by backward(
           List(C),
@@ -269,7 +283,9 @@ model ListMonad satisfies Monad(
               λ (y : A) st bind(B, C, f(y), g)
             )
         )
-        then ⊢ append(C, bind(B, C, f(x), g), bind(B, C, bind(A, B, rest, f), g))
+        then
+          ih := bind(B, C, bind(A, B, rest, f), g) = bind(A, C, rest, λ (x : A) st bind(B, C, f(x), g))
+          ⊢ append(C, bind(B, C, f(x), g), bind(B, C, bind(A, B, rest, f), g))
               = bind(A, C, cons(A, x, rest), λ (y : A) st bind(B, C, f(y), g));
         by backward(
           List(C),
@@ -284,7 +300,9 @@ model ListMonad satisfies Monad(
               λ (y : A) st bind(B, C, f(y), g)
             )
         )
-        then ⊢ append(C, bind(B, C, f(x), g), bind(A, C, rest, λ (x : A) st bind(B, C, f(x), g)))
+        then
+          ih := bind(B, C, bind(A, B, rest, f), g) = bind(A, C, rest, λ (x : A) st bind(B, C, f(x), g))
+          ⊢ append(C, bind(B, C, f(x), g), bind(A, C, rest, λ (x : A) st bind(B, C, f(x), g)))
               = bind(A, C, cons(A, x, rest), λ (y : A) st bind(B, C, f(y), g));
         by backward(
           List(C),
@@ -294,7 +312,9 @@ model ListMonad satisfies Monad(
           λ (zs : List(C)) st
             append(C, bind(B, C, f(x), g), bind(A, C, rest, λ (y : A) st bind(B, C, f(y), g))) = zs
         )
-        then ⊢ append(C, bind(B, C, f(x), g), bind(A, C, rest, λ (y : A) st bind(B, C, f(y), g)))
+        then
+          ih := bind(B, C, bind(A, B, rest, f), g) = bind(A, C, rest, λ (x : A) st bind(B, C, f(x), g))
+          ⊢ append(C, bind(B, C, f(x), g), bind(A, C, rest, λ (y : A) st bind(B, C, f(y), g)))
               = append(C, bind(B, C, f(x), g), bind(A, C, rest, λ (y : A) st bind(B, C, f(y), g)));
         by refl(
           List(C),
