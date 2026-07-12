@@ -8,6 +8,13 @@ description = "WebAssembly wrapper around algae-kernel: parse, highlight-token, 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+# Recent Rust toolchains emit a second (reference-types) table, which the
+# `wasm-opt` version bundled by wasm-pack cannot parse ("Only 1 table definition
+# allowed in MVP"). Skip wasm-opt so the build is robust across toolchains; the
+# only cost is a slightly larger `.wasm`.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [dependencies]
 algae-kernel = { path = "../algae-kernel" }
 wasm-bindgen = "0.2"
