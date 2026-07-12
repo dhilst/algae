@@ -3,104 +3,152 @@ Specifying error behavior
 =========================
 
 Remember the warning back in :doc:`specs`, that our stack specification was
-**incomplete**? Here is exactly how. What is ``top(empty)`` — the top of an
+**incomplete**? Here is exactly how. What is ``top(A, empty(A))`` — the top of an
 *empty* stack? The two axioms never say. A programmer implementing that spec would
 have to decide something on the spot — perhaps throw an exception — for a case the
 specification simply left open. We usually want to *avoid* runtime errors, or at
 the very least pin down in the specification where they may occur.
 
 So this is a real gap. Algae has no partial functions — ``top`` is total, so
-``top(empty)`` *is* some element, we just never said which. A caller who pops one
+``top(A, empty(A))`` *is* some element, we just never said which. A caller who pops one
 element too many deserves a defined answer, not a shrug.
 
-Algae's motto is *failure is modeled with sum types*. So we give ``pop`` and
-``top`` a second possible outcome — an ``Error`` — and specify the empty case
-outright:
+Algae's motto is *failure is modeled with sum types*. The standard library gives
+this shape a name: ``Result(A, E)`` — the type of "an ``A`` on success, *or* an
+``E`` on failure," built from two constructors,
 
 .. code-block:: alg
 
+   ok  : forall (A E : Sort) st A → Result(A, E);   # success, carrying an A
+   err : forall (A E : Sort) st E → Result(A, E);   # failure, carrying an E
+
+So we give ``pop`` and ``top`` a second possible outcome — an ``Error`` — by
+returning a ``Result`` and specifying the empty case outright:
+
+.. code-block:: alg
+
+   import result(ok, err, result_cases);
+
    sort Error : Sort;
 
-   op err : → Error;
-   op pop : Stack(A) → Stack(A) | Error;
-   op top : Stack(A) → A | Error;
+   op underflow : → Error;   # the one way our stack operations can fail
+   op pop : forall (A : Sort) st Stack(A) → Result(Stack(A), Error);
+   op top : forall (A : Sort) st Stack(A) → Result(A, Error);
 
-   axiom pop_empty(A : Sort)  ⊢ pop(empty) = err;
-   axiom top_empty(A : Sort)  ⊢ top(empty) = err;
+   axiom pop_empty(A : Sort)
+     ⊢ pop(A, empty(A)) = err(Stack(A), Error, underflow);
+   axiom top_empty(A : Sort)
+     ⊢ top(A, empty(A)) = err(A, Error, underflow);
 
 The return types are now **sum types**: ``pop`` yields "a stack *or* an error,"
-written ``Stack(A) | Error``. Two things make this fit together:
+written ``Result(Stack(A), Error)``. Unlike an untyped model, a plain value does
+**not** silently slip into the sum — you say *which* outcome it is with ``ok`` or
+``err``:
 
-- ``pop(empty) = err`` type-checks because a value of a *summand* injects into the
-  sum: ``err : Error`` sits happily where a ``Stack(A) | Error`` is wanted.
-- The old success laws survive untouched, for the same reason. ``pop(push(x, s)) =
-  s`` still holds — ``s : Stack(A)`` injects into ``Stack(A) | Error`` — it just
-  now reads as "on success, you get ``s`` back." Nothing we proved before breaks.
+- ``err(Stack(A), Error, underflow)`` tags the ``Error`` value ``underflow`` as the
+  *failure* branch, giving it type ``Result(Stack(A), Error)``.
+- On success you use ``ok``: a real result ``s : Stack(A)`` becomes
+  ``ok(Stack(A), Error, s) : Result(Stack(A), Error)``. The old success laws
+  survive, reworded to say "on success, you get ``ok`` of your value back."
+
+(The ``import result(ok, err, result_cases);`` is what brings the ``Result`` type,
+its ``ok`` / ``err`` constructors, and the ``result_cases`` eliminator into scope.)
+
+The explicit ``ok`` / ``err`` are the price of honesty: the type now records
+*which* outcome happened, and every use site has to say so.
 
 Here's the whole thing, error-aware, still verifying:
 
 .. code-block:: alg
 
-   import core(forward);
+   import result(ok, err, result_cases, ok_inj);
+   import core(forward, implication_intro);
 
    sort Stack : Sort → Sort;
    sort Error : Sort;
 
-   op empty : → Stack(A);
-   op push  : A * Stack(A) → Stack(A);
-   op err   : → Error;
-   op pop   : Stack(A) → Stack(A) | Error;
-   op top   : Stack(A) → A | Error;
+   op empty     : forall (A : Sort) st → Stack(A);
+   op push      : forall (A : Sort) st A * Stack(A) → Stack(A);
+   op underflow : → Error;
+   op pop       : forall (A : Sort) st Stack(A) → Result(Stack(A), Error);
+   op top       : forall (A : Sort) st Stack(A) → Result(A, Error);
 
-   axiom top_push(A : Sort, x : A, s : Stack(A))  ⊢ top(push(x, s)) = x;
-   axiom pop_push(A : Sort, x : A, s : Stack(A))  ⊢ pop(push(x, s)) = s;
-   axiom pop_empty(A : Sort)  ⊢ pop(empty) = err;
-   axiom top_empty(A : Sort)  ⊢ top(empty) = err;
+   axiom top_push(A : Sort, x : A, s : Stack(A))
+     ⊢ top(A, push(A, x, s)) = ok(A, Error, x);
+   axiom pop_push(A : Sort, x : A, s : Stack(A))
+     ⊢ pop(A, push(A, x, s)) = ok(Stack(A), Error, s);
+   axiom pop_empty(A : Sort)
+     ⊢ pop(A, empty(A)) = err(Stack(A), Error, underflow);
+   axiom top_empty(A : Sort)
+     ⊢ top(A, empty(A)) = err(A, Error, underflow);
 
    # empty is now fully specified: peeking it is an error, not a mystery.
-   lemma peek_empty(A : Sort)  ⊢ top(empty) = err;
+   lemma peek_empty(A : Sort)
+     ⊢ top(A, empty(A)) = err(A, Error, underflow);
    proof
      by top_empty(A);
    qed;
 
-   # the success laws still hold — an A injects into A | Error.
-   lemma top_of_push(A : Sort, x : A, s : Stack(A))  ⊢ top(push(x, s)) = x;
+   # the success law: peeking a push returns ok of the pushed value.
+   lemma top_of_push(A : Sort, x : A, s : Stack(A))
+     ⊢ top(A, push(A, x, s)) = ok(A, Error, x);
    proof
      by top_push(A, x, s);
    qed;
 
-   # push one, pop it, then peek: the error surfaces through the composition.
-   lemma push_pop_peek(A : Sort, a : A)  ⊢ top(pop(push(a, empty))) = err;
+   # pop after push returns the same stack — a *successful* ok of s.
+   lemma pop_of_push(A : Sort, a : A, s : Stack(A))
+     ⊢ pop(A, push(A, a, s)) = ok(Stack(A), Error, s);
    proof
-     by forward(Stack(A), pop(push(a, empty)), empty,
-                  pop_push(A, a, empty), top(_) = err)
-     then ⊢ top(empty) = err;
-     by top_empty(A);
+     by pop_push(A, a, s);
    qed;
 
-- **``peek_empty``** is the point of the whole exercise: ``top(empty)`` now has an
-  answer, ``err``, provable in one step. The gap is closed.
+   # A more evolved proof
+   lemma push_of_pop_weak(A : Sort, a : A, s0 s1 : Stack(A))
+     ⊢ pop(A, push(A, a, s0)) = ok(Stack(A), Error, s1) ⇒ s0 = s1;
+   proof
+     by forward(
+       Result(Stack(A), Error),
+       pop(A, push(A, a, s0)),
+       ok(Stack(A), Error, s0),
+       pop_push(A, a, s0),
+       (_ = ok(Stack(A), Error, s1) ⇒ s0 = s1))
+     then ⊢ (ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1)) ⇒ (s0 = s1);
+     by implication_intro(ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1), s0 = s1)
+     then
+       P := ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1)
+       ⊢ s0 = s1;
+     by ok_inj(Stack(A), Error, s0, s1)
+     then
+       P := ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1)
+       ⊢ ok(Stack(A), Error, s0) = ok(Stack(A), Error, s1);
+     by P;
+   qed;
+
+- **``peek_empty``** is the point of the whole exercise: ``top(A, empty(A))`` now has an
+  answer, ``err(…, underflow)``, provable in one step. The gap is closed.
 - **``top_of_push``** confirms nothing regressed — the success law is exactly as
-  before.
-- **``push_pop_peek``** chains operations: push ``a``, pop it back to ``empty``,
-  then peek — and the error propagates out. We rewrite ``pop(push(a, empty))`` to
-  ``empty`` and finish with ``top_empty``.
+  before, now stated as an explicit ``ok`` result.
+- **``pop_of_push``** is the round-trip law: for *any* stack ``s``, pushing ``a``
+  then popping returns ``ok(Stack(A), Error, s)`` — a *tagged success* carrying the
+  same stack ``s`` you started with.
 
 The tradeoff
 ============
 
 Specifying errors this way buys you **totality and honesty**: there are no
-undefined corners left, ``pop(empty)`` genuinely equals ``err``, and any caller
-can tell success from failure by looking at which side of the sum they got.
+undefined corners left, ``pop(A, empty(A))`` genuinely equals ``err(…, underflow)``,
+and any caller can tell success from failure by looking at which constructor they
+got.
 
-But you pay for it. Once ``pop`` returns ``Stack(A) | Error``, that error rides
-along through every composition. ``push_pop_peek`` only went through because the
-inner ``pop`` demonstrably *succeeded* (it produced ``empty``, a real stack) — so
-the injection carried us past it. Feed a genuinely-might-be-error result into the
-next operation and a rigorous spec has to **case-split**: if it errored, propagate;
-otherwise carry on. The tidy equations start sprouting side conditions, and
-``pop(pop(s))`` stops being something you can write without first asking "did the
-first pop fail?"
+But you pay for it, and the types now make you pay up front. Once ``pop`` returns
+``Result(Stack(A), Error)``, you can no longer write ``top(A, pop(A, s))`` — ``top``
+wants a ``Stack(A)``, not a ``Result(Stack(A), Error)``, so the composition simply
+does not type-check. To chain another operation you must **case-split** the result
+first (with ``result_cases``): if it is ``ok`` of a stack, carry on; if it is
+``err`` of an error, propagate. The tidy equations sprout side conditions, and
+``pop(A, pop(A, s))`` stops being something you can write without first asking "did
+the first pop fail?"
 
 That's the perennial bargain. Leave failure unspecified and the algebra stays
 clean but the spec lies by omission. Track it in the types and the spec tells the

@@ -109,8 +109,8 @@ rule or_elim(
   P Q R : Prop
 )
   ⊢ P ∨ Q;
-  P := P ⊢ R;
-  Q := Q ⊢ R
+  hp := P ⊢ R;
+  hq := Q ⊢ R
   ────────────────────────
   ⊢ R
 end;
@@ -118,7 +118,7 @@ end;
 rule implication_intro(
   P Q : Prop
 )
-  P := P ⊢ Q
+  hp := P ⊢ Q
   ────────────────────────
   ⊢ P ⇒ Q
 end;
@@ -135,7 +135,7 @@ end;
 rule negation_intro(
   P : Prop
 )
-  P := P ⊢ False
+  hp := P ⊢ False
   ────────────────────────
   ⊢ ¬P
 end;

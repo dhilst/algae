@@ -277,12 +277,12 @@ idea for other shapes.</p>
   <span class="o">⊢</span> <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="p">;</span>
 <span class="k">proof</span>
   <span class="k">by</span> <span class="n">pair_cases</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span>
-  <span class="n">then</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">y</span> <span class="p">:</span> <span class="n">B</span> <span class="o">⊢</span> <span class="n">pair</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="n">pair</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
-  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Pair</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">),</span> <span class="n">pair</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">));</span>
+  <span class="n">then</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">y</span> <span class="p">:</span> <span class="n">B</span> <span class="o">⊢</span> <span class="n">pair</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="n">pair</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
+  <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Pair</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">),</span> <span class="n">pair</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">));</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">pair_cases</span></code> replaces the opaque <code class="docutils literal notranslate"><span class="pre">p</span></code> with a concrete <code class="docutils literal notranslate"><span class="pre">pair(x,</span> <span class="pre">y)</span></code> for fresh
+<p><code class="docutils literal notranslate"><span class="pre">pair_cases</span></code> replaces the opaque <code class="docutils literal notranslate"><span class="pre">p</span></code> with a concrete <code class="docutils literal notranslate"><span class="pre">pair(A,</span> <span class="pre">B,</span> <span class="pre">x,</span> <span class="pre">y)</span></code> for fresh
 <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>. A sum, by contrast, is built <em>two</em> ways — <code class="docutils literal notranslate"><span class="pre">inl</span></code> or <code class="docutils literal notranslate"><span class="pre">inr</span></code> — so
 <code class="docutils literal notranslate"><span class="pre">sum_cases</span></code> gives you two branches:</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">adt</span><span class="p">(</span><span class="n">sum_cases</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
@@ -293,13 +293,13 @@ idea for other shapes.</p>
   <span class="k">by</span> <span class="n">sum_cases</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span> <span class="k">cases</span>
     <span class="k">case</span>
       <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">;</span>
-      <span class="o">⊢</span> <span class="n">inl</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">inl</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">),</span> <span class="n">inl</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+      <span class="o">⊢</span> <span class="n">inl</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">inl</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">),</span> <span class="n">inl</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">));</span>
     <span class="k">qed</span><span class="p">;</span>
     <span class="k">case</span>
       <span class="n">y</span> <span class="p">:</span> <span class="n">B</span><span class="p">;</span>
-      <span class="o">⊢</span> <span class="n">inr</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="n">inr</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">),</span> <span class="n">inr</span><span class="p">(</span><span class="n">y</span><span class="p">));</span>
+      <span class="o">⊢</span> <span class="n">inr</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="n">inr</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
+      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">),</span> <span class="n">inr</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">y</span><span class="p">));</span>
     <span class="k">qed</span><span class="p">;</span>
   <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
@@ -311,7 +311,7 @@ being proved of the whole value.</p>
 <section id="options-results-lists">
 <h2>Options, results, lists<a class="headerlink" href="#options-results-lists" title="Link to this heading">¶</a></h2>
 <p>The data types follow suit. <a href="https://github.com/dhilst/algae/blob/main/algae/stdlib/v1/option.alg" target="_blank" rel="noopener"><code class="docutils literal notranslate"><span class="pre">option.alg</span></code></a> gives <code class="docutils literal notranslate"><span class="pre">option_cases</span></code> (<code class="docutils literal notranslate"><span class="pre">none</span></code> or
-<code class="docutils literal notranslate"><span class="pre">some(x)</span></code>):</p>
+<code class="docutils literal notranslate"><span class="pre">some(A,</span> <span class="pre">x)</span></code>):</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">option</span><span class="p">(</span><span class="n">option_cases</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
 
 <span class="k">lemma</span> <span class="n">an_option_is_itself</span><span class="p">(</span><span class="n">A</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">m</span> <span class="p">:</span> <span class="n">Option</span><span class="p">(</span><span class="n">A</span><span class="p">))</span>
@@ -319,19 +319,19 @@ being proved of the whole value.</p>
 <span class="k">proof</span>
   <span class="k">by</span> <span class="n">option_cases</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span> <span class="k">cases</span>
     <span class="k">case</span>
-      <span class="o">⊢</span> <span class="n">none</span> <span class="o">=</span> <span class="n">none</span><span class="p">;</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">None</span><span class="p">,</span> <span class="n">none</span><span class="p">);</span>
+      <span class="o">⊢</span> <span class="n">none</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">=</span> <span class="n">none</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Option</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">none</span><span class="p">(</span><span class="n">A</span><span class="p">));</span>
     <span class="k">qed</span><span class="p">;</span>
     <span class="k">case</span>
       <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">;</span>
-      <span class="o">⊢</span> <span class="n">some</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">some</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Option</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">some</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+      <span class="o">⊢</span> <span class="n">some</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">some</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Option</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">some</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">));</span>
     <span class="k">qed</span><span class="p">;</span>
   <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
 </pre></div>
 </div>
-<p><a href="https://github.com/dhilst/algae/blob/main/algae/stdlib/v1/result.alg" target="_blank" rel="noopener"><code class="docutils literal notranslate"><span class="pre">result.alg</span></code></a> mirrors it with <code class="docutils literal notranslate"><span class="pre">result_cases</span></code> (<code class="docutils literal notranslate"><span class="pre">ok(x)</span></code> or <code class="docutils literal notranslate"><span class="pre">err(e)</span></code>), and
+<p><a href="https://github.com/dhilst/algae/blob/main/algae/stdlib/v1/result.alg" target="_blank" rel="noopener"><code class="docutils literal notranslate"><span class="pre">result.alg</span></code></a> mirrors it with <code class="docutils literal notranslate"><span class="pre">result_cases</span></code> (<code class="docutils literal notranslate"><span class="pre">ok(A,</span> <span class="pre">E,</span> <span class="pre">x)</span></code> or <code class="docutils literal notranslate"><span class="pre">err(A,</span> <span class="pre">E,</span> <span class="pre">e)</span></code>), and
 <a href="https://github.com/dhilst/algae/blob/main/algae/stdlib/v1/list.alg" target="_blank" rel="noopener"><code class="docutils literal notranslate"><span class="pre">list.alg</span></code></a> gives <code class="docutils literal notranslate"><span class="pre">list_induction</span></code> — a <em>recursive</em> case analysis, like <code class="docutils literal notranslate"><span class="pre">nat</span></code>:
 the <code class="docutils literal notranslate"><span class="pre">cons</span></code> case even hands you an induction hypothesis <code class="docutils literal notranslate"><span class="pre">ih</span></code> about the tail.</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">list</span><span class="p">(</span><span class="n">list_induction</span><span class="p">,</span> <span class="n">refl</span><span class="p">);</span>
@@ -341,15 +341,15 @@ the <code class="docutils literal notranslate"><span class="pre">cons</span></co
 <span class="k">proof</span>
   <span class="k">by</span> <span class="n">list_induction</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_</span><span class="p">)</span> <span class="k">cases</span>
     <span class="k">case</span>
-      <span class="o">⊢</span> <span class="n">nil</span> <span class="o">=</span> <span class="n">nil</span><span class="p">;</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">List</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">nil</span><span class="p">);</span>
+      <span class="o">⊢</span> <span class="n">nil</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">=</span> <span class="n">nil</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">List</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">nil</span><span class="p">(</span><span class="n">A</span><span class="p">));</span>
     <span class="k">qed</span><span class="p">;</span>
     <span class="k">case</span>
       <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">;</span>
       <span class="n">rest</span> <span class="p">:</span> <span class="n">List</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
       <span class="n">ih</span> <span class="o">:=</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">rest</span><span class="p">;</span>
-      <span class="o">⊢</span> <span class="n">cons</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rest</span><span class="p">)</span> <span class="o">=</span> <span class="n">cons</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rest</span><span class="p">);</span>
-      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">List</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">cons</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rest</span><span class="p">));</span>
+      <span class="o">⊢</span> <span class="n">cons</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">rest</span><span class="p">)</span> <span class="o">=</span> <span class="n">cons</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">rest</span><span class="p">);</span>
+      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">List</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">cons</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">rest</span><span class="p">));</span>
     <span class="k">qed</span><span class="p">;</span>
   <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
@@ -364,7 +364,7 @@ binding into a <code class="docutils literal notranslate"><span class="pre">some
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">option</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">bind_runs_the_function</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">A</span><span class="p">,</span> <span class="n">f</span> <span class="p">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">Option</span><span class="p">(</span><span class="n">B</span><span class="p">))</span>
-  <span class="o">⊢</span> <span class="n">bind</span><span class="p">(</span><span class="n">some</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+  <span class="o">⊢</span> <span class="n">bind</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">some</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
 <span class="k">proof</span>
   <span class="k">by</span> <span class="n">bind_some</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">);</span>
 <span class="k">qed</span><span class="p">;</span>
@@ -381,7 +381,7 @@ equations to rewrite with.</p>
 <div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">option</span><span class="p">;</span>
 
 <span class="k">lemma</span> <span class="n">bind_of_none</span><span class="p">(</span><span class="n">A</span> <span class="n">B</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">g</span> <span class="p">:</span> <span class="n">A</span> <span class="o">→</span> <span class="n">Option</span><span class="p">(</span><span class="n">B</span><span class="p">))</span>
-  <span class="o">⊢</span> <span class="n">bind</span><span class="p">(</span><span class="n">none</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="o">=</span> <span class="n">none</span><span class="p">;</span>
+  <span class="o">⊢</span> <span class="n">bind</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">none</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">g</span><span class="p">)</span> <span class="o">=</span> <span class="n">none</span><span class="p">(</span><span class="n">B</span><span class="p">);</span>
 <span class="k">proof</span>
   <span class="k">by</span> <span class="kp">wip</span><span class="p">(</span>?<span class="n">goal</span><span class="p">);</span>
 <span class="kp">wip</span><span class="p">;</span>
@@ -389,7 +389,7 @@ equations to rewrite with.</p>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p><code class="docutils literal notranslate"><span class="pre">bind_none(A,</span> <span class="pre">B,</span> <span class="pre">g)</span></code> proves <code class="docutils literal notranslate"><span class="pre">bind(none,</span> <span class="pre">g)</span> <span class="pre">=</span> <span class="pre">none</span></code> outright — it’s a
+<p><code class="docutils literal notranslate"><span class="pre">bind_none(A,</span> <span class="pre">B,</span> <span class="pre">g)</span></code> proves <code class="docutils literal notranslate"><span class="pre">bind(A,</span> <span class="pre">B,</span> <span class="pre">none(A),</span> <span class="pre">g)</span> <span class="pre">=</span> <span class="pre">none(B)</span></code> outright — it’s a
 premise-free fact, so a single <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">bind_none(A,</span> <span class="pre">B,</span> <span class="pre">g);</span></code> closes the goal, no
 <code class="docutils literal notranslate"><span class="pre">then</span></code> needed.</p>
 </div>

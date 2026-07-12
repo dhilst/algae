@@ -29,11 +29,11 @@ Pairs and sums
      ⊢ p = p;
    proof
      by pair_cases(A, B, p, _ = _)
-     then x : A, y : B ⊢ pair(x, y) = pair(x, y);
-     by refl(Pair(A, B), pair(x, y));
+     then x : A, y : B ⊢ pair(A, B, x, y) = pair(A, B, x, y);
+     by refl(Pair(A, B), pair(A, B, x, y));
    qed;
 
-``pair_cases`` replaces the opaque ``p`` with a concrete ``pair(x, y)`` for fresh
+``pair_cases`` replaces the opaque ``p`` with a concrete ``pair(A, B, x, y)`` for fresh
 ``x``, ``y``. A sum, by contrast, is built *two* ways — ``inl`` or ``inr`` — so
 ``sum_cases`` gives you two branches:
 
@@ -47,13 +47,13 @@ Pairs and sums
      by sum_cases(A, B, s, _ = _) cases
        case
          x : A;
-         ⊢ inl(x) = inl(x);
-         by refl(Sum(A, B), inl(x));
+         ⊢ inl(A, B, x) = inl(A, B, x);
+         by refl(Sum(A, B), inl(A, B, x));
        qed;
        case
          y : B;
-         ⊢ inr(y) = inr(y);
-         by refl(Sum(A, B), inr(y));
+         ⊢ inr(A, B, y) = inr(A, B, y);
+         by refl(Sum(A, B), inr(A, B, y));
        qed;
      qed;
    qed;
@@ -65,7 +65,7 @@ Options, results, lists
 =======================
 
 The data types follow suit. |option.alg| gives ``option_cases`` (``none`` or
-``some(x)``):
+``some(A, x)``):
 
 .. code-block:: alg
 
@@ -76,18 +76,18 @@ The data types follow suit. |option.alg| gives ``option_cases`` (``none`` or
    proof
      by option_cases(A, m, _ = _) cases
        case
-         ⊢ none = none;
-         by refl(None, none);
+         ⊢ none(A) = none(A);
+         by refl(Option(A), none(A));
        qed;
        case
          x : A;
-         ⊢ some(x) = some(x);
-         by refl(Option(A), some(x));
+         ⊢ some(A, x) = some(A, x);
+         by refl(Option(A), some(A, x));
        qed;
      qed;
    qed;
 
-|result.alg| mirrors it with ``result_cases`` (``ok(x)`` or ``err(e)``), and
+|result.alg| mirrors it with ``result_cases`` (``ok(A, E, x)`` or ``err(A, E, e)``), and
 |list.alg| gives ``list_induction`` — a *recursive* case analysis, like ``nat``:
 the ``cons`` case even hands you an induction hypothesis ``ih`` about the tail.
 
@@ -100,15 +100,15 @@ the ``cons`` case even hands you an induction hypothesis ``ih`` about the tail.
    proof
      by list_induction(A, xs, _ = _) cases
        case
-         ⊢ nil = nil;
-         by refl(List(A), nil);
+         ⊢ nil(A) = nil(A);
+         by refl(List(A), nil(A));
        qed;
        case
          x : A;
          rest : List(A);
          ih := rest = rest;
-         ⊢ cons(x, rest) = cons(x, rest);
-         by refl(List(A), cons(x, rest));
+         ⊢ cons(A, x, rest) = cons(A, x, rest);
+         by refl(List(A), cons(A, x, rest));
        qed;
      qed;
    qed;
@@ -125,7 +125,7 @@ binding into a ``some`` just runs the function:
    import option;
 
    lemma bind_runs_the_function(A B : Sort, x : A, f : A → Option(B))
-     ⊢ bind(some(x), f) = f(x);
+     ⊢ bind(A, B, some(A, x), f) = f(x);
    proof
      by bind_some(A, B, x, f);
    qed;
@@ -146,14 +146,14 @@ equations to rewrite with.
       import option;
 
       lemma bind_of_none(A B : Sort, g : A → Option(B))
-        ⊢ bind(none, g) = none;
+        ⊢ bind(A, B, none(A), g) = none(B);
       proof
         by wip(?goal);
       wip;
 
    .. hint::
 
-      ``bind_none(A, B, g)`` proves ``bind(none, g) = none`` outright — it's a
+      ``bind_none(A, B, g)`` proves ``bind(A, B, none(A), g) = none(B)`` outright — it's a
       premise-free fact, so a single ``by bind_none(A, B, g);`` closes the goal, no
       ``then`` needed.
 

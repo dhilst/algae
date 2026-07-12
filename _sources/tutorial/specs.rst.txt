@@ -59,19 +59,19 @@ checker can parse, typecheck, and verify it for you:
 
    sort Stack : Sort → Sort;   # stacks of some element type
 
-   op empty : → Stack(A);      # the empty stack
-   op push  : A * Stack(A) → Stack(A);
-   op top   : Stack(A) → A;
+   op empty : forall (A : Sort) st → Stack(A);      # the empty stack
+   op push  : forall (A : Sort) st A * Stack(A) → Stack(A);
+   op top   : forall (A : Sort) st Stack(A) → A;
 
    axiom top_push(A : Sort, x : A, s : Stack(A))
-     ⊢ top(push(x, s)) = x;
+     ⊢ top(A, push(A, x, s)) = x;
 
 .. admonition:: Constructors *are* operations
    :class: note
 
    You might expect a distinction between *constructors* (which build values) and
-   *operations* (which consume them). Algae makes none. ``op empty : → Stack(A)``
-   looks like a constructor and ``op push : A * Stack(A) → Stack(A)`` like an
+   *operations* (which consume them). Algae makes none. ``op empty : forall (A : Sort) st → Stack(A)``
+   looks like a constructor and ``op push : forall (A : Sort) st A * Stack(A) → Stack(A)`` like an
    operation, but to Algae they are both just operators — symbols with a
    signature. There is no privileged set of "the real values"; there are only the
    operators and the equations that relate them.
@@ -93,7 +93,7 @@ hide ambiguity in.
    :class: warning
 
    Look again at what the spec above says — and doesn't. It never mentions
-   ``top(empty)``: what is the top of an *empty* stack? Nothing here pins it down.
+   ``top(A, empty(A))``: what is the top of an *empty* stack? Nothing here pins it down.
    We'll return to this exact gap in :doc:`errors` and see how to close it.
 
 Sorts and operations, precisely
@@ -107,14 +107,14 @@ tuple of arguments:
 
 .. code-block:: alg
 
-   op empty : → Stack(A);            # no arguments — just a result
-   op push  : A * Stack(A) → Stack(A);  # two arguments: an A and a Stack(A)
-   op pop   : Stack(A) → Stack(A);   # one argument
-   op top   : Stack(A) → A;
+   op empty : forall (A : Sort) st → Stack(A);            # no arguments — just a result
+   op push  : forall (A : Sort) st A * Stack(A) → Stack(A);  # two arguments: an A and a Stack(A)
+   op pop   : forall (A : Sort) st Stack(A) → Stack(A);   # one argument
+   op top   : forall (A : Sort) st Stack(A) → A;
 
 That's a *vocabulary* and nothing more. ``empty``, ``push``, ``pop``, and ``top``
 are just symbols; nothing yet says what popping does. In Algae, operators are
-**inert** — the checker never evaluates them, so ``pop(push(x, empty))`` does not
+**inert** — the checker never evaluates them, so ``pop(A, push(A, x, empty(A)))`` does not
 quietly collapse to ``empty`` on its own.
 
 Axioms give operators meaning
@@ -126,9 +126,9 @@ proof. Two equations are enough to make these symbols behave like a stack:
 .. code-block:: alg
 
    axiom top_push(A : Sort, x : A, s : Stack(A))
-     ⊢ top(push(x, s)) = x;   # the top of a push is what you pushed
+     ⊢ top(A, push(A, x, s)) = x;   # the top of a push is what you pushed
    axiom pop_push(A : Sort, x : A, s : Stack(A))
-     ⊢ pop(push(x, s)) = s;   # popping a push undoes it
+     ⊢ pop(A, push(A, x, s)) = s;   # popping a push undoes it
 
 An axiom is exactly a **zero-premise rule** (recall :doc:`backward-reasoning`):
 nothing to establish, so wherever its conclusion matches your goal, it closes it.
