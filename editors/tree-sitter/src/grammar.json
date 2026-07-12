@@ -372,6 +372,39 @@
           "value": ":"
         },
         {
+          "type": "REPEAT",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "forall"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "∀"
+                  }
+                ]
+              },
+              {
+                "type": "FIELD",
+                "name": "type_param",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "binder"
+                }
+              },
+              {
+                "type": "STRING",
+                "value": "st"
+              }
+            ]
+          }
+        },
+        {
           "type": "FIELD",
           "name": "signature",
           "content": {
@@ -1609,8 +1642,59 @@
       "value": "*"
     },
     "type_expr": {
-      "type": "SYMBOL",
-      "name": "_function_type"
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_function_type"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "forall_type"
+        }
+      ]
+    },
+    "forall_type": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "forall"
+              },
+              {
+                "type": "STRING",
+                "value": "∀"
+              }
+            ]
+          },
+          {
+            "type": "FIELD",
+            "name": "binder",
+            "content": {
+              "type": "SYMBOL",
+              "name": "binder"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "st"
+          },
+          {
+            "type": "FIELD",
+            "name": "body",
+            "content": {
+              "type": "SYMBOL",
+              "name": "type_expr"
+            }
+          }
+        ]
+      }
     },
     "_function_type": {
       "type": "PREC_RIGHT",

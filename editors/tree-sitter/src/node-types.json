@@ -364,6 +364,32 @@
     }
   },
   {
+    "type": "forall_type",
+    "named": true,
+    "fields": {
+      "binder": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "binder",
+            "named": true
+          }
+        ]
+      },
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type_expr",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "formal_param",
     "named": true,
     "fields": {},
@@ -848,6 +874,16 @@
         "types": [
           {
             "type": "function_sig",
+            "named": true
+          }
+        ]
+      },
+      "type_param": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "binder",
             "named": true
           }
         ]
@@ -1561,6 +1597,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "forall_type",
+          "named": true
+        },
         {
           "type": "identifier",
           "named": true

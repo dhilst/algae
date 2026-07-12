@@ -135,6 +135,13 @@ module.exports = grammar({
       'op',
       field('name', $.symbol),
       ':',
+      // Optional explicit type parameters: `forall (… : Sort) st` prefixes bind
+      // the sort variables the signature ranges over.
+      repeat(seq(
+        choice('forall', '∀'),
+        field('type_param', $.binder),
+        'st',
+      )),
       field('signature', $.function_sig),
       ';',
     ),
@@ -443,7 +450,20 @@ module.exports = grammar({
     _product_op: _ => '*',
 
     // 3.20 Types
-    type_expr: $ => $._function_type,
+    type_expr: $ => choice(
+      $._function_type,
+      $.forall_type,
+    ),
+
+    // forall_type = ("forall" | "∀") binder "st" type_expr
+    // A dependent function type, e.g. a polymorphic operator's signature or a
+    // polymorphic theory operation: `forall (A : Sort) st A -> Option(A)`.
+    forall_type: $ => prec.right(seq(
+      choice('forall', '∀'),
+      field('binder', $.binder),
+      'st',
+      field('body', $.type_expr),
+    )),
 
     _function_type: $ => prec.right(PREC.arrow, seq(
       $._sum_type,
