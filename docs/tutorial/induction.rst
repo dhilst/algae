@@ -55,7 +55,7 @@ branches, so this is a job for ``cases``. Here is the full proof of
 
 .. code-block:: alg
 
-   import core(refl, backward, transitivity);
+   import core(refl, forward);
 
    sort Nat : Sort;
    op 0 : → Nat;
@@ -85,9 +85,25 @@ branches, so this is a job for ``cases``. Here is the full proof of
          k : Nat;
          ih := k + 0 = k;                 # step: assume P(k)
          ⊢ s(k) + 0 = s(k);             # prove P(s k)
-         by backward(Nat, k + 0, k, ih, s(k) + 0 = s(_))
-         then ⊢ s(k) + 0 = s(k + 0);      # goal after rewriting k <- k + 0
-         by add_succ_left(k, 0);          # conclusion s(k) + 0 = s(k + 0) is the goal
+         by forward(                      # rewrite s(k) + 0 → s(k + 0) by add_succ_left
+           Nat,
+           s(k) + 0,
+           s(k + 0),
+           add_succ_left(k, 0),
+           λ (x : Nat) st x = s(k))
+         then
+           ih := k + 0 = k                # restate ih — a `then` may not drop a hypothesis
+           ⊢ s(k + 0) = s(k);
+         by forward(                      # rewrite the inner k + 0 → k by ih
+           Nat,
+           k + 0,
+           k,
+           ih,
+           λ (x : Nat) st s(x) = s(k))
+         then
+           ih := k + 0 = k
+           ⊢ s(k) = s(k);
+         by refl(Nat, s(k));              # both sides equal — reflexivity closes it
        qed;
      qed;
    qed;
@@ -100,12 +116,13 @@ Reading it as a tree:
 - The **base case** ``0 + 0 = 0`` is closed by ``add_zero_left(0)``: its
   conclusion ``0 + n = n``, at ``n = 0``, is exactly ``0 + 0 = 0``.
 - The **step case** assumes ``ih := k + 0 = k`` and must prove ``s(k) + 0 = s(k)``.
-  It uses ``ih`` to rewrite ``k`` to ``k + 0`` under ``s``, leaving
-  ``s(k) + 0 = s(k + 0)``, which ``add_succ_left(k, 0)`` discharges.
+  Two rewrites do it: ``add_succ_left(k, 0)`` turns ``s(k) + 0`` into ``s(k + 0)``,
+  leaving ``s(k + 0) = s(k)``; then ``ih`` rewrites the inner ``k + 0`` to ``k``,
+  leaving ``s(k) = s(k)``, which ``refl`` closes.
 
-Notice ``ih`` — a **hypothesis** introduced by the step case — being handed to
-``backward`` as a proof argument. That's the proof namespace at work: ``ih`` is
-not a term, it's *evidence*.
+Notice ``ih`` — a **hypothesis** introduced by the step case — being handed to the
+second ``forward`` as a proof argument. That's the proof namespace at work: ``ih``
+is not a term, it's *evidence*.
 
 Eigenvariables
 ==============
@@ -172,9 +189,11 @@ begins by introducing the variable:
    qed;
 
 Here the ``then`` keeps its context: ``forall_intro`` introduces the fresh
-eigenvariable ``n``, so the continuation names it (``n : Nat ⊢ …``). When a step
-introduces no new variables — most ``backward`` steps — you can drop the context
-and just write ``then ⊢ <goal>;``.
+eigenvariable ``n``, so the continuation names it (``n : Nat ⊢ …``). A ``then`` must
+carry forward every **hypothesis** still in scope — Algae does no implicit
+weakening, so dropping one (like ``ih`` in the induction step above) is an error.
+Only when the context holds nothing to carry — no hypotheses, no fresh variables —
+can you write the bare ``then ⊢ <goal>;``.
 
 This is also why ``induction`` states its conclusion as ``∀ (n : Nat) st P(n)``
 rather than taking ``n`` as a parameter: the step case must reason about ``n`` as
