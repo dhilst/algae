@@ -1097,14 +1097,72 @@ fn subst_occurrences(goal_nf: &Expr, from_nf: &Expr, to: &Expr) -> Expr {
     sys.nf(goal_nf)
 }
 
-/// Report a `rewrite(<eq>)?` suggestion hole. Given the equation `lhs = rhs` the
-/// argument proves and the current goal, synthesize the `forward` motive automatically
-/// — abstracting *every* occurrence of `lhs` in the goal — and, when the resulting
-/// `forward` step actually applies, offer it as a paste-able fix
-/// `by forward(T, lhs, rhs, <eq>, P) then <ctx> ⊢ <newgoal>;`. When the rewrite does
-/// not apply (no matching subterm, un-inferrable type, non-equation argument, or
-/// `forward` not in scope), emit a plain diagnostic with no fix. The step is admitted,
-/// so the proof stays incomplete — exactly like every other `?` inspect step.
+/// Immediate subexpressions of `e`, for subterm traversal.
+fn expr_children(e: &Expr) -> Vec<&Expr> {
+    match e {
+        Expr::App(f, args) => {
+            let mut v = Vec::with_capacity(args.len() + 1);
+            v.push(f.as_ref());
+            v.extend(args.iter());
+            v
+        }
+        Expr::Lam(a, b)
+        | Expr::Forall(a, b)
+        | Expr::Pi(a, b)
+        | Expr::Exists(a, b)
+        | Expr::Arrow(a, b)
+        | Expr::Eq(a, b)
+        | Expr::And(a, b)
+        | Expr::Or(a, b)
+        | Expr::Implies(a, b)
+        | Expr::Iff(a, b) => vec![a.as_ref(), b.as_ref()],
+        Expr::Not(a) => vec![a.as_ref()],
+        Expr::Product(xs) | Expr::Sum(xs) => xs.iter().collect(),
+        Expr::Bound(_) | Expr::Free(_) | Expr::Const(_) | Expr::Sort | Expr::Prop | Expr::False => {
+            Vec::new()
+        }
+    }
+}
+
+/// The metavariable binding from the first (pre-order, leftmost-outermost) subterm
+/// of `goal` that matches `pat` (with `metas` as wildcards), or `None`.
+fn first_subterm_match(goal: &Expr, pat: &Expr, metas: &[Sym]) -> Option<Vec<(Sym, Expr)>> {
+    let mut subst = Vec::new();
+    if crate::core::rewrite::match_pattern(pat, goal, metas, &mut subst) {
+        return Some(subst);
+    }
+    for child in expr_children(goal) {
+        if let Some(s) = first_subterm_match(child, pat, metas) {
+            return Some(s);
+        }
+    }
+    None
+}
+
+/// Format a `by forward(...)` call across lines, one argument per line indented two
+/// spaces past the `by`. The first line carries no leading indent (it is spliced in
+/// at the `by`'s existing column); callers prefix `indent` when embedding it in a
+/// message.
+fn format_forward_call(indent: &str, arg_strs: &[String]) -> String {
+    let arg_indent = format!("{indent}  ");
+    let body = arg_strs.join(&format!(",\n{arg_indent}"));
+    format!("by forward(\n{arg_indent}{body})")
+}
+
+/// Report a `rewrite(<eq>)?` suggestion hole. The argument names an equation
+/// `lhs = rhs` — either fully applied (`pop_push(A, a, s)`) or with some/all
+/// arguments left as holes (`pop_push` bare, or `pop_push(?A, ?x, ?s)`).
+///
+/// * With holes, the missing arguments are **inferred** by matching the axiom's
+///   left side against a subterm of the goal, and the suggestion is the same
+///   `rewrite` step with those arguments filled in (`rewrite(pop_push(A, a, s))?`).
+/// * Fully applied, the motive is synthesized automatically — abstracting *every*
+///   occurrence of `lhs` in the goal — and the suggestion is the paste-able
+///   `by forward(T, lhs, rhs, <eq>, P) then <ctx> ⊢ <newgoal>;` step.
+///
+/// When nothing applies (no matching subterm, an argument that can't be inferred,
+/// a non-equation argument, or `forward` not in scope) a plain diagnostic explains
+/// why and offers no fix. The step is admitted, so the proof stays incomplete.
 fn report_rewrite_hole(
     elab: &mut Elab,
     ctx: &[CtxEntry],
@@ -1113,7 +1171,7 @@ fn report_rewrite_hole(
     rs: &RewriteSystem,
 ) {
     use crate::core::display::show;
-    use crate::core::tactic::apply;
+    use crate::core::tactic::{apply, subst_all};
 
     let reference = stmt.reference.as_ref().expect("inspect step has a reference");
     let mut msg = format!(
@@ -1121,7 +1179,7 @@ fn report_rewrite_hole(
         show(goal, &elab.interner)
     );
 
-    // Exactly one argument: the equation proof.
+    // Exactly one argument: the equation (a proof reference, possibly with holes).
     if reference.args.len() != 1 {
         elab.err(
             format!(
@@ -1132,23 +1190,171 @@ fn report_rewrite_hole(
         );
         return;
     }
+    let axiom_arg = &reference.args[0];
 
-    // Resolve the argument to the equation it proves.
-    let mut scope = scope_from_ctx(ctx);
-    let eq_stmt = match resolve_proof_term(elab, ctx, &mut scope, &reference.args[0]) {
-        Some(e) => e,
-        None => return, // resolve_proof_term already reported the failure.
+    // Split the argument into its head reference and its surface arguments.
+    let (qname, surface_args) = match &axiom_arg.node {
+        ast::ExprNode::Var(q) => (q.clone(), Vec::new()),
+        ast::ExprNode::App(head, a) => match &head.node {
+            ast::ExprNode::Var(q) => (q.clone(), a.clone()),
+            _ => {
+                elab.err("expected a proof reference", axiom_arg.span);
+                return;
+            }
+        },
+        _ => {
+            elab.err("expected a proof reference", axiom_arg.span);
+            return;
+        }
     };
-    let (lhs, rhs) = match rs.nf(&eq_stmt) {
-        Expr::Eq(a, b) => (*a, *b),
+
+    // Resolve the equation's rule (a global axiom/lemma or a local hypothesis).
+    let pref = ast::ProofRef {
+        name: qname.clone(),
+        args: Vec::new(),
+        span: axiom_arg.span,
+    };
+    let (_akey, arule) = match resolve_tactic(elab, ctx, &pref) {
+        Some(x) => x,
+        None => return,
+    };
+    if !arule.premises.is_empty() {
+        elab.err("a `rewrite` argument must reference a fact (no premises)", axiom_arg.span);
+        return;
+    }
+    match &arule.conclusion {
+        Expr::Eq(_, _) => {}
         other => {
             msg.push_str(&format!(
                 "\nThe argument proves `{}`, which is not an equation `a = b`.\n",
-                show(&other, &elab.interner)
+                show(other, &elab.interner)
             ));
             elab.err(msg.trim_end().to_string(), stmt.span);
             return;
         }
+    }
+
+    let mut scope = scope_from_ctx(ctx);
+    // Classify each parameter as a supplied value (→ `concrete`) or a hole to infer
+    // (→ `metas`). A bare reference leaves every parameter a hole.
+    let mut concrete_subst: Vec<(Sym, Expr)> = Vec::new();
+    let mut metas: Vec<Sym> = Vec::new();
+    let n = arule.params.len();
+    if surface_args.is_empty() {
+        for p in &arule.params {
+            match p {
+                Param::Term { name, .. } => metas.push(*name),
+                Param::Proof { .. } => {
+                    elab.err("`rewrite` cannot infer proof arguments — supply them explicitly", axiom_arg.span);
+                    return;
+                }
+            }
+        }
+    } else {
+        if surface_args.len() != n {
+            elab.err(
+                format!("`{}` takes {} argument(s), got {}", qname.name.text, n, surface_args.len()),
+                axiom_arg.span,
+            );
+            return;
+        }
+        for (p, sa) in arule.params.iter().zip(&surface_args) {
+            let is_hole = matches!(sa.node, ast::ExprNode::NamedHole(_));
+            match p {
+                Param::Term { name, .. } => {
+                    if is_hole {
+                        metas.push(*name);
+                    } else {
+                        match elab.lower_expr(&mut scope, sa) {
+                            Ok(v) => concrete_subst.push((*name, v)),
+                            Err(_) => return,
+                        }
+                    }
+                }
+                Param::Proof { .. } => {
+                    if is_hole {
+                        elab.err("`rewrite` cannot infer proof arguments — supply them explicitly", sa.span);
+                        return;
+                    }
+                    let _ = resolve_proof_term(elab, ctx, &mut scope, sa);
+                }
+            }
+        }
+    }
+
+    let goal_nf = rs.nf(goal);
+    let (lhs_pat, rhs_pat) = match &arule.conclusion {
+        Expr::Eq(a, b) => ((**a).clone(), (**b).clone()),
+        _ => unreachable!("conclusion checked to be an equation above"),
+    };
+
+    // --- Inference mode: solve the holes by matching the axiom's left side. ---
+    if !metas.is_empty() {
+        if arule.params.iter().any(|p| matches!(p, Param::Proof { .. })) {
+            elab.err("`rewrite` can only infer arguments for equations without proof hypotheses", axiom_arg.span);
+            return;
+        }
+        let lhs_inst = rs.nf(&subst_all(&lhs_pat, &concrete_subst));
+        let solved = match first_subterm_match(&goal_nf, &lhs_inst, &metas) {
+            Some(s) => s,
+            None => {
+                msg.push_str(&format!(
+                    "\nNo subterm of the goal matches the left side `{}` of the equation.\n",
+                    show(&lhs_inst, &elab.interner)
+                ));
+                elab.err(msg.trim_end().to_string(), stmt.span);
+                return;
+            }
+        };
+        let full: Vec<(Sym, Expr)> = concrete_subst.iter().chain(solved.iter()).cloned().collect();
+        let unsolved: Vec<Sym> = metas.iter().copied().filter(|m| !full.iter().any(|(s, _)| s == m)).collect();
+        if !unsolved.is_empty() {
+            let names = unsolved
+                .iter()
+                .map(|s| elab.interner.resolve(*s))
+                .collect::<Vec<_>>()
+                .join(", ");
+            msg.push_str(&format!(
+                "\nCould not infer {names} from the goal — supply {} explicitly.\n",
+                if unsolved.len() == 1 { "it" } else { "them" }
+            ));
+            elab.err(msg.trim_end().to_string(), stmt.span);
+            return;
+        }
+        // Spell the now-ground axiom application in parameter order.
+        let arg_strs: Vec<String> = arule
+            .params
+            .iter()
+            .filter_map(|p| match p {
+                Param::Term { name, .. } => {
+                    full.iter().find(|(s, _)| s == name).map(|(_, v)| show(v, &elab.interner))
+                }
+                Param::Proof { .. } => None,
+            })
+            .collect();
+        let axiom_name = match &qname.module {
+            Some(m) => format!("{}.{}", m.text, qname.name.text),
+            None => qname.name.text.clone(),
+        };
+        let ground = format!("{axiom_name}({})", arg_strs.join(", "));
+        msg.push_str(&format!(
+            "\nInferred `{ground}` from the goal.\n\nContinue with:\n  by rewrite({ground})?;\n"
+        ));
+        let fix = Fix {
+            title: format!("rewrite({ground})?"),
+            replacement: format!("by rewrite({ground})?;"),
+            span: stmt.span,
+        };
+        elab.err_with_fixes(msg.trim_end().to_string(), stmt.span, vec![fix]);
+        return;
+    }
+
+    // --- Ground mode: the equation is fully concrete → suggest the forward step. ---
+    let _ = &rhs_pat; // rhs comes from the instantiated statement below.
+    let eq_stmt = rs.nf(&subst_all(&arule.conclusion, &concrete_subst));
+    let (lhs, rhs) = match &eq_stmt {
+        Expr::Eq(a, b) => ((**a).clone(), (**b).clone()),
+        _ => unreachable!("instantiated conclusion is still an equation"),
     };
 
     // The sort of both sides (forward's `T : Sort`).
@@ -1172,7 +1378,6 @@ fn report_rewrite_hole(
     };
 
     // Build the motive by abstracting every occurrence of `lhs` in the goal.
-    let goal_nf = rs.nf(goal);
     let lhs_nf = rs.nf(&lhs);
     let v = elab.interner.fresh("x");
     let body = subst_occurrences(&goal_nf, &lhs_nf, &Expr::Free(v));
@@ -1220,22 +1425,25 @@ fn report_rewrite_hole(
         }
     };
 
-    // The concrete `by forward(...)` call: `T`, `lhs`, `rhs`, and the motive printed via
-    // `show` (all valid surface syntax); the axiom spelled exactly as the user wrote it.
+    // The concrete `by forward(...)` call, one argument per line: `T`, `lhs`, `rhs`,
+    // and the motive printed via `show` (all valid surface syntax); the axiom spelled
+    // exactly as the user wrote it.
     let axiom_src = elab
-        .span_text(reference.args[0].span)
+        .span_text(axiom_arg.span)
         .map(str::to_string)
         .unwrap_or_else(|| show(&eq_stmt, &elab.interner));
-    let call = format!(
-        "by forward({}, {}, {}, {}, {})",
-        show(&t_sort, &elab.interner),
-        show(&lhs, &elab.interner),
-        show(&rhs, &elab.interner),
-        axiom_src,
-        show(&motive, &elab.interner),
+    let indent = line_indent(&elab.source, stmt.span.start);
+    let call = format_forward_call(
+        &indent,
+        &[
+            show(&t_sort, &elab.interner),
+            show(&lhs, &elab.interner),
+            show(&rhs, &elab.interner),
+            axiom_src,
+            show(&motive, &elab.interner),
+        ],
     );
 
-    let indent = line_indent(&elab.source, stmt.span.start);
     let mut fixes: Vec<Fix> = Vec::new();
     match next.first() {
         None => {
@@ -2181,6 +2389,62 @@ mod fix_tests {
         assert!(
             ds.iter().any(|d| d.message.contains("No subterm of the goal matches")),
             "should explain why: {ds:?}"
+        );
+    }
+
+    #[test]
+    fn rewrite_hole_forward_suggestion_is_multiline() {
+        // The forward suggestion breaks each argument onto its own line, indented
+        // two spaces past the `by`.
+        let src = "import core(forward);\nsort T : Sort;\nop a : -> T;\nop b : -> T;\nop f : T -> T;\naxiom ab |- a = b;\nlemma l\n  |- f(a) = f(a);\nproof\n  by rewrite(ab)?;\nwip;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement.starts_with("by forward("))
+            .expect("ground rewrite should offer a `forward` fix");
+        // `by forward(` then each argument on its own 4-space-indented line (the
+        // `by` sits at 2 spaces, arguments two further).
+        assert!(
+            fix.replacement.starts_with("by forward(\n    T,\n    a,\n    b,\n    ab,\n    λ"),
+            "arguments should be one-per-line: {:?}",
+            fix.replacement
+        );
+    }
+
+    #[test]
+    fn rewrite_hole_infers_axiom_arguments() {
+        // A bare axiom reference: the arguments are solved by matching the axiom's
+        // left side `pop(A, push(A, x, s))` against the goal.
+        let stack = "import core(forward);\nsort Stack : Sort -> Sort;\nop empty : forall (A : Sort) st -> Stack(A);\nop push : forall (A : Sort) st A * Stack(A) -> Stack(A);\nop pop : forall (A : Sort) st Stack(A) -> Stack(A);\nop top : forall (A : Sort) st Stack(A) -> A;\naxiom pop_push(A : Sort, x : A, s : Stack(A)) |- pop(A, push(A, x, s)) = s;\nlemma one_pop(A : Sort, a b : A)\n  |- top(A, pop(A, push(A, a, push(A, b, empty(A))))) = b;\nproof\n  by rewrite(pop_push)?;\nwip;\n";
+        let ds = diags(stack);
+        assert_spans_valid(stack, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement.starts_with("by rewrite("))
+            .expect("bare axiom ref should infer its arguments");
+        assert_eq!(
+            fix.replacement,
+            "by rewrite(pop_push(A, a, push(A, b, empty(A))))?;"
+        );
+    }
+
+    #[test]
+    fn rewrite_hole_infers_from_named_holes() {
+        // Explicit `?` holes (some concrete, some inferred) resolve the same way.
+        let stack = "import core(forward);\nsort Stack : Sort -> Sort;\nop empty : forall (A : Sort) st -> Stack(A);\nop push : forall (A : Sort) st A * Stack(A) -> Stack(A);\nop pop : forall (A : Sort) st Stack(A) -> Stack(A);\nop top : forall (A : Sort) st Stack(A) -> A;\naxiom pop_push(A : Sort, x : A, s : Stack(A)) |- pop(A, push(A, x, s)) = s;\nlemma one_pop(A : Sort, a b : A)\n  |- top(A, pop(A, push(A, a, push(A, b, empty(A))))) = b;\nproof\n  by rewrite(pop_push(A, ?x, ?s))?;\nwip;\n";
+        let ds = diags(stack);
+        assert_spans_valid(stack, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement.starts_with("by rewrite("))
+            .expect("named holes should be inferred");
+        assert_eq!(
+            fix.replacement,
+            "by rewrite(pop_push(A, a, push(A, b, empty(A))))?;"
         );
     }
 }
