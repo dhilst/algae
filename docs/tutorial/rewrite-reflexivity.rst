@@ -89,14 +89,44 @@ You write the placeholder with ``_``. Writing the whole function as
 ``λ (x : Stack(A)) st top(x) = b``. The ``_`` is the slot the equation's two sides
 plug into.
 
-.. admonition:: Sugar on the way
-   :class: note
+.. admonition:: The shortcut — the ``rewrite(…)?`` hole
+   :class: tip
 
-   A lighter surface syntax for rewriting is planned for Algae — one that will
-   read closer to "rewrite this equation here" and expand to an application of the
-   ``forward`` rule under the hood. The *mechanics* won't change: it will still be
-   ``forward`` doing the work, and everything you learn here will carry straight
-   over.
+   You rarely spell out a whole ``forward`` call by hand. Instead, name the
+   equation you want to use inside a **suggestion hole** and let the checker write
+   the rest:
+
+   .. code-block:: alg
+
+      by rewrite(<eq>)?;
+
+   where ``<eq>`` is any proof of an equation ``lhs = rhs`` — an axiom, a lemma, or
+   a hypothesis in scope. Like every ``?`` hole it does not close the goal; it
+   reports a suggestion. To build it, the checker:
+
+   #. reads the equation ``lhs = rhs`` that ``<eq>`` proves;
+   #. finds ``lhs`` in the goal and builds the motive ``P`` for you, placing the
+      ``_`` at **every** occurrence of that subterm;
+   #. infers the sort ``T`` of the two sides;
+   #. checks that the resulting ``forward`` step actually applies.
+
+   If it does, it offers the fully-written step as a one-click fix (or you paste
+   it yourself):
+
+   .. code-block:: alg
+
+      by forward(T, lhs, rhs, <eq>, P)
+      then <context> ⊢ <new goal>;
+
+   The ``<new goal>`` is your goal with ``lhs`` rewritten to ``rhs``, and the
+   ``<context>`` is restated in full so nothing is silently dropped. Nothing named
+   ``rewrite`` ever reaches the kernel — it expands to ``forward`` at check time,
+   and the kernel re-checks that ``forward`` step. So the mechanics below are
+   exactly what the hole generates; learn them once and the shortcut is just a
+   time-saver.
+
+   If ``lhs`` does not occur in the goal — or the argument is not an equation — the
+   hole explains why and offers no fix.
 
 Equational reasoning on the stack
 =================================
@@ -142,6 +172,17 @@ Read the placeholder ``top(A, _) = b`` by plugging each side of the equation
 - ``a`` side in the hole → ``top(A, pop(A, push(A, a, …))) = b`` — our current goal.
 - ``b`` side in the hole → ``top(A, push(A, b, empty(A))) = b`` — the goal after the
   rewrite, which ``top_push`` closes.
+
+Everything from ``Stack(A)`` down to the ``top(A, _) = b`` placeholder in that step
+is mechanical: it is fixed by the equation ``pop_push(A, a, push(A, b, empty(A)))``
+and the goal. That is exactly what the ``rewrite(…)?`` hole works out for you — the
+whole ``by forward(…) then …;`` above is what
+
+.. code-block:: alg
+
+   by rewrite(pop_push(A, a, push(A, b, empty(A))))?;
+
+suggests when you run the check.
 
 Deeper stacks work the same way — just more rewrites. Three pushes and two pops:
 
