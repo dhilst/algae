@@ -1,50 +1,27 @@
-rule or_elim(P Q R : Prop)
-  ⊢ P ∨ Q;
-  P := P ⊢ R;
-  Q := Q ⊢ R
-  ────────────────────────
-  ⊢ R
-end;
+import core(forward, refl);
 
-rule or_intro_left(P Q : Prop)
-  ⊢ P
-  ────────────────────────
-  ⊢ P ∨ Q
-end;
+sort Nat : Sort;
+op z : → Nat;
+op s : Nat → Nat;
+op add : Nat * Nat → Nat;
 
-rule or_intro_right(P Q : Prop)
-  ⊢ Q
-  ────────────────────────
-  ⊢ P ∨ Q
-end;
+axiom add_zero(n : Nat)    ⊢ add(z, n) = n;
+axiom add_succ(n m : Nat)  ⊢ add(s(n), m) = s(add(n, m));
 
-rule implication_intro(P Q : Prop)
-  P := P ⊢ Q
-  ────────────────────────
-  ⊢ P ⇒ Q
-end;
-
-rule biconditional_intro(P Q : Prop)
-  ⊢ P ⇒ Q;
-  ⊢ Q ⇒ P
-  ────────────────────────
-  ⊢ P ⇔ Q
-end;
-
-lemma or_comm(A B : Prop, d := A ∨ B)
-  ⊢ B ∨ A;
+lemma add_left_zero(n : Nat)
+  ⊢ add(z, n) = n;
 proof
   by wip(?goal);
 wip;
 
-lemma or_comm_imp(A B : Prop)
-  ⊢ (A ∨ B) ⇒ (B ∨ A);
+lemma one_plus_zero
+  ⊢ add(s(z), z) = s(z);
 proof
   by wip(?goal);
 wip;
 
-lemma or_comm_iff(A B : Prop)
-  ⊢ (A ∨ B) ⇔ (B ∨ A);
+lemma one_plus_one
+  ⊢ add(s(z), s(z)) = s(s(z));
 proof
   by wip(?goal);
 wip;

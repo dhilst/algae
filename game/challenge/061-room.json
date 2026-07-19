@@ -1,10 +1,10 @@
 {
   "id": "061",
   "tier": "hard",
-  "title": "The Mirror Of Or",
+  "title": "The Ladder Of Numbers",
   "monster": "dragon",
   "module": "room061",
-  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "prompt": "A dragon guards the hatch. Rewrite each sum down to a numeral to earn the key.",
   "food": false,
-  "help": "This room holds 3 lemmas — finish them all (turn every wip into qed). (1) Helper. or_elim(A, B, B ∨ A) cases; build B ∨ A with or_intro_right / or_intro_left. (2) Uses or_comm. implication_intro then P := A ∨ B ⊢ B ∨ A; by or_comm(A, B, P);. (3) Uses or_comm_imp. biconditional_intro cases; by or_comm_imp(A, B); and by or_comm_imp(B, A);."
+  "help": "This room is about rewriting with the two addition laws. `forward(Nat, lhs, rhs, eq, motive)` replaces `lhs` with `rhs`, the motive being the goal with `_` at the spot. Shortcut: `by rewrite(add_succ)?;` (or `by rewrite(add_zero)?;`) infers the arguments and suggests the full `by forward(…) then …;` step. Finish all 3 lemmas. (1) add_left_zero is one axiom: `by add_zero(n);`. (2) one_plus_zero: rewrite with add_succ (motive `_ = s(z)`) to reach `⊢ s(add(z, z)) = s(z);`, then rewrite the inner `add(z, z)` with add_zero (motive `s(_) = s(z)`) and close with `by refl(Nat, s(z));`. (3) one_plus_one is the same shape: add_succ, then add_zero, then `by refl(Nat, s(s(z)));`."
 }

@@ -1,43 +1,27 @@
-rule and_intro(P Q : Prop)
-  ⊢ P;
-  ⊢ Q
-  ────────────────────────
-  ⊢ P ∧ Q
-end;
+import core(forward, refl);
 
-rule implication_intro(P Q : Prop)
-  P := P ⊢ Q
-  ────────────────────────
-  ⊢ P ⇒ Q
-end;
+sort B : Sort;
+op tt  : → B;
+op ff  : → B;
+op neg : B → B;
 
-rule negation_intro(P : Prop)
-  P := P ⊢ False
-  ────────────────────────
-  ⊢ ¬P
-end;
+axiom neg_tt ⊢ neg(tt) = ff;
+axiom neg_ff ⊢ neg(ff) = tt;
 
-rule negation_elim(P : Prop)
-  ⊢ P;
-  ⊢ ¬P
-  ────────────────────────
-  ⊢ False
-end;
-
-lemma dni(A : Prop, x := A)
-  ⊢ ¬(¬A);
+lemma dneg_tt
+  ⊢ neg(neg(tt)) = tt;
 proof
   by wip(?goal);
 wip;
 
-lemma dni_imp(A : Prop)
-  ⊢ A ⇒ ¬(¬A);
+lemma dneg_ff
+  ⊢ neg(neg(ff)) = ff;
 proof
   by wip(?goal);
 wip;
 
-lemma dni_combo(A : Prop, x := A)
-  ⊢ ¬(¬A) ∧ (A ⇒ ¬(¬A));
+lemma tneg_tt
+  ⊢ neg(neg(neg(tt))) = ff;
 proof
   by wip(?goal);
 wip;

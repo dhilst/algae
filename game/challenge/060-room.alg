@@ -1,49 +1,22 @@
-rule and_intro(P Q : Prop)
-  ⊢ P;
-  ⊢ Q
-  ────────────────────────
-  ⊢ P ∧ Q
-end;
+import core(forward, refl);
 
-rule and_left(P Q : Prop)
-  ⊢ P ∧ Q
-  ────────────────────────
-  ⊢ P
-end;
+sort Stack : Sort → Sort;
+op empty : forall (A : Sort) st → Stack(A);
+op push  : forall (A : Sort) st A * Stack(A) → Stack(A);
+op pop   : forall (A : Sort) st Stack(A) → Stack(A);
+op top   : forall (A : Sort) st Stack(A) → A;
 
-rule and_right(P Q : Prop)
-  ⊢ P ∧ Q
-  ────────────────────────
-  ⊢ Q
-end;
+axiom top_push(A : Sort, x : A, s : Stack(A))  ⊢ top(A, push(A, x, s)) = x;
+axiom pop_push(A : Sort, x : A, s : Stack(A))  ⊢ pop(A, push(A, x, s)) = s;
 
-rule implication_intro(P Q : Prop)
-  P := P ⊢ Q
-  ────────────────────────
-  ⊢ P ⇒ Q
-end;
-
-rule biconditional_intro(P Q : Prop)
-  ⊢ P ⇒ Q;
-  ⊢ Q ⇒ P
-  ────────────────────────
-  ⊢ P ⇔ Q
-end;
-
-lemma and_comm(A B : Prop, both := A ∧ B)
-  ⊢ B ∧ A;
+lemma top_one(A : Sort, a : A)
+  ⊢ top(A, push(A, a, empty(A))) = a;
 proof
   by wip(?goal);
 wip;
 
-lemma and_comm_imp(A B : Prop)
-  ⊢ (A ∧ B) ⇒ (B ∧ A);
-proof
-  by wip(?goal);
-wip;
-
-lemma and_comm_iff(A B : Prop)
-  ⊢ (A ∧ B) ⇔ (B ∧ A);
+lemma pop_then_top(A : Sort, a b : A)
+  ⊢ top(A, pop(A, push(A, a, push(A, b, empty(A))))) = b;
 proof
   by wip(?goal);
 wip;

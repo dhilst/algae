@@ -297,7 +297,7 @@ falls.</p>
 prove <code class="docutils literal notranslate"><span class="pre">P(s(n))</span></code>) — and a conclusion <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">n.</span> <span class="pre">P(n)</span></code>. Two premises means two
 branches, so this is a job for <code class="docutils literal notranslate"><span class="pre">cases</span></code>. Here is the full proof of
 <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">n</span></code>, straight from <code class="docutils literal notranslate"><span class="pre">nat.alg</span></code>:</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">backward</span><span class="p">,</span> <span class="n">transitivity</span><span class="p">);</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">import</span> <span class="n">core</span><span class="p">(</span><span class="n">refl</span><span class="p">,</span> <span class="n">forward</span><span class="p">);</span>
 
 <span class="k">sort</span> <span class="n">Nat</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
 <span class="k">op</span> <span class="m">0</span> <span class="p">:</span> <span class="o">→</span> <span class="n">Nat</span><span class="p">;</span>
@@ -327,9 +327,25 @@ branches, so this is a job for <code class="docutils literal notranslate"><span 
       <span class="n">k</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">;</span>
       <span class="n">ih</span> <span class="o">:=</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">k</span><span class="p">;</span>                 <span class="c1"># step: assume P(k)</span>
       <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">);</span>             <span class="c1"># prove P(s k)</span>
-      <span class="k">by</span> <span class="n">backward</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">ih</span><span class="p">,</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">_</span><span class="p">))</span>
-      <span class="n">then</span> <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">);</span>      <span class="c1"># goal after rewriting k &lt;- k + 0</span>
-      <span class="k">by</span> <span class="n">add_succ_left</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="m">0</span><span class="p">);</span>          <span class="c1"># conclusion s(k) + 0 = s(k + 0) is the goal</span>
+      <span class="k">by</span> <span class="n">forward</span><span class="p">(</span>                      <span class="c1"># rewrite s(k) + 0 → s(k + 0) by add_succ_left</span>
+        <span class="n">Nat</span><span class="p">,</span>
+        <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="m">0</span><span class="p">,</span>
+        <span class="n">s</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">),</span>
+        <span class="n">add_succ_left</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="m">0</span><span class="p">),</span>
+        <span class="o">λ</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">x</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+      <span class="n">then</span>
+        <span class="n">ih</span> <span class="o">:=</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">k</span>                <span class="c1"># restate ih — a `then` may not drop a hypothesis</span>
+        <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">)</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">);</span>
+      <span class="k">by</span> <span class="n">forward</span><span class="p">(</span>                      <span class="c1"># rewrite the inner k + 0 → k by ih</span>
+        <span class="n">Nat</span><span class="p">,</span>
+        <span class="n">k</span> <span class="o">+</span> <span class="m">0</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">,</span>
+        <span class="n">ih</span><span class="p">,</span>
+        <span class="o">λ</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">Nat</span><span class="p">)</span> <span class="k">st</span> <span class="n">s</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+      <span class="n">then</span>
+        <span class="n">ih</span> <span class="o">:=</span> <span class="n">k</span> <span class="o">+</span> <span class="m">0</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="o">⊢</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">);</span>
+      <span class="k">by</span> <span class="n">refl</span><span class="p">(</span><span class="n">Nat</span><span class="p">,</span> <span class="n">s</span><span class="p">(</span><span class="n">k</span><span class="p">));</span>              <span class="c1"># both sides equal — reflexivity closes it</span>
     <span class="k">qed</span><span class="p">;</span>
   <span class="k">qed</span><span class="p">;</span>
 <span class="k">qed</span><span class="p">;</span>
@@ -343,12 +359,13 @@ is a hole — more on it in a second). The goal <code class="docutils literal no
 <li><p>The <strong>base case</strong> <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code> is closed by <code class="docutils literal notranslate"><span class="pre">add_zero_left(0)</span></code>: its
 conclusion <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">n</span></code>, at <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">0</span></code>, is exactly <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p></li>
 <li><p>The <strong>step case</strong> assumes <code class="docutils literal notranslate"><span class="pre">ih</span> <span class="pre">:=</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">k</span></code> and must prove <code class="docutils literal notranslate"><span class="pre">s(k)</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">s(k)</span></code>.
-It uses <code class="docutils literal notranslate"><span class="pre">ih</span></code> to rewrite <code class="docutils literal notranslate"><span class="pre">k</span></code> to <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span></code> under <code class="docutils literal notranslate"><span class="pre">s</span></code>, leaving
-<code class="docutils literal notranslate"><span class="pre">s(k)</span> <span class="pre">+</span> <span class="pre">0</span> <span class="pre">=</span> <span class="pre">s(k</span> <span class="pre">+</span> <span class="pre">0)</span></code>, which <code class="docutils literal notranslate"><span class="pre">add_succ_left(k,</span> <span class="pre">0)</span></code> discharges.</p></li>
+Two rewrites do it: <code class="docutils literal notranslate"><span class="pre">add_succ_left(k,</span> <span class="pre">0)</span></code> turns <code class="docutils literal notranslate"><span class="pre">s(k)</span> <span class="pre">+</span> <span class="pre">0</span></code> into <code class="docutils literal notranslate"><span class="pre">s(k</span> <span class="pre">+</span> <span class="pre">0)</span></code>,
+leaving <code class="docutils literal notranslate"><span class="pre">s(k</span> <span class="pre">+</span> <span class="pre">0)</span> <span class="pre">=</span> <span class="pre">s(k)</span></code>; then <code class="docutils literal notranslate"><span class="pre">ih</span></code> rewrites the inner <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">+</span> <span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">k</span></code>,
+leaving <code class="docutils literal notranslate"><span class="pre">s(k)</span> <span class="pre">=</span> <span class="pre">s(k)</span></code>, which <code class="docutils literal notranslate"><span class="pre">refl</span></code> closes.</p></li>
 </ul>
-<p>Notice <code class="docutils literal notranslate"><span class="pre">ih</span></code> — a <strong>hypothesis</strong> introduced by the step case — being handed to
-<code class="docutils literal notranslate"><span class="pre">backward</span></code> as a proof argument. That’s the proof namespace at work: <code class="docutils literal notranslate"><span class="pre">ih</span></code> is
-not a term, it’s <em>evidence</em>.</p>
+<p>Notice <code class="docutils literal notranslate"><span class="pre">ih</span></code> — a <strong>hypothesis</strong> introduced by the step case — being handed to the
+second <code class="docutils literal notranslate"><span class="pre">forward</span></code> as a proof argument. That’s the proof namespace at work: <code class="docutils literal notranslate"><span class="pre">ih</span></code>
+is not a term, it’s <em>evidence</em>.</p>
 </section>
 <section id="eigenvariables">
 <h2>Eigenvariables<a class="headerlink" href="#eigenvariables" title="Link to this heading">¶</a></h2>
@@ -406,9 +423,11 @@ begins by introducing the variable:</p>
 </pre></div>
 </div>
 <p>Here the <code class="docutils literal notranslate"><span class="pre">then</span></code> keeps its context: <code class="docutils literal notranslate"><span class="pre">forall_intro</span></code> introduces the fresh
-eigenvariable <code class="docutils literal notranslate"><span class="pre">n</span></code>, so the continuation names it (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">:</span> <span class="pre">Nat</span> <span class="pre">⊢</span> <span class="pre">…</span></code>). When a step
-introduces no new variables — most <code class="docutils literal notranslate"><span class="pre">backward</span></code> steps — you can drop the context
-and just write <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">&lt;goal&gt;;</span></code>.</p>
+eigenvariable <code class="docutils literal notranslate"><span class="pre">n</span></code>, so the continuation names it (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">:</span> <span class="pre">Nat</span> <span class="pre">⊢</span> <span class="pre">…</span></code>). A <code class="docutils literal notranslate"><span class="pre">then</span></code> must
+carry forward every <strong>hypothesis</strong> still in scope — Algae does no implicit
+weakening, so dropping one (like <code class="docutils literal notranslate"><span class="pre">ih</span></code> in the induction step above) is an error.
+Only when the context holds nothing to carry — no hypotheses, no fresh variables —
+can you write the bare <code class="docutils literal notranslate"><span class="pre">then</span> <span class="pre">⊢</span> <span class="pre">&lt;goal&gt;;</span></code>.</p>
 <p>This is also why <code class="docutils literal notranslate"><span class="pre">induction</span></code> states its conclusion as <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">(n</span> <span class="pre">:</span> <span class="pre">Nat)</span> <span class="pre">st</span> <span class="pre">P(n)</span></code>
 rather than taking <code class="docutils literal notranslate"><span class="pre">n</span></code> as a parameter: the step case must reason about <code class="docutils literal notranslate"><span class="pre">n</span></code> as
 a bound eigenvariable the premises discharge, which a caller-supplied parameter
