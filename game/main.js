@@ -274,6 +274,12 @@ function buildMap() {
   grid.style.gridTemplateColumns = `repeat(${maxX - minX + 1}, var(--tile))`;
   grid.style.gridTemplateRows = `repeat(${maxY - minY + 1}, var(--tile))`;
 
+  // Rooms one door-step from where you stand: clicking any of them walks there.
+  const here = curRoom();
+  const reachable = new Set(
+    ["N", "S", "E", "W"].map((d) => here.doors[d]).filter((id) => id != null)
+  );
+
   for (const r of rooms) {
     const cell = el("div", "tile");
     cell.style.gridColumn = r.x - minX + 1;
@@ -289,7 +295,13 @@ function buildMap() {
     cell.appendChild(el("span", "tile-glyph", glyph));
     if (r.isExitDown && floor.index !== 0) cell.appendChild(el("span", "tile-stair down", "⬇"));
     if (r.isEntryUp && floor.index !== 0) cell.appendChild(el("span", "tile-stair up", "⬆"));
-    if (r.id === run.roomId) cell.classList.add("here");
+    if (r.id === run.roomId) {
+      cell.classList.add("here");
+    } else if (reachable.has(r.id)) {
+      cell.classList.add("reachable");
+      cell.title = "Walk here";
+      cell.addEventListener("click", () => moveTo(r.id));
+    }
     grid.appendChild(cell);
   }
   const frame = el("div", "map-frame");
@@ -621,6 +633,46 @@ function winScreen() {
   wrap.appendChild(b);
   app.appendChild(wrap);
 }
+
+// ---- Keyboard ------------------------------------------------------------
+
+// WASD / arrow keys walk through a door; Enter advances a message screen.
+const MOVE_KEYS = {
+  w: "N", arrowup: "N",
+  a: "W", arrowleft: "W",
+  s: "S", arrowdown: "S",
+  d: "E", arrowright: "E",
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return; // leave chords (e.g. Ctrl-Enter) alone
+  const t = e.target;
+  const typing =
+    t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable ||
+      (t.closest && t.closest(".cm-editor")));
+
+  // Enter dismisses whatever message screen is up — the lore a sphinx leaves
+  // behind, a chest, the guard, the ring, or an ending.
+  if (e.key === "Enter" && !typing) {
+    const btn = document.querySelector(".message-screen .btn-primary");
+    if (btn) {
+      e.preventDefault();
+      btn.click();
+      return;
+    }
+  }
+
+  // Movement only on the dungeon map, and not while the help manual is open.
+  if (currentScreen !== "dungeon" || typing) return;
+  if (document.querySelector(".help-overlay")) return;
+  const dir = MOVE_KEYS[e.key.toLowerCase()];
+  if (!dir) return;
+  const nb = curRoom().doors[dir];
+  if (nb != null) {
+    e.preventDefault();
+    moveTo(nb);
+  }
+});
 
 // Pause hunger persistence cleanly if the tab is hidden/closed.
 window.addEventListener("beforeunload", () => persist());
