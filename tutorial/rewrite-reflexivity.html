@@ -332,13 +332,38 @@ left to right, the way you read it.</p></li>
 <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">T)</span> <span class="pre">st</span> <span class="pre">…</span></code> gets old fast, so <code class="docutils literal notranslate"><span class="pre">_</span></code> is sugar for it: <code class="docutils literal notranslate"><span class="pre">top(_)</span> <span class="pre">=</span> <span class="pre">b</span></code> means
 <code class="docutils literal notranslate"><span class="pre">λ</span> <span class="pre">(x</span> <span class="pre">:</span> <span class="pre">Stack(A))</span> <span class="pre">st</span> <span class="pre">top(x)</span> <span class="pre">=</span> <span class="pre">b</span></code>. The <code class="docutils literal notranslate"><span class="pre">_</span></code> is the slot the equation’s two sides
 plug into.</p>
-<div class="note admonition">
-<p class="admonition-title">Sugar on the way</p>
-<p>A lighter surface syntax for rewriting is planned for Algae — one that will
-read closer to “rewrite this equation here” and expand to an application of the
-<code class="docutils literal notranslate"><span class="pre">forward</span></code> rule under the hood. The <em>mechanics</em> won’t change: it will still be
-<code class="docutils literal notranslate"><span class="pre">forward</span></code> doing the work, and everything you learn here will carry straight
-over.</p>
+<div class="tip admonition">
+<p class="admonition-title">The shortcut — the <code class="docutils literal notranslate"><span class="pre">rewrite(…)?</span></code> hole</p>
+<p>You rarely spell out a whole <code class="docutils literal notranslate"><span class="pre">forward</span></code> call by hand. Instead, name the
+equation you want to use inside a <strong>suggestion hole</strong> and let the checker write
+the rest:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">by</span> <span class="n">rewrite</span><span class="p">(</span><span class="o">&lt;</span><span class="n">eq</span><span class="o">&gt;</span><span class="p">)</span>?<span class="p">;</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;eq&gt;</span></code> is any proof of an equation <code class="docutils literal notranslate"><span class="pre">lhs</span> <span class="pre">=</span> <span class="pre">rhs</span></code> — an axiom, a lemma, or
+a hypothesis in scope. Like every <code class="docutils literal notranslate"><span class="pre">?</span></code> hole it does not close the goal; it
+reports a suggestion. To build it, the checker:</p>
+<ol class="arabic simple">
+<li><p>reads the equation <code class="docutils literal notranslate"><span class="pre">lhs</span> <span class="pre">=</span> <span class="pre">rhs</span></code> that <code class="docutils literal notranslate"><span class="pre">&lt;eq&gt;</span></code> proves;</p></li>
+<li><p>finds <code class="docutils literal notranslate"><span class="pre">lhs</span></code> in the goal and builds the motive <code class="docutils literal notranslate"><span class="pre">P</span></code> for you, placing the
+<code class="docutils literal notranslate"><span class="pre">_</span></code> at <strong>every</strong> occurrence of that subterm;</p></li>
+<li><p>infers the sort <code class="docutils literal notranslate"><span class="pre">T</span></code> of the two sides;</p></li>
+<li><p>checks that the resulting <code class="docutils literal notranslate"><span class="pre">forward</span></code> step actually applies.</p></li>
+</ol>
+<p>If it does, it offers the fully-written step as a one-click fix (or you paste
+it yourself):</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">by</span> <span class="n">forward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">eq</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+<span class="n">then</span> <span class="o">&lt;</span><span class="n">context</span><span class="o">&gt;</span> <span class="o">⊢</span> <span class="o">&lt;</span><span class="n">new</span> <span class="n">goal</span><span class="o">&gt;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;new</span> <span class="pre">goal&gt;</span></code> is your goal with <code class="docutils literal notranslate"><span class="pre">lhs</span></code> rewritten to <code class="docutils literal notranslate"><span class="pre">rhs</span></code>, and the
+<code class="docutils literal notranslate"><span class="pre">&lt;context&gt;</span></code> is restated in full so nothing is silently dropped. Nothing named
+<code class="docutils literal notranslate"><span class="pre">rewrite</span></code> ever reaches the kernel — it expands to <code class="docutils literal notranslate"><span class="pre">forward</span></code> at check time,
+and the kernel re-checks that <code class="docutils literal notranslate"><span class="pre">forward</span></code> step. So the mechanics below are
+exactly what the hole generates; learn them once and the shortcut is just a
+time-saver.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">lhs</span></code> does not occur in the goal — or the argument is not an equation — the
+hole explains why and offers no fix.</p>
 </div>
 </section>
 <section id="equational-reasoning-on-the-stack">
@@ -383,6 +408,14 @@ off the top:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">b</span></code> side in the hole → <code class="docutils literal notranslate"><span class="pre">top(A,</span> <span class="pre">push(A,</span> <span class="pre">b,</span> <span class="pre">empty(A)))</span> <span class="pre">=</span> <span class="pre">b</span></code> — the goal after the
 rewrite, which <code class="docutils literal notranslate"><span class="pre">top_push</span></code> closes.</p></li>
 </ul>
+<p>Everything from <code class="docutils literal notranslate"><span class="pre">Stack(A)</span></code> down to the <code class="docutils literal notranslate"><span class="pre">top(A,</span> <span class="pre">_)</span> <span class="pre">=</span> <span class="pre">b</span></code> placeholder in that step
+is mechanical: it is fixed by the equation <code class="docutils literal notranslate"><span class="pre">pop_push(A,</span> <span class="pre">a,</span> <span class="pre">push(A,</span> <span class="pre">b,</span> <span class="pre">empty(A)))</span></code>
+and the goal. That is exactly what the <code class="docutils literal notranslate"><span class="pre">rewrite(…)?</span></code> hole works out for you — the
+whole <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">forward(…)</span> <span class="pre">then</span> <span class="pre">…;</span></code> above is what</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">by</span> <span class="n">rewrite</span><span class="p">(</span><span class="n">pop_push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">empty</span><span class="p">(</span><span class="n">A</span><span class="p">))))</span>?<span class="p">;</span>
+</pre></div>
+</div>
+<p>suggests when you run the check.</p>
 <p>Deeper stacks work the same way — just more rewrites. Three pushes and two pops:</p>
 <p><em>Don’t worry — you can’t read this. This is exactly why we need induction, which
 we’ll cover later.</em></p>
