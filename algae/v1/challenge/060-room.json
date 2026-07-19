@@ -1,11 +1,11 @@
 {
   "id": "060",
   "tier": "hard",
-  "title": "The Mirror Of And",
+  "title": "The Mirror Of Stacks",
   "monster": "dragon",
   "module": "room060",
-  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "prompt": "A dragon guards the hatch. Rewrite each goal until it holds, and the key is yours.",
   "food": true,
   "lore": "The dragon's fire roars, and somewhere inside it you seem to hear every fear you have never spoken aloud.",
-  "help": "This room holds 3 lemmas — finish them all (turn every wip into qed). (1) Helper. by and_intro(B, A) cases; and_right/and_left each then ⊢ A ∧ B; by both. (2) Uses and_comm. implication_intro then P := A ∧ B ⊢ B ∧ A; by and_comm(A, B, P);. (3) Uses and_comm_imp. biconditional_intro cases; by and_comm_imp(A, B); and by and_comm_imp(B, A);."
+  "help": "This room is about rewriting. `forward(T, lhs, rhs, eq, motive)` replaces `lhs` with `rhs` in the goal, where the motive is the goal with `_` marking the spot the equation lands. Shortcut: type `by rewrite(<eq>)?;` (e.g. `by rewrite(pop_push)?;`) and the checker infers the arguments and suggests the whole `by forward(…) then …;` step — accept it, then close the leftover goal. Finish both lemmas (every wip → qed). (1) top_one is a single axiom instance: `by top_push(A, a, empty(A));`. (2) pop_then_top: rewrite `pop(A, push(A, a, …))` to `push(A, b, empty(A))` with pop_push (motive `top(A, _) = b`), giving `⊢ top(A, push(A, b, empty(A))) = b;`, then close with `by top_push(A, b, empty(A));`."
 }

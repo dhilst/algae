@@ -1,30 +1,21 @@
-rule implication_intro(P Q : Prop)
-  P := P ⊢ Q
-  ────────────────────────
-  ⊢ P ⇒ Q
-end;
+import core(forward, refl);
 
-rule implication_elim(P Q : Prop)
-  ⊢ P ⇒ Q;
-  ⊢ P
-  ────────────────────────
-  ⊢ Q
-end;
+sort List : Sort → Sort;
+op nil  : forall (A : Sort) st → List(A);
+op cons : forall (A : Sort) st A * List(A) → List(A);
+op app  : forall (A : Sort) st List(A) * List(A) → List(A);
 
-lemma mp(A B : Prop, f := A ⇒ B, x := A)
-  ⊢ B;
+axiom app_nil(A : Sort, ys : List(A))              ⊢ app(A, nil(A), ys) = ys;
+axiom app_cons(A : Sort, x : A, xs ys : List(A))   ⊢ app(A, cons(A, x, xs), ys) = cons(A, x, app(A, xs, ys));
+
+lemma app_left_nil(A : Sort, ys : List(A))
+  ⊢ app(A, nil(A), ys) = ys;
 proof
   by wip(?goal);
 wip;
 
-lemma imp_trans(A B C : Prop, f := A ⇒ B, g := B ⇒ C)
-  ⊢ A ⇒ C;
-proof
-  by wip(?goal);
-wip;
-
-lemma imp_quad(A B C D : Prop, f := A ⇒ B, g := B ⇒ C, h := C ⇒ D)
-  ⊢ A ⇒ D;
+lemma app_singleton(A : Sort, x : A, ys : List(A))
+  ⊢ app(A, cons(A, x, nil(A)), ys) = cons(A, x, ys);
 proof
   by wip(?goal);
 wip;

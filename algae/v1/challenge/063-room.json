@@ -4,8 +4,8 @@
   "title": "Twice Denied",
   "monster": "dragon",
   "module": "room063",
-  "prompt": "A dragon guards the hatch. Complete its proof to earn the key.",
+  "prompt": "A dragon guards the hatch. Rewrite the negations away to earn the key.",
   "food": false,
   "lore": "Grooves worn into the stone, as if others came this way before you — each of them, it seems, alone.",
-  "help": "This room holds 3 lemmas — finish them all (turn every wip into qed). (1) Helper. negation_intro(¬A) then P := ¬A ⊢ False; by negation_elim(A) from x and P. (2) Uses dni. implication_intro then P := A ⊢ ¬(¬A); by dni(A, P);. (3) Uses dni and dni_imp. and_intro cases; by dni(A, x); and by dni_imp(A);."
+  "help": "This room is about rewriting away double and triple negations. `forward(B, lhs, rhs, eq, motive)` replaces `lhs` with `rhs`, the motive being the goal with `_` at the spot; rewriting the innermost negation first is easiest. Shortcut: `by rewrite(neg_tt)?;` / `by rewrite(neg_ff)?;` infers the arguments and suggests the full `by forward(…) then …;` step. Finish all 3 lemmas. (1) dneg_tt: rewrite `neg(tt)` with neg_tt (motive `neg(_) = tt`) to reach `⊢ neg(ff) = tt;`, close with `by neg_ff;`. (2) dneg_ff mirrors it: neg_ff (motive `neg(_) = ff`), then `by neg_tt;`. (3) tneg_tt: rewrite the innermost `neg(tt)` with neg_tt (motive `neg(neg(_)) = ff`), then `neg(ff)` with neg_ff (motive `neg(_) = ff`), then `by neg_tt;`."
 }
