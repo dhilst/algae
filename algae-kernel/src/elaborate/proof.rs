@@ -608,13 +608,34 @@ fn elaborate_step(
     // Admit: `by wip` closes the goal without a proof (tainted).
     if stmt.admit {
         if stmt.inspect {
-            report_tactic_hole(elab, ctx, goal, stmt, rs);
+            let is_rewrite = stmt
+                .reference
+                .as_ref()
+                .map(|r| is_rewrite_ref(elab, ctx, r))
+                .unwrap_or(false);
+            if is_rewrite {
+                report_rewrite_hole(elab, ctx, goal, stmt, rs);
+            } else {
+                report_tactic_hole(elab, ctx, goal, stmt, rs);
+            }
         } else if let Some(name) = &stmt.hole {
             report_hole(elab, ctx, goal, name, stmt.span, rs);
         }
         return Some((admit_step(elab, ctx, goal, stmt.span), true));
     }
     let reference = stmt.reference.as_ref().expect("non-admit statement has a reference");
+
+    // `rewrite` is a suggestion hole, not a checking tactic — it only makes sense with
+    // a trailing `?`. Reaching here means it was written without one.
+    if is_rewrite_ref(elab, ctx, reference) {
+        elab.err(
+            "`rewrite` is a suggestion hole — write `by rewrite(<eq>)?;` (with a trailing `?`) \
+             to get a `forward` suggestion"
+                .to_string(),
+            stmt.span,
+        );
+        return None;
+    }
 
     // Resolve the tactic.
     let (tactic_name, base_rule) = resolve_tactic(elab, ctx, reference)?;
@@ -1048,6 +1069,207 @@ fn line_indent(source: &str, start: usize) -> String {
         .chars()
         .take_while(|c| *c == ' ' || *c == '\t')
         .collect()
+}
+
+/// Is `reference` the `rewrite` suggestion hole (a module-less `rewrite` not shadowed
+/// by a user-defined tactic or local hypothesis, which would take precedence)?
+fn is_rewrite_ref(elab: &Elab, ctx: &[CtxEntry], reference: &ast::ProofRef) -> bool {
+    if reference.name.module.is_some() || reference.name.name.text != "rewrite" {
+        return false;
+    }
+    if let Some(key) = elab.interner.get("rewrite") {
+        let shadowed = elab.sig.tactics.contains_key(&key)
+            || ctx
+                .iter()
+                .any(|e| matches!(e, CtxEntry::Proof { name, .. } if *name == key));
+        if shadowed {
+            return false;
+        }
+    }
+    true
+}
+
+/// Replace every occurrence of `from_nf` in `goal_nf` with `to`, via the existing
+/// ground rewrite engine (an empty metavar list means exact structural matching).
+fn subst_occurrences(goal_nf: &Expr, from_nf: &Expr, to: &Expr) -> Expr {
+    let mut sys = RewriteSystem::new();
+    sys.push(from_nf.clone(), to.clone(), Vec::new());
+    sys.nf(goal_nf)
+}
+
+/// Report a `rewrite(<eq>)?` suggestion hole. Given the equation `lhs = rhs` the
+/// argument proves and the current goal, synthesize the `forward` motive automatically
+/// — abstracting *every* occurrence of `lhs` in the goal — and, when the resulting
+/// `forward` step actually applies, offer it as a paste-able fix
+/// `by forward(T, lhs, rhs, <eq>, P) then <ctx> ⊢ <newgoal>;`. When the rewrite does
+/// not apply (no matching subterm, un-inferrable type, non-equation argument, or
+/// `forward` not in scope), emit a plain diagnostic with no fix. The step is admitted,
+/// so the proof stays incomplete — exactly like every other `?` inspect step.
+fn report_rewrite_hole(
+    elab: &mut Elab,
+    ctx: &[CtxEntry],
+    goal: &Expr,
+    stmt: &ast::ProofStmt,
+    rs: &RewriteSystem,
+) {
+    use crate::core::display::show;
+    use crate::core::tactic::apply;
+
+    let reference = stmt.reference.as_ref().expect("inspect step has a reference");
+    let mut msg = format!(
+        "found rewrite hole in `by rewrite`\n\nGoal:\n  {}\n",
+        show(goal, &elab.interner)
+    );
+
+    // Exactly one argument: the equation proof.
+    if reference.args.len() != 1 {
+        elab.err(
+            format!(
+                "`rewrite` expects 1 argument (a proof of an equation `a = b`), got {}",
+                reference.args.len()
+            ),
+            stmt.span,
+        );
+        return;
+    }
+
+    // Resolve the argument to the equation it proves.
+    let mut scope = scope_from_ctx(ctx);
+    let eq_stmt = match resolve_proof_term(elab, ctx, &mut scope, &reference.args[0]) {
+        Some(e) => e,
+        None => return, // resolve_proof_term already reported the failure.
+    };
+    let (lhs, rhs) = match rs.nf(&eq_stmt) {
+        Expr::Eq(a, b) => (*a, *b),
+        other => {
+            msg.push_str(&format!(
+                "\nThe argument proves `{}`, which is not an equation `a = b`.\n",
+                show(&other, &elab.interner)
+            ));
+            elab.err(msg.trim_end().to_string(), stmt.span);
+            return;
+        }
+    };
+
+    // The sort of both sides (forward's `T : Sort`).
+    let frees: std::collections::HashMap<Sym, Expr> = ctx
+        .iter()
+        .filter_map(|e| match e {
+            CtxEntry::Term { name, ty } => Some((*name, ty.clone())),
+            CtxEntry::Proof { .. } => None,
+        })
+        .collect();
+    let t_sort = match elab.infer(&frees, &[], &lhs) {
+        Ok(t) => rs.nf(&t),
+        Err(_) => {
+            msg.push_str(&format!(
+                "\nCould not infer the type of `{}`.\n",
+                show(&lhs, &elab.interner)
+            ));
+            elab.err(msg.trim_end().to_string(), stmt.span);
+            return;
+        }
+    };
+
+    // Build the motive by abstracting every occurrence of `lhs` in the goal.
+    let goal_nf = rs.nf(goal);
+    let lhs_nf = rs.nf(&lhs);
+    let v = elab.interner.fresh("x");
+    let body = subst_occurrences(&goal_nf, &lhs_nf, &Expr::Free(v));
+    if body == goal_nf {
+        msg.push_str(&format!(
+            "\nNo subterm of the goal matches the left side `{}` of the equation.\n",
+            show(&lhs, &elab.interner)
+        ));
+        elab.err(msg.trim_end().to_string(), stmt.span);
+        return;
+    }
+    let motive = Expr::Lam(
+        Box::new(t_sort.clone()),
+        Box::new(crate::core::term::close(&body, v)),
+    );
+
+    // Look up `forward` and validate the rewrite by applying it for real; the returned
+    // sequent is the canonical subgoal we restate in the fix.
+    let fwd = match elab
+        .interner
+        .get("forward")
+        .and_then(|k| elab.sig.tactics.get(&k))
+    {
+        Some(r) => r.clone(),
+        None => {
+            msg.push_str("\n`forward` is not in scope — add `import core(forward);` to use `rewrite`.\n");
+            elab.err(msg.trim_end().to_string(), stmt.span);
+            return;
+        }
+    };
+    let args = vec![
+        Arg::Term(t_sort.clone()),
+        Arg::Term(lhs.clone()),
+        Arg::Term(rhs.clone()),
+        Arg::Proof(eq_stmt.clone()),
+        Arg::Term(motive.clone()),
+    ];
+    let next = match apply(&fwd, &args, goal, ctx, rs) {
+        Ok(n) => n,
+        Err(e) => {
+            let rendered = e.render(&elab.interner);
+            msg.push_str(&format!("\nThe rewrite does not apply: {rendered}\n"));
+            elab.err(msg.trim_end().to_string(), stmt.span);
+            return;
+        }
+    };
+
+    // The concrete `by forward(...)` call: `T`, `lhs`, `rhs`, and the motive printed via
+    // `show` (all valid surface syntax); the axiom spelled exactly as the user wrote it.
+    let axiom_src = elab
+        .span_text(reference.args[0].span)
+        .map(str::to_string)
+        .unwrap_or_else(|| show(&eq_stmt, &elab.interner));
+    let call = format!(
+        "by forward({}, {}, {}, {}, {})",
+        show(&t_sort, &elab.interner),
+        show(&lhs, &elab.interner),
+        show(&rhs, &elab.interner),
+        axiom_src,
+        show(&motive, &elab.interner),
+    );
+
+    let indent = line_indent(&elab.source, stmt.span.start);
+    let mut fixes: Vec<Fix> = Vec::new();
+    match next.first() {
+        None => {
+            // `forward` always leaves one subgoal, so this is defensive.
+            msg.push_str(&format!("\nThis rewrite closes the goal:\n{indent}{call};\n"));
+            fixes.push(Fix {
+                title: "Rewrite with `forward`".to_string(),
+                replacement: format!("{call};"),
+                span: stmt.span,
+            });
+        }
+        Some(sq) => {
+            let entries = continuation_entries(ctx, &sq.ctx, rs, &elab.interner);
+            let g = show(&sq.goal, &elab.interner);
+            let body_indent = format!("{indent}  ");
+            let then_block = render_then(&entries, &g, &body_indent);
+            let name = stmt.subgoal_name.clone().unwrap_or_else(|| "goal".into());
+            if entries.is_empty() {
+                msg.push_str(&format!("\nApplying it leaves:\n  ⊢ {g}\n"));
+            } else {
+                msg.push_str(&format!("\nApplying it leaves:\n  {} ⊢ {g}\n", entries.join("; ")));
+            }
+            msg.push_str(&format!(
+                "\nContinue with:\n{indent}{call}\n{indent}{then_block}\n{indent}by wip(?{name});\n"
+            ));
+            fixes.push(Fix {
+                title: "Rewrite with `forward`".to_string(),
+                replacement: format!("{call}\n{indent}{then_block}\n{indent}by wip(?{name});"),
+                span: stmt.span,
+            });
+        }
+    }
+
+    elab.err_with_fixes(msg.trim_end().to_string(), stmt.span, fixes);
 }
 
 /// Report a **tactic-inspect** step (`by ref(…)?`, `?name` arguments, or a
@@ -1908,5 +2130,57 @@ mod fix_tests {
             .expect("solved tactic holes should offer a full application");
         assert_eq!(fix.replacement, "by refl(T, a)?;");
         assert_eq!(fix.title, "refl(T, a)?");
+    }
+
+    #[test]
+    fn rewrite_hole_offers_forward_suggestion() {
+        // `by rewrite(ab)?` on `f(a) = f(a)` should suggest the full `forward`
+        // step that rewrites `a → b`, leaving `f(b) = f(b)`.
+        let src = "import core(forward);\nsort T : Sort;\nop a : -> T;\nop b : -> T;\nop f : T -> T;\naxiom ab |- a = b;\nlemma l\n  |- f(a) = f(a);\nproof\n  by rewrite(ab)?;\nwip;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement.starts_with("by forward("))
+            .expect("rewrite hole should offer a `forward` continuation fix");
+        // The suggestion drops the inspect `?;`; the only `?` left is the fresh
+        // `wip(?…)` hole the continuation introduces.
+        assert!(fix.replacement.contains("then"), "should restate the subgoal: {:?}", fix.replacement);
+        assert!(fix.replacement.contains("f(b) = f(b)"), "should rewrite a → b: {:?}", fix.replacement);
+        assert!(fix.replacement.contains("ab"), "should reuse the axiom as written: {:?}", fix.replacement);
+        assert!(fix.replacement.trim_end().ends_with("by wip(?goal);"), "ends in a hole: {:?}", fix.replacement);
+    }
+
+    #[test]
+    fn rewrite_hole_abstracts_all_occurrences() {
+        // Both sides of `a = a` are `a`; `rewrite(ab)` must flip every occurrence,
+        // leaving `b = b`.
+        let src = "import core(forward);\nsort T : Sort;\nop a : -> T;\nop b : -> T;\naxiom ab |- a = b;\nlemma l\n  |- a = a;\nproof\n  by rewrite(ab)?;\nwip;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        let fix = ds
+            .iter()
+            .flat_map(|d| &d.fixes)
+            .find(|f| f.replacement.starts_with("by forward("))
+            .expect("rewrite hole should offer a `forward` continuation fix");
+        assert!(fix.replacement.contains("⊢ b = b"), "all occurrences flip: {:?}", fix.replacement);
+    }
+
+    #[test]
+    fn rewrite_hole_no_match_offers_no_fix() {
+        // The equation's left side `a` does not occur in the goal `c = c`, so no
+        // suggestion can be made.
+        let src = "import core(forward);\nsort T : Sort;\nop a : -> T;\nop b : -> T;\nop c : -> T;\naxiom ab |- a = b;\nlemma l\n  |- c = c;\nproof\n  by rewrite(ab)?;\nwip;\n";
+        let ds = diags(src);
+        assert_spans_valid(src, &ds);
+        assert!(
+            ds.iter().flat_map(|d| &d.fixes).next().is_none(),
+            "no matching subterm should offer no fix: {ds:?}"
+        );
+        assert!(
+            ds.iter().any(|d| d.message.contains("No subterm of the goal matches")),
+            "should explain why: {ds:?}"
+        );
     }
 }
