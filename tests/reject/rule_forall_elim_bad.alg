@@ -1,6 +1,6 @@
-# Sad: forall_elim's conclusion is P(x) for the eigenvariable x. Here the
-# eigenvariable argument is `c`, so the conclusion is `c = c`, but the goal is
-# `x = x`. The rule conclusion does not match the goal, so it is rejected.
+# Sad: forall_elim's conclusion is P(x) for the witness x. Here the witness
+# argument is `c`, so the conclusion is `c = c`, but the goal is `x = x`. The
+# rule conclusion does not match the goal, so it is rejected.
 #expect: tactic `forall_elim`: rule conclusion does not match the current goal
 import core(forall_elim);
 

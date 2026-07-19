@@ -166,10 +166,10 @@ Both say "P holds for every x." The difference is representation:
 
 .. code-block:: alg
 
-   rule forall_intro(T : Sort, P : T → Prop)      rule forall_elim(T : Sort, P : T → Prop)
+   rule forall_intro(T : Sort, P : T → Prop)      rule forall_elim(T : Sort, P : T → Prop, x : T)
      x : T ⊢ P(x)                                   ⊢ ∀ (y : T) st P(y)
      ────────────────────────                        ────────────────────────
-     ⊢ ∀ (x : T) st P(x)                       x : T ⊢ P(x)
+     ⊢ ∀ (x : T) st P(x)                             ⊢ P(x)
 
 ``forall_intro`` turns a proof of ``P(x)`` for a fresh eigenvariable ``x`` into
 ``∀ x. P(x)``; ``forall_elim`` goes the other way. So proving a ``forall`` goal

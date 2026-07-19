@@ -13,10 +13,10 @@ rule exists_elim(T : Sort, P : T → Prop, Q : Prop)
   ⊢ Q
 end;
 
-rule forall_elim(T : Sort, P : T → Prop)
+rule forall_elim(T : Sort, P : T → Prop, x : T)
   ⊢ ∀ (y : T) st P(y)
   ────────────────────────
-  x : T ⊢ P(x)
+  ⊢ P(x)
 end;
 
 rule implication_elim(P Q : Prop)

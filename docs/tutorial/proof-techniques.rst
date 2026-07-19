@@ -491,10 +491,10 @@ all.
 
    .. code-block:: alg
 
-      rule forall_elim(T : Sort, P : T → Prop)
+      rule forall_elim(T : Sort, P : T → Prop, x : T)
         ⊢ ∀ (y : T) st P(y)
         ────────────────────────
-        x : T ⊢ P(x)
+        ⊢ P(x)
       end;
 
       sort T : Sort;
@@ -517,10 +517,10 @@ all.
         ⊢ ∀ (x : T) st P(x)
       end;
 
-      rule forall_elim(T : Sort, P : T → Prop)
+      rule forall_elim(T : Sort, P : T → Prop, x : T)
         ⊢ ∀ (y : T) st P(y)
         ────────────────────────
-        x : T ⊢ P(x)
+        ⊢ P(x)
       end;
 
       rule and_intro(P Q : Prop)
@@ -706,10 +706,10 @@ must not mention ``a``, since you don't get to know which witness you were hande
         ⊢ Q
       end;
 
-      rule forall_elim(T : Sort, P : T → Prop)
+      rule forall_elim(T : Sort, P : T → Prop, x : T)
         ⊢ ∀ (y : T) st P(y)
         ────────────────────────
-        x : T ⊢ P(x)
+        ⊢ P(x)
       end;
 
       rule implication_elim(P Q : Prop)

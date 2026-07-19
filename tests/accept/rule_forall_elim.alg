@@ -1,9 +1,7 @@
 # Happy path for core rule `forall_elim`
-# (|- forall y. P(y) ==> x : T |- P(x)).
-# The conclusion carries an eigenvariable x in its context, so the lemma goal
-# itself is stated under that context (lemma parameter x : T). The eigenvariable
-# is supplied as the third argument so the conclusion P(x) = (x = x) matches the
-# goal.
+# (|- forall y. P(y) ==> |- P(x)).
+# The witness x is an explicit third parameter, so it is supplied as the third
+# argument; the conclusion P(x) = (x = x) then matches the goal.
 import core(forall_elim);
 
 sort T : Sort;
