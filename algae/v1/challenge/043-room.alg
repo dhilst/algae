@@ -1,5 +1,5 @@
 rule negation_intro(P : Prop)
-  P := P ⊢ False
+  hp := P ⊢ False
   ────────────────────────
   ⊢ ¬P
 end;

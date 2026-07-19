@@ -1,5 +1,5 @@
 rule implication_intro(P Q : Prop)
-  P := P ⊢ Q
+  hp := P ⊢ Q
   ────────────────────────
   ⊢ P ⇒ Q
 end;

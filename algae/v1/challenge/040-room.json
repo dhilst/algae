@@ -6,5 +6,5 @@
   "module": "room040",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
-  "help": "This room holds 2 lemmas — finish them all (turn every wip into qed). (1) implication_intro(A ∧ B, A) then P := A ∧ B ⊢ A; by and_left(A, B) then ⊢ A ∧ B; by P;. (2) contrapositive(A, B) then ⊢ ¬B ⇒ ¬A; by nn;."
+  "help": "This room holds 2 lemmas — finish them all (turn every wip into qed). (1) implication_intro(A ∧ B, A) then hp := A ∧ B ⊢ A; by and_left(A, B) then ⊢ A ∧ B; by hp;. (2) contrapositive(A, B) then ⊢ ¬B ⇒ ¬A; by nn;."
 }

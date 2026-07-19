@@ -105,8 +105,8 @@ rule sum_reflect_elim(
   P Q R : Prop
 )
   ⊢ P ∨ Q;
-  P := P ⊢ R;
-  Q := Q ⊢ R
+  hp := P ⊢ R;
+  hq := Q ⊢ R
   ────────────────────────
   ⊢ R
 end;
