@@ -6,5 +6,5 @@
   "module": "room043",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
-  "help": "This room holds 2 lemmas — finish them all (turn every wip into qed). (1) negation_intro(A) then P := A ⊢ False; then implication_elim(A, False) against f and P. (2) negation_intro(¬A) then P := ¬A ⊢ False; then negation_elim(A) from x and P."
+  "help": "This room holds 2 lemmas — finish them all (turn every wip into qed). (1) negation_intro(A) then hp := A ⊢ False; then implication_elim(A, False) against f and hp. (2) negation_intro(¬A) then hp := ¬A ⊢ False; then negation_elim(A) from x and hp."
 }

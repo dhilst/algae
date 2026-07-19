@@ -6,5 +6,5 @@
   "module": "room004",
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": false,
-  "help": "implication_intro(A, A) then P := A ⊢ A; by P;."
+  "help": "implication_intro(A, A) then hp := A ⊢ A; by hp;."
 }

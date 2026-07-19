@@ -7,5 +7,5 @@
   "prompt": "A sphinx bars the room. Complete its proof to banish it.",
   "food": true,
   "lore": "'On the morning of the wedding,' it murmurs, 'what if you are not the man she believes you are?'",
-  "help": "This room holds 2 lemmas — finish them all (turn every wip into qed). (1) false_elim(C) then ⊢ False; then negation_elim(A) from x and nx. (2) contrapositive(A, A) then ⊢ ¬A ⇒ ¬A; by implication_intro(¬A, ¬A) then P := ¬A ⊢ ¬A; by P;."
+  "help": "This room holds 2 lemmas — finish them all (turn every wip into qed). (1) false_elim(C) then ⊢ False; then negation_elim(A) from x and nx. (2) contrapositive(A, A) then ⊢ ¬A ⇒ ¬A; by implication_intro(¬A, ¬A) then hp := ¬A ⊢ ¬A; by hp;."
 }
