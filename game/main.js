@@ -418,6 +418,25 @@ function moveTo(roomId) {
   dungeonScreen();
 }
 
+// Enter on the dungeon map: interact with whatever the room holds, using the
+// same precedence as the on-screen action buttons in buildRoomPanel.
+function interact() {
+  const floor = curFloor();
+  const room = curRoom();
+  // A mob (uncleared sphinx/dragon/demon) must be faced first — a boss room's
+  // hatch stays locked until it is cleared.
+  if (room.type === "monster" && !isCleared(room)) { enterCombat(room); return; }
+  // An unopened chest.
+  if (room.type === "chest" && !run.openedChests.has(rk(floor.index, room.id))) {
+    openChest(room);
+    return;
+  }
+  // Stairs: prefer descending, else climb back up. descend()/ascend() self-guard.
+  if (room.isExitDown && (floor.index === 0 || isCleared(room))) { descend(); return; }
+  if (room.isEntryUp) { ascend(); return; }
+  // Otherwise: nothing to interact with.
+}
+
 function descend() {
   const floor = curFloor();
   const room = curRoom();
@@ -636,7 +655,8 @@ function winScreen() {
 
 // ---- Keyboard ------------------------------------------------------------
 
-// WASD / arrow keys walk through a door; Enter advances a message screen.
+// WASD / arrow keys walk through a door; Enter dismisses a message screen, or
+// interacts with the current room when the dungeon map is up.
 const MOVE_KEYS = {
   w: "N", arrowup: "N",
   a: "W", arrowleft: "W",
@@ -658,6 +678,12 @@ document.addEventListener("keydown", (e) => {
     if (btn) {
       e.preventDefault();
       btn.click();
+      return;
+    }
+    // No message up: on the dungeon map, Enter interacts with the room.
+    if (currentScreen === "dungeon" && !document.querySelector(".help-overlay")) {
+      e.preventDefault();
+      interact();
       return;
     }
   }
