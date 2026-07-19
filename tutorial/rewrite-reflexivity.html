@@ -351,8 +351,13 @@ reports a suggestion. To build it, the checker:</p>
 <li><p>checks that the resulting <code class="docutils literal notranslate"><span class="pre">forward</span></code> step actually applies.</p></li>
 </ol>
 <p>If it does, it offers the fully-written step as a one-click fix (or you paste
-it yourself):</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">by</span> <span class="n">forward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">eq</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+it yourself), one argument per line:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">by</span> <span class="n">forward</span><span class="p">(</span>
+  <span class="n">T</span><span class="p">,</span>
+  <span class="n">lhs</span><span class="p">,</span>
+  <span class="n">rhs</span><span class="p">,</span>
+  <span class="o">&lt;</span><span class="n">eq</span><span class="o">&gt;</span><span class="p">,</span>
+  <span class="n">P</span><span class="p">)</span>
 <span class="n">then</span> <span class="o">&lt;</span><span class="n">context</span><span class="o">&gt;</span> <span class="o">⊢</span> <span class="o">&lt;</span><span class="n">new</span> <span class="n">goal</span><span class="o">&gt;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -364,6 +369,14 @@ exactly what the hole generates; learn them once and the shortcut is just a
 time-saver.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">lhs</span></code> does not occur in the goal — or the argument is not an equation — the
 hole explains why and offers no fix.</p>
+<p><strong>You don’t even need the equation’s arguments.</strong> Give the bare axiom name and
+the checker infers them by matching the axiom’s left side against the goal:</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">by</span> <span class="n">rewrite</span><span class="p">(</span><span class="n">pop_push</span><span class="p">)</span>?<span class="p">;</span>                    <span class="c1"># infer every argument</span>
+<span class="k">by</span> <span class="n">rewrite</span><span class="p">(</span><span class="n">pop_push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> ?<span class="n">x</span><span class="p">,</span> ?<span class="n">s</span><span class="p">))</span>?<span class="p">;</span>         <span class="c1"># or pin some, infer the rest (?x, ?s)</span>
+</pre></div>
+</div>
+<p>Either suggests the fully-applied <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">rewrite(pop_push(A,</span> <span class="pre">a,</span> <span class="pre">push(A,</span> <span class="pre">b,</span> <span class="pre">empty(A))))?;</span></code>,
+which in turn suggests the <code class="docutils literal notranslate"><span class="pre">forward</span></code> step above — each <code class="docutils literal notranslate"><span class="pre">?</span></code> refining the last.</p>
 </div>
 </section>
 <section id="equational-reasoning-on-the-stack">
@@ -409,13 +422,14 @@ off the top:</p>
 rewrite, which <code class="docutils literal notranslate"><span class="pre">top_push</span></code> closes.</p></li>
 </ul>
 <p>Everything from <code class="docutils literal notranslate"><span class="pre">Stack(A)</span></code> down to the <code class="docutils literal notranslate"><span class="pre">top(A,</span> <span class="pre">_)</span> <span class="pre">=</span> <span class="pre">b</span></code> placeholder in that step
-is mechanical: it is fixed by the equation <code class="docutils literal notranslate"><span class="pre">pop_push(A,</span> <span class="pre">a,</span> <span class="pre">push(A,</span> <span class="pre">b,</span> <span class="pre">empty(A)))</span></code>
-and the goal. That is exactly what the <code class="docutils literal notranslate"><span class="pre">rewrite(…)?</span></code> hole works out for you — the
-whole <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">forward(…)</span> <span class="pre">then</span> <span class="pre">…;</span></code> above is what</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">by</span> <span class="n">rewrite</span><span class="p">(</span><span class="n">pop_push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">push</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">empty</span><span class="p">(</span><span class="n">A</span><span class="p">))))</span>?<span class="p">;</span>
+is mechanical: it is fixed by the equation <code class="docutils literal notranslate"><span class="pre">pop_push</span></code> and the goal. That is exactly
+what the <code class="docutils literal notranslate"><span class="pre">rewrite(…)?</span></code> hole works out for you — the whole <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">forward(…)</span> <span class="pre">then</span> <span class="pre">…;</span></code>
+above is what</p>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">by</span> <span class="n">rewrite</span><span class="p">(</span><span class="n">pop_push</span><span class="p">)</span>?<span class="p">;</span>
 </pre></div>
 </div>
-<p>suggests when you run the check.</p>
+<p>suggests, going through the fully-applied <code class="docutils literal notranslate"><span class="pre">by</span> <span class="pre">rewrite(pop_push(A,</span> <span class="pre">a,</span> <span class="pre">push(A,</span> <span class="pre">b,</span>
+<span class="pre">empty(A))))?;</span></code> on the way (accept one suggestion, then the next).</p>
 <p>Deeper stacks work the same way — just more rewrites. Three pushes and two pops:</p>
 <p><em>Don’t worry — you can’t read this. This is exactly why we need induction, which
 we’ll cover later.</em></p>

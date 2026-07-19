@@ -111,11 +111,16 @@ plug into.
    #. checks that the resulting ``forward`` step actually applies.
 
    If it does, it offers the fully-written step as a one-click fix (or you paste
-   it yourself):
+   it yourself), one argument per line:
 
    .. code-block:: alg
 
-      by forward(T, lhs, rhs, <eq>, P)
+      by forward(
+        T,
+        lhs,
+        rhs,
+        <eq>,
+        P)
       then <context> ⊢ <new goal>;
 
    The ``<new goal>`` is your goal with ``lhs`` rewritten to ``rhs``, and the
@@ -127,6 +132,17 @@ plug into.
 
    If ``lhs`` does not occur in the goal — or the argument is not an equation — the
    hole explains why and offers no fix.
+
+   **You don't even need the equation's arguments.** Give the bare axiom name and
+   the checker infers them by matching the axiom's left side against the goal:
+
+   .. code-block:: alg
+
+      by rewrite(pop_push)?;                    # infer every argument
+      by rewrite(pop_push(A, ?x, ?s))?;         # or pin some, infer the rest (?x, ?s)
+
+   Either suggests the fully-applied ``by rewrite(pop_push(A, a, push(A, b, empty(A))))?;``,
+   which in turn suggests the ``forward`` step above — each ``?`` refining the last.
 
 Equational reasoning on the stack
 =================================
@@ -174,15 +190,16 @@ Read the placeholder ``top(A, _) = b`` by plugging each side of the equation
   rewrite, which ``top_push`` closes.
 
 Everything from ``Stack(A)`` down to the ``top(A, _) = b`` placeholder in that step
-is mechanical: it is fixed by the equation ``pop_push(A, a, push(A, b, empty(A)))``
-and the goal. That is exactly what the ``rewrite(…)?`` hole works out for you — the
-whole ``by forward(…) then …;`` above is what
+is mechanical: it is fixed by the equation ``pop_push`` and the goal. That is exactly
+what the ``rewrite(…)?`` hole works out for you — the whole ``by forward(…) then …;``
+above is what
 
 .. code-block:: alg
 
-   by rewrite(pop_push(A, a, push(A, b, empty(A))))?;
+   by rewrite(pop_push)?;
 
-suggests when you run the check.
+suggests, going through the fully-applied ``by rewrite(pop_push(A, a, push(A, b,
+empty(A))))?;`` on the way (accept one suggestion, then the next).
 
 Deeper stacks work the same way — just more rewrites. Three pushes and two pops:
 
