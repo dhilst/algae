@@ -195,11 +195,12 @@ end;
 
 rule forall_elim(
   T : Sort,
-  P : T → Prop
+  P : T → Prop,
+  x : T
 )
   ⊢ ∀ (y : T) st P(y)
   ────────────────────────
-  x : T ⊢ P(x)
+  ⊢ P(x)
 end;
 
 rule forall_intro(

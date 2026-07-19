@@ -1,9 +1,9 @@
 sort T : Sort;
 
-rule forall_elim(T : Sort, P : T → Prop)
+rule forall_elim(T : Sort, P : T → Prop, x : T)
   ⊢ ∀ (y : T) st P(y)
   ────────────────────────
-  x : T ⊢ P(x)
+  ⊢ P(x)
 end;
 
 rule exists_intro(T : Sort, P : T → Prop, x : T)

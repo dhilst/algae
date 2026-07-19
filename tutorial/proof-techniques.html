@@ -726,10 +726,10 @@ in; close <code class="docutils literal notranslate"><span class="pre">by</span>
 </div>
 <p><strong>7b.</strong> Instantiate a universal: from <code class="docutils literal notranslate"><span class="pre">∀</span> <span class="pre">y.</span> <span class="pre">P(y)</span></code> and a point <code class="docutils literal notranslate"><span class="pre">a</span></code>, get
 <code class="docutils literal notranslate"><span class="pre">P(a)</span></code>.</p>
-<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+<div class="highlight-alg notranslate"><div class="highlight"><pre><span></span><span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
   <span class="p">────────────────────────</span>
-  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="k">end</span><span class="p">;</span>
 
 <span class="k">sort</span> <span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">;</span>
@@ -752,10 +752,10 @@ in; close <code class="docutils literal notranslate"><span class="pre">by</span>
   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="k">end</span><span class="p">;</span>
 
-<span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+<span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
   <span class="p">────────────────────────</span>
-  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="k">end</span><span class="p">;</span>
 
 <span class="k">rule</span> <span class="n">and_intro</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>
@@ -939,10 +939,10 @@ with <code class="docutils literal notranslate"><span class="pre">exists_intro(T
   <span class="o">⊢</span> <span class="n">Q</span>
 <span class="k">end</span><span class="p">;</span>
 
-<span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">)</span>
+<span class="k">rule</span> <span class="n">forall_elim</span><span class="p">(</span><span class="n">T</span> <span class="p">:</span> <span class="kt">Sort</span><span class="p">,</span> <span class="n">P</span> <span class="p">:</span> <span class="n">T</span> <span class="o">→</span> <span class="kt">Prop</span><span class="p">,</span> <span class="n">x</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span>
   <span class="o">⊢</span> <span class="o">∀</span> <span class="p">(</span><span class="n">y</span> <span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="k">st</span> <span class="n">P</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
   <span class="p">────────────────────────</span>
-  <span class="n">x</span> <span class="p">:</span> <span class="n">T</span> <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+  <span class="o">⊢</span> <span class="n">P</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="k">end</span><span class="p">;</span>
 
 <span class="k">rule</span> <span class="n">implication_elim</span><span class="p">(</span><span class="n">P</span> <span class="n">Q</span> <span class="p">:</span> <span class="kt">Prop</span><span class="p">)</span>

@@ -6,10 +6,10 @@ rule forall_intro(T : Sort, P : T → Prop)
   ⊢ ∀ (x : T) st P(x)
 end;
 
-rule forall_elim(T : Sort, P : T → Prop)
+rule forall_elim(T : Sort, P : T → Prop, x : T)
   ⊢ ∀ (y : T) st P(y)
   ────────────────────────
-  x : T ⊢ P(x)
+  ⊢ P(x)
 end;
 
 rule and_intro(P Q : Prop)
